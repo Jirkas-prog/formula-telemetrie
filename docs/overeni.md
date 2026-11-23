@@ -13,4 +13,6 @@ Na Linuxu s nástroji `convbin` a `rnx2rtkp` spusť z adresáře `Formula_Manage
 
 ## Co zbývá změřit ve vozidle
 
+Při přípravě veřejného vydání 24. 11. 2026 byl rovněž sestaven firmware ESP32-S3 s profilem `imu` v PlatformIO Core 6.2.0 a s lokálním heslem z příkladu. Výstupem byl obraz `firmware.bin`. Na Windows proběhl překlad v krátké pracovní cestě. U pomocného editoru O-Leaf proběhlo 25 testů Node.js, z nichž 24 prošlo a jeden byl přeskočen. Tyto kontroly ověřují sestavitelnost firmwaru a testované funkce editoru. Funkci IMU na vozidle dokládají samostatné protokoly.
+
 Pro ověření přesnosti, dostupnosti pevného řešení a úplnosti trajektorie je třeba vlastní souběžný venkovní záznam roveru a základny, zdokumentované ustavení antén a nezávislá reference. Pro podíl platných řešení se uvádí také jmenovatel, časové okno a počty chybějících epoch. Odolnost napájení a úplnost poslední dávky vyžadují samostatnou zkoušku s řízeným přerušením. [Technický popis](technicka-zprava.md)

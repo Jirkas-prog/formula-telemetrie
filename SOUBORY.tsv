@@ -1,6 +1,7 @@
 cesta	SHA-256 (obsah v Git)	původ	zdroj nebo registr
 .gitattributes	36f9b01747f8b94eaf19c610551d5f31ee795ade6d9c41a72df0eaecb356d719	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
 .gitignore	3d8dcffaef0728b142cb90048d1959b81c84a6f52559c9ffbae1cde85a3f2c5c	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+CITATION.cff	88877f09411faec22745e8e11d8e9295d3550d52e7a20978de77570fd889a209	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
 ESP32_IMU/.gitignore	0e818f2f837460f26ec377f6f8d27cb471767f57da3a9ef7eac659e88f288ca8	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
 ESP32_IMU/README.md	02089d42dc15de0e41ebf7ea3d2f78f40263adc54e8bf2cffc86d2ce8e9e6f3c	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
 ESP32_IMU/analysis_20261026/app/analysis_core.js	eca56002d789281b72347459c45482383a5581c20fe9ba6125d83806fd165b86	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
@@ -383,14 +384,14 @@ Formula_Manager/static/vendor/leaflet.css	a7837102824184820dfa198d1ebcd109ff6d0f
 Formula_Manager/static/vendor/leaflet.js	db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a	Leaflet 1.9.4; BSD-2-Clause	docs/zdroje.md
 Formula_Manager/static/wifi.js	0a96a4a0d88ac91ada065c05923faa69db882de3da02cbc77daebaf177cbc04f	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
 Formula_Manager/transfers.py	6066bf23d1c4b9a994059813527136fd6d0e1868abee3f126883094ba5b4206b	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
-README.md	c6609e8e39aec466ce723bd2c991bf721f995723be3ed8256fa15a9872dfff4e	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
-docs/dalsi-podklady.md	51114d2cd51937a92469e81aa6faa9e90775e5b38a77632b14ae756f6dd72306	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+README.md	00d47abdbaa93bef565ab06cd6b19c38acce49d6cfa538402de026f0fcaa07da	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/dalsi-podklady.md	eddc91ec255e6663aaa73f370c6d3b610b377d8bb2d518fce71fc0b2a0d61f9d	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
 docs/instalace.md	bdf57ee71d73169dec54bc00f14e3297a2103279c1d88fd9a2852bb56cbc303f	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
-docs/overeni.md	e322ebea1a4c3d448c87431b47f1c1b317e20b05188c5d0d652ff63d2c603fe5	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/overeni.md	4a5913c5ea23aad252d2363b2cdd9743b04f7ee0e70caab982a4bcdf70270a6a	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
 docs/studie-a-imu.md	c71010abdbef8a54e6bf7915f61bf47b4865a40cc1cd2a7ac7776b8d5025b6f2	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
-docs/technicka-dokumentace.pdf	1040067fea7c456b9248535739c31c524c5216f2c131f2991144be07dba4db50	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
-docs/technicka-zprava.md	21074caed4bc7e586e1e742bb1628fdbf03141be1b94e547955e6f263b0a7efd	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
-docs/zdroje.md	df1a27567107f0c3652e39a264b57a141bf666e5bd4b4575027bc00037e524fe	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/technicka-dokumentace.pdf	e5d254fe138243de909e8a7dada47835fcf7f9e67ac105e1385c273b685a3198	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/technicka-zprava.md	ebcd56024e38f0b90337b032d52193c6273195fda189fc201745888ca4e52b92	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/zdroje.md	4d6ee0054d217e73604306a0359b4b170f09a21e539237efb53123c69ed95306	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
 nastroje/archiv-nvme-ntfs/Flash-Nvme.ps1	462541582c13de87178b41563834a529ff62974b57673e2b6e089dcef4c2737b	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
 nastroje/archiv-nvme-ntfs/build-image.sh	75db5bf3280386f4636c9caf359f8331b393810f76be0bd46056425c62168c2b	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
 nastroje/archiv-nvme-ntfs/check-final-image.sh	b49d954ae050273e8ca1b4e1cb8c19d2ff9330b62affb598b7ab47e1ba0b64b5	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
@@ -455,6 +456,8 @@ nastroje/o-leaf/tools/package-addon.ps1	d0639bd67295507ff6dfe756eb996d2ead5aa8ef
 nastroje/o-leaf/tools/set-repository-url.ps1	c57b587d6e25bb1d2bff507dc1533b06742e2777497906a1332b6098453af589	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
 overeni/integrita_exportu.json	44130cfe074a99616697cd0ce7616064784fd38bd9ecd7eec8ebb61841ce9aeb	Vlastní kontrolní výpis stolního měření ze dne 18. 11. 2026	docs/overeni.md
 podklady/praxe/praxe.tex	83e8084dceb7b628d45ea5262b1adf0302a9228d9ec8806508edda12da6b61bf	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+podklady/prezentace-autora/Jiri_Bursik_ED_slide_13-10-2026.pptx	3b33d7e2d74d7ac72bcf510ff415780dfaa8fd20c96b8540fb53643861e70e78	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+podklady/prezentace-autora/fm-prezentace-progress01-cz.pptx	667fa2dccd02fe1eb3a99767a45763fbc51ac4aa6e595bd6a75e510808508f24	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
 podklady/rozpocet/nakupni-kosik.pdf	44baf70cb43ad1b4de02021462fffce5ba180c1a0a19e51a4917e3c7f28327c2	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
 podklady/senzorika-prezentace/Senzorika_FS_TUL_2026-10-14_v2.deckcraft	658d224d38301155bd6aff83d795e3d6f959e7bbfffe348df51afe2ac1d6940f	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
 podklady/senzorika-prezentace/Senzorika_FS_TUL_2026-10-14_v2.pdf	9f6d4223975f9e4ec8961206f649fa9f5ecc281c7fd0a93a5505324f78f3e1a3	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md

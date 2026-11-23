@@ -1,6 +1,6 @@
 # Palubní záznam a vyhodnocení GNSS
 
-**Elektronická příloha k bakalářské práci Jiřího Buršíka „Využití RTK systému pro telemetrii studentské formule“, Technická univerzita v Liberci, 23. listopadu 2026.** Dokument popisuje vydanou implementaci. Odkazy na moduly vedou na místa, podle nichž lze tvrzení ověřit. Soupis použitého softwaru, dokumentace výrobců a spolupráce s AI je v [registru zdrojů](zdroje.md).
+**Elektronická příloha k bakalářské práci Jiřího Buršíka „Využití RTK systému pro telemetrii studentské formule“, Technická univerzita v Liberci, 24. listopadu 2026.** Dokument popisuje vydanou implementaci. Odkazy na moduly vedou na místa, podle nichž lze tvrzení ověřit. Soupis použitého softwaru, dokumentace výrobců a spolupráce s AI je v [registru zdrojů](zdroje.md).
 
 ## 1. Co je předmětem měření
 

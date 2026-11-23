@@ -1,6 +1,6 @@
 # Telemetrie studentské formule
 
-**Elektronická příloha bakalářské práce Jiřího Buršíka „Využití RTK systému pro telemetrii studentské formule“, Technická univerzita v Liberci.** Vydání z 23. listopadu 2026 spojuje zdrojový kód palubního GNSS loggeru, postup jeho sestavení a výsledky, které lze reprodukovat.
+**Elektronická příloha bakalářské práce Jiřího Buršíka „Využití RTK systému pro telemetrii studentské formule“, Technická univerzita v Liberci.** Vydání z 24. listopadu 2026 spojuje zdrojový kód palubního GNSS loggeru, postup jeho sestavení a výsledky, které lze reprodukovat.
 
 | Chci… | Kde začít |
 |---|---|

@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "Pro citaci elektronické přílohy použijte toto vydání a identifikátor jeho revize Git."
+type: software
+title: "Telemetrie studentské formule: zdrojové kódy, technická dokumentace a protokol ověření"
+authors:
+  - family-names: "Buršík"
+    given-names: "Jiří"
+version: "bp-2026-11-24"
+date-released: 2026-11-24
+repository-code: "https://github.com/Jirkas-prog/formula-telemetrie"
+url: "https://github.com/Jirkas-prog/formula-telemetrie/releases/tag/bp-2026-11-24"
+abstract: "Elektronická příloha bakalářské práce na Technické univerzitě v Liberci. Kód a dokumentace GNSS loggeru, PPK, stacionárních měření a samostatného inerciálního experimentu. Převzaté části a použití generativní AI popisuje registr docs/zdroje.md."

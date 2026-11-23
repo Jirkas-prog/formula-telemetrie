@@ -1,0 +1,10 @@
+[Unit]
+Description=Check the Formula fallback hotspot for known Wi-Fi networks
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=2min
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

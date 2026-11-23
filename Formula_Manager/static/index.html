@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#12171b"><meta name="color-scheme" content="dark">
+<title>Formula · Telemetrie</title>
+<link rel="icon" href="/static/mark.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/vendor/leaflet.css"><link rel="stylesheet" href="/static/app.css">
+<script defer src="/static/vendor/leaflet.js"></script><script defer src="/static/app.js"></script>
+<script defer src="/static/gps.js"></script>
+<script defer src="/static/overview.js"></script>
+<script defer src="/static/pi-overview.js"></script>
+<link rel="stylesheet" href="/static/tools.css">
+<script defer src="/static/accuracy.js"></script>
+<script defer src="/static/operations.js"></script>
+<script defer src="/static/ppk.js"></script>
+<script defer src="/static/network-drive.js"></script>
+<script defer src="/static/wifi.js"></script>
+</head>
+<body>
+<div id="auth" class="login-screen">
+  <div class="login-card">
+    <div class="brand"><img src="/static/mark.svg" alt=""><div>FORMULA<span>TELEMETRIE</span></div></div>
+    <div class="login-stripe"></div><h1>Přihlášení k loggeru</h1>
+    <form id="login-form"><label>Uživatel<input name="username" autocomplete="username" value="formula69" required></label><label>Heslo<input name="password" type="password" autocomplete="current-password" required></label><p id="login-error" role="alert"></p><button class="primary" type="submit">Přihlásit se <i data-icon="arrow"></i></button></form>
+  </div>
+</div>
+<div id="app" hidden>
+<aside>
+  <div class="brand"><img src="/static/mark.svg" alt=""><div>FORMULA<span>TELEMETRIE</span></div></div>
+  <nav aria-label="Hlavní nabídka">
+    <button class="nav active" data-page="live" aria-current="page"><i data-icon="pulse"></i><span>Živý přehled</span></button>
+    <button class="nav" data-page="history"><i data-icon="archive"></i><span>Záznamy jízd</span></button>
+    <button class="nav" data-page="startup"><i data-icon="power"></i><span>Záznam po spuštění</span></button>
+    <button class="nav" data-page="gps"><i data-icon="sat"></i><span>GPS diagnostika</span></button>
+    <button class="nav" data-page="accuracy"><i data-icon="target"></i><span>Přesnost</span></button>
+    <button class="nav" data-page="export"><i data-icon="usb"></i><span>Export na USB</span></button>
+    <button class="nav" data-page="files"><i data-icon="archive"></i><span>Soubory</span></button>
+    <button class="nav" data-page="drive"><i data-icon="network"></i><span>Síťový disk</span></button>
+    <button class="nav" data-page="ppk"><i data-icon="target"></i><span>Výpočet PPK</span></button>
+    <button class="nav" data-page="hardware"><i data-icon="chip"></i><span>Hardware</span></button>
+    <button class="nav" data-page="settings"><i data-icon="sliders"></i><span>Nastavení</span></button>
+  </nav>
+  <div class="aside-end"><span class="host"><i data-icon="board"></i> Raspberry Pi 5</span><button id="logout" class="quiet"><i data-icon="logout"></i> Odhlásit se</button></div>
+</aside>
+<main>
+<header><div class="crumb">TELEMETRIE <span>/</span> <b id="breadcrumb">PŘEHLED</b></div><span id="connection" class="chip"><em></em> Připojování</span></header>
+<div id="banner" role="alert" class="alert" hidden></div>
+<section id="page-live">
+  <div class="page-title"><div><h1>Živý přehled</h1><p>GNSS přijímač a průběh měření</p></div><button type="button" id="record" class="primary"><i data-icon="record"></i><span>Spustit záznam</span></button></div>
+  <div class="metrics">
+    <article><div class="metric-label"><i data-icon="antenna"></i>Přijímač</div><b id="receiver-state">—</b><small id="receiver-detail">Čekání na spojení</small></article>
+    <article><div class="metric-label"><i data-icon="target"></i>Řešení polohy</div><b id="fix-state">—</b><small id="fix-detail">Bez dostupných dat</small></article>
+    <article><div class="metric-label"><i data-icon="sat"></i>Satelity</div><b id="satellites">—</b><small>Použité ve výpočtu</small></article>
+    <article><div class="metric-label"><i data-icon="speed"></i>Rychlost</div><b><span id="speed">—</span> <span class="unit">km/h</span></b><small>Vodorovná rychlost</small></article>
+  </div>
+  <div class="board">
+    <article class="panel"><div class="panel-head"><h2>Poloha a trasa</h2><button class="quiet" id="center"><i data-icon="target"></i> Vycentrovat</button></div>
+      <div class="map-shell"><div id="live-map" class="map" aria-label="Mapa živé polohy"></div><div id="live-map-message" class="map-label"></div></div>
+      <div class="panel-foot"><span class="legend"><em></em><span id="track-label">Živá poloha</span></span><label class="inline"><input type="checkbox" class="tiles-switch"> Podklad OSM</label></div>
+    </article>
+    <article class="panel recording-panel"><div class="panel-head"><h2>Záznam jízdy</h2><i data-icon="drive"></i></div>
+      <div class="record-body"><div class="record-indicator" id="record-state"><em></em> Zjišťování stavu</div><b id="session-name">—</b>
+      <dl><div><dt>Doba záznamu</dt><dd id="duration">—</dd></div><div><dt>Uložené vzorky</dt><dd id="samples">—</dd></div><div><dt>Interval zápisu</dt><dd id="commit">—</dd></div><div><dt>Volné místo</dt><dd id="free">—</dd></div></dl>
+      </div><button class="panel-link" data-goto="history">Otevřít záznamy <i data-icon="arrow"></i></button>
+    </article>
+  </div>
+  <article class="panel chart-panel"><div class="panel-head"><h2>Průběh měření</h2><label class="metric-select"><span class="sr">Veličina živého grafu</span><select id="live-channel"></select></label></div><div id="live-chart" class="chart"></div><div class="panel-foot"><span id="live-chart-caption">Živé vzorky</span><span id="last-sample">—</span></div></article>
+</section>
+<section id="page-history" hidden><div class="page-title"><div><h1>Záznamy jízd</h1><p>Uložené relace, trasy a export dat</p></div><button id="refresh-history" class="secondary"><i data-icon="refresh"></i> Obnovit</button></div>
+  <article class="panel"><div class="panel-head"><h2>Jízdy v databázi</h2><small id="db-size"></small></div><div id="sessions"></div></article>
+  <div id="session-detail" hidden><div class="section-title"><div><h2 id="detail-name">Detail jízdy</h2><p id="detail-meta"></p></div><div class="actions"><a class="secondary" id="csv" download>CSV <i data-icon="download"></i></a><a class="secondary" id="raw" download>SBF <i data-icon="download"></i></a><button type="button" id="rename-session" class="quiet">Přejmenovat</button><button type="button" id="delete-session" class="quiet bad">Smazat jízdu</button></div></div>
+  <article class="panel"><div class="panel-head"><h2>Trasa jízdy</h2><label class="inline"><input type="checkbox" class="tiles-switch"> Podklad OSM</label></div><div class="map-shell"><div id="history-map" class="map" aria-label="Mapa archivované jízdy"></div><div id="history-map-message" class="map-label"></div></div></article>
+  <article class="panel chart-panel"><div class="panel-head"><h2>Graf jízdy</h2><label class="metric-select"><span class="sr">Veličina grafu jízdy</span><select id="history-channel"></select></label></div><div class="chart" id="history-chart"></div><div class="panel-foot"><span id="point-count"></span></div></article></div>
+</section>
+<section id="page-gps" hidden>
+  <div class="page-title"><div><h1>GPS diagnostika</h1><p>Septentrio mosaic-X5 · data a konfigurace přijímače</p></div><a class="primary gps-web" target="_blank" rel="noopener" hidden>Otevřít web GPS <i data-icon="external"></i></a></div>
+  <nav class="gps-views" aria-label="Zobrazení GPS diagnostiky">
+    <button type="button" aria-pressed="true" aria-controls="gps-overview" id="show-overview"><i data-icon="pulse"></i>Přehled přijímače</button>
+    <button type="button" aria-pressed="false" aria-controls="gps-technical" id="show-technical"><i data-icon="sliders"></i>Data a konfigurace</button>
+  </nav>
+  <div id="gps-overview">
+    <p id="ov-notice" class="alert" role="status" hidden></p>
+    <article class="panel ov-summary">
+      <section><h2><i data-icon="board"></i>Přijímač</h2><dl id="ov-receiver"></dl></section>
+      <section><h2><i data-icon="target"></i>Poloha</h2><dl id="ov-position"></dl></section>
+      <section><h2><i data-icon="pulse"></i>Stav</h2><dl id="ov-status"></dl></section>
+      <div id="ov-flags" class="ov-flags"></div>
+    </article>
+    <article class="panel"><div class="panel-head"><h2>Indikátory kvality</h2><small>Stupnice 0–10</small></div><div id="ov-quality" class="ov-quality"></div></article>
+    <article class="panel"><div class="panel-head"><h2>Družice GNSS</h2><small>Hlavní anténa</small></div><div id="ov-sky"></div></article>
+    <div class="ov-pair">
+      <article class="panel"><div class="panel-head"><h2>NTRIP</h2><i data-icon="antenna"></i></div><div id="ov-ntrip" class="ov-link"></div></article>
+      <article class="panel"><div class="panel-head"><h2>Ethernet</h2><i data-icon="network"></i></div><div id="ov-ethernet" class="ov-link"></div></article>
+    </div>
+    <article class="panel"><div class="panel-head"><h2>Datové toky</h2><small>Výstupy přijímače</small></div><div id="ov-streams"></div></article>
+    <div class="ov-pair">
+      <article class="panel"><div class="panel-head"><h2>Záznam na interní disk</h2><i data-icon="drive"></i></div><div id="ov-disk" class="ov-instrument"></div></article>
+      <article class="panel"><div class="panel-head"><h2>Vytížení CPU</h2><small>Posledních 60 s</small></div><div id="ov-cpu" class="ov-instrument"></div></article>
+    </div>
+  </div>
+  <div id="gps-technical" hidden>
+  <div class="metrics">
+    <article><div class="metric-label"><i data-icon="antenna"></i>USB přijímač</div><b id="gps-connected">—</b><small id="gps-bytes"></small></article>
+    <article><div class="metric-label"><i data-icon="target"></i>Řešení polohy</div><b id="gps-fix">—</b><small id="gps-age"></small></article>
+    <article><div class="metric-label"><i data-icon="sat"></i>Použité družice</div><b id="gps-sats">—</b><small id="gps-time"></small></article>
+    <article><div class="metric-label"><i data-icon="pulse"></i>RTCM do USB</div><b id="gps-rtcm">—</b><small id="gps-rtcm-age"></small></article>
+  </div>
+  <div class="gps-columns">
+    <article class="panel"><div class="panel-head"><h2>Data z přijímače</h2><i data-icon="pulse"></i></div>
+      <div class="gps-body"><label>Blok SBF<select id="gps-block"></select></label>
+      <div class="actions"><button type="button" class="secondary" id="gps-snapshot">Načíst diagnostické bloky</button><label class="inline"><input type="checkbox" id="gps-freeze"> Pozastavit náhled</label></div>
+      <small id="gps-snapshot-state" role="status"></small>
+      <div id="gps-report" hidden>
+        <div class="frame-heading"><span id="frame-icon" aria-hidden="true"></span><div><h3 id="frame-title"></h3><p id="frame-description"></p></div></div>
+        <dl id="frame-metrics"></dl>
+      </div>
+      <div id="gps-block-state" class="frame-meta"></div>
+      <details id="frame-technical" class="frame-disclosure" hidden><summary>Technická pole <span id="frame-field-count"></span></summary>
+        <label class="frame-search"><span class="sr">Hledat v technických polích</span><input id="frame-filter" type="search" placeholder="Hledat pole, např. Latitude" autocomplete="off"></label>
+        <div class="gps-scroll"><dl id="gps-fields"></dl></div>
+      </details>
+      <details id="frame-binary" class="frame-disclosure" hidden><summary>Surový rámec <span>HEX</span></summary><pre id="gps-hex"></pre></details></div>
+    </article>
+    <article class="panel"><div class="panel-head"><h2>Konfigurace GPS</h2><i data-icon="sliders"></i></div>
+      <div class="gps-body"><label>Vyhledat parametr<input id="gps-search" type="search" placeholder="Např. anténa, tracking, SBF"></label>
+      <label>Parametr přijímače<select id="gps-param"></select></label>
+      <div class="actions"><button class="secondary" id="gps-read">Přečíst hodnotu</button><button class="quiet" id="gps-help">Syntaxe</button></div>
+      <pre id="gps-answer" role="status"></pre>
+      <form id="gps-write" hidden><label>Nové argumenty příkazu<input id="gps-args" required maxlength="200" autocomplete="off"></label>
+      <button class="secondary" type="submit">Použít v přijímači</button></form>
+      <small id="gps-param-note"></small>
+      <a class="secondary gps-web" target="_blank" rel="noopener" hidden>Úplná správa ve webu GPS <i data-icon="external"></i></a></div>
+    </article>
+  </div>
+  <article class="panel gps-inventory"><div class="panel-head"><h2>Provoz na USB2</h2><small>Od připojení přijímače</small></div>
+    <div class="gps-scroll"><table><thead><tr><th>Blok SBF</th><th>ID</th><th>Přijato</th><th>Poslední příjem</th></tr></thead><tbody id="gps-inventory"></tbody></table></div>
+  </article>
+  </div>
+</section>
+<section id="page-accuracy" class="tools-page" hidden>
+<div class="page-title"><div><h1>Přesnost</h1><p>Stacionární měření a návraty antény na stejnou značku</p></div><button class="secondary" id="acc-new">Nové místo</button></div>
+<article class="panel"><div class="tool-body"><div class="tool-controls"><label>Měřicí místo<select id="acc-mark"></select></label><button class="quiet" id="acc-edit">Upravit místo</button></div><p id="acc-place-note"></p><small id="acc-coords"></small>
+<div class="tool-controls"><label>Interval vzorků (s)<input id="acc-step" type="number" min="1" max="86400" step="1" value="1"></label><button class="primary" id="acc-start">Spustit stacionární test</button><button class="secondary" id="acc-stop" hidden>Zastavit</button><button class="quiet" id="acc-reset" hidden>Vynulovat a začít znovu</button></div>
+<p id="acc-status" role="status"></p></div></article>
+<div class="tool-split"><article class="panel"><div class="panel-head"><h2>Odchylky polohy</h2><small id="acc-plot-id"></small></div><div class="polar" id="acc-plot"></div><div class="panel-foot"><small id="acc-plot-note"></small></div></article>
+<article class="panel"><div class="panel-head"><h2>Výsledek testu</h2><i data-icon="target"></i></div><div class="tool-body"><dl id="acc-stats" class="tool-stats"></dl><small>Poloměr je vodorovná vzdálenost od těžiště všech platných vzorků. Sever je nahoře, východ vpravo.</small></div></article></div>
+<article class="panel"><div class="panel-head"><h2>Opakovatelnost na místě</h2><small id="acc-baseline"></small></div><div class="tool-table" id="acc-history"></div><div class="panel-foot tool-controls"><button class="quiet" id="acc-prev">Novější testy</button><small id="acc-page"></small><button class="quiet" id="acc-next">Starší testy</button></div></article>
+</section>
+<section id="page-export" class="tools-page" hidden>
+<div class="page-title"><div><h1>Export na USB</h1><p>Ukončené jízdy a stacionární testy</p></div><button id="usb-refresh" class="secondary">Obnovit jednotky</button></div>
+<article class="panel"><div class="panel-head"><h2>Cílová jednotka</h2><i data-icon="usb"></i></div><div class="tool-body"><div class="tool-controls"><label>Umístění<select id="usb-target"></select></label><button id="usb-mount" class="secondary" hidden>Připojit</button><button id="usb-unmount" class="secondary" hidden>Bezpečně odpojit</button></div><small id="usb-state"></small></div></article>
+<article class="panel"><div class="panel-head"><h2>Data k exportu</h2></div><div class="tool-body"><div class="tool-controls"><label class="tick"><input type="checkbox" id="exp-rides" checked>Jízdy · CSV a SBF</label><label class="tick"><input type="checkbox" id="exp-tests" checked>Testy přesnosti · CSV</label></div>
+<div class="tool-controls"><label>Výběr<select id="exp-scope"><option value="selected">Ručně vybrané</option><option value="all">Všechny záznamy</option><option value="new">Dosud neexportované na tuto jednotku</option><option value="latest">Nejnovějších N záznamů</option><option value="days">Za posledních X dní</option></select></label><label id="exp-amount-row" hidden><span id="exp-amount-label"></span><input type="number" id="exp-amount" min="1" max="1000000" value="7"></label></div>
+<div id="exp-items" class="export-items"></div><div class="tool-controls"><button class="primary" id="exp-go">Spustit export</button><span id="exp-count"></span></div></div></article>
+<article class="panel"><div class="panel-head"><h2>Průběh exportu</h2><i data-icon="download"></i></div><div class="tool-body"><p id="exp-job" role="status"></p><progress id="exp-progress" hidden></progress><button class="quiet" id="exp-open" hidden>Otevřít složku v průzkumníku</button></div></article>
+</section>
+<section id="page-files" class="tools-page" hidden><div class="page-title"><div><h1>Soubory</h1><p>Průzkumník exportů na NVMe a souborů na USB</p></div><button id="files-refresh" class="secondary">Obnovit</button></div>
+<article class="panel"><div class="tool-body"><div class="tool-controls"><label>Jednotka<select id="files-target"></select></label><button id="files-mount" class="secondary" hidden>Připojit</button><button id="files-up" class="secondary">O úroveň výš</button></div><strong id="files-path"></strong></div><div class="tool-table" id="files-list"></div><div class="panel-foot tool-controls"><button class="quiet" id="files-prev">Předchozí</button><small id="files-count"></small><button class="quiet" id="files-next">Další</button></div></article></section>
+<section id="page-hardware" class="tools-page" hidden><div class="page-title"><div><h1>Hardware</h1><p>Raspberry Pi 5 · záznam na NVMe každých 5 s</p></div>
+<div class="tool-controls"><label>Období<select id="hw-period"><option value="5">5 minut</option><option value="15">15 minut</option><option value="30" selected>30 minut</option></select></label>
+<label>Konec období<input type="datetime-local" id="hw-end"></label><button class="secondary" id="hw-live" disabled>Zpět na živá data</button></div></div>
+<p id="hw-error" class="alert" role="status" hidden></p>
+<div id="hw-charts" class="hw-charts"></div><small id="hw-stamp"></small></section>
+<section id="page-drive" class="tools-page" hidden>
+  <div class="page-title"><div><h1>Síťový disk</h1><p>Připojení ke složce pro měření PPK na NVMe</p></div><button id="drive-refresh" class="secondary">Obnovit adresy</button></div>
+  <article class="panel"><div class="panel-head"><h2>Připojení a přihlášení</h2><i data-icon="network"></i></div>
+    <div class="tool-body"><div class="tool-controls"><label>Připojení<select id="drive-network"><option value="local">Místní Wi-Fi · jméno Pi</option><option value="wifi_ip" disabled>Místní Wi-Fi · IP adresa</option><option value="tailscale" disabled>Vzdáleně přes Tailscale</option></select></label>
+    <label>Uživatel<input id="drive-user" readonly></label>
+    <label>Heslo k síťovému disku<input id="drive-password" type="text" placeholder="••••••••" readonly autocomplete="off" spellcheck="false"></label></div>
+    <div class="tool-controls"><button class="secondary" id="drive-reveal" type="button" disabled>Zobrazit heslo</button><button class="quiet" id="drive-copy" type="button" hidden>Kopírovat heslo</button></div>
+    <p id="drive-note" role="status"></p></div>
+  </article>
+  <div class="tool-split">
+    <article class="panel"><div class="panel-head"><h2>Windows</h2></div><div class="tool-body">
+      <ol><li>Otevři Průzkumníka a vyber <strong>Tento počítač → Připojit síťovou jednotku</strong>. Ve Windows 11 je příkaz v nabídce tří teček.</li>
+      <li>Vyber volné písmeno, například <strong>P:</strong>. Do pole <strong>Složka</strong> vlož tuto adresu.<code id="drive-unc"></code></li>
+      <li>Pro příští spuštění zaškrtni <strong>Znovu připojit při přihlášení</strong>. Zvol <strong>Připojit pomocí jiných přihlašovacích údajů</strong> a zadej účet a heslo uvedené nahoře.</li></ol>
+      <details><summary>Připojení v PowerShellu</summary><p>Spusť jako běžný uživatel. Hvězdička vyvolá výzvu k zadání hesla.</p><code id="drive-win-cmd"></code></details>
+    </div></article>
+    <article class="panel"><div class="panel-head"><h2>Linux</h2></div><div class="tool-body">
+      <ol><li>V aplikaci <strong>Soubory</strong> (GNOME) nebo <strong>Dolphin</strong> (KDE) stiskni <kbd>Ctrl + L</kbd>.</li>
+      <li>Vlož tuto adresu a stiskni Enter.<code id="drive-uri"></code></li>
+      <li>Vyber přihlášení jako <strong>registrovaný uživatel</strong>. Zadej účet a heslo uvedené nahoře. Otevřenou složku můžeš přidat do záložek.</li></ol>
+      <details><summary>Připojení v terminálu</summary><p>Na Debianu nebo Ubuntu nainstaluj nástroj CIFS a připoj disk. Příkaz mount si vyžádá heslo Samby.</p><code id="drive-linux-cmd"></code><p>Odpojení disku</p><code>sudo umount /mnt/formula-ppk</code></details>
+    </div></article>
+  </div>
+  <p>Po zkopírování měření otevři <button class="quiet" data-goto="ppk">Výpočet PPK</button> a soubor importuj do databáze.</p>
+</section>
+<section id="page-ppk" class="tools-page" hidden>
+<div class="page-title"><div><h1>Výpočet PPK</h1><p>Dodatečný výpočet polohy roveru vůči stacionární základně</p></div><button class="secondary" id="ppk-files">Import ze Samby nebo USB</button></div>
+<article class="panel"><div class="panel-head"><h2>Nový výpočet</h2></div><form id="ppk-form" class="tool-body">
+<div class="tool-controls"><label>Rover nebo jízda<select id="ppk-rover" required></select></label><label>Stacionární základna<select id="ppk-base" required></select></label>
+<label>Navigační RINEX · volitelné<select id="ppk-nav" multiple size="3"></select></label></div>
+<div class="tool-controls"><label>Referenční souřadnice základny<select id="ppk-ref"><option value="manual">Zaměřená poloha antény</option><option value="header">Použít APPROX POSITION XYZ z hlavičky základny</option></select></label>
+<label id="ppk-date-row" hidden>Datum záznamu RTCM3<input id="ppk-date" type="date"></label></div>
+<div class="tool-controls" id="ppk-llh"><label>Šířka (°)<input id="ppk-lat" type="number" min="-90" max="90" step="any"></label><label>Délka (°)<input id="ppk-lon" type="number" min="-180" max="180" step="any"></label><label>Elipsoidická výška (m)<input id="ppk-height" type="number" min="-1000" max="20000" step="any"></label></div>
+<p id="ppk-ref-note"></p><button class="primary" id="ppk-start">Spočítat souřadnice</button></form></article>
+<article class="panel"><div class="panel-head"><h2>Importy a výpočty</h2></div><div id="ppk-jobs" class="tool-table"></div></article>
+<article class="panel"><div class="panel-head"><h2>Souřadnice po epochách</h2><a class="secondary" id="ppk-csv" hidden>Stáhnout CSV</a></div><div class="tool-body"><label>Uložený výpočet<select id="ppk-result"></select></label><p id="ppk-summary"></p><div id="ppk-table" class="tool-table"></div><div class="tool-controls"><button class="secondary" id="ppk-prev">Předchozí</button><small id="ppk-page"></small><button class="secondary" id="ppk-next">Další</button></div></div></article>
+</section>
+<section id="page-startup" hidden>
+<div class="page-title"><div><h1>Záznam po spuštění</h1><p>Profil pro příští zapnutí Raspberry Pi</p></div></div>
+<article class="panel settings-panel"><div class="panel-head"><h2>Automatický start</h2><span class="chip" id="startup-state"></span></div>
+<form id="startup-form">
+<label class="setting"><span><strong>Spustit záznam po zapnutí Raspberry Pi</strong><small>Jakmile se připojí GNSS přijímač, začne nová jízda. Logger může začít i bez Wi-Fi a bez určené polohy.</small></span><input type="checkbox" name="autostart"></label>
+<label class="setting"><span><strong>Frekvence polohy</strong><small>Kolik polohových zpráv za sekundu má přijímač posílat.</small></span><select name="rate_hz"></select></label>
+<label class="setting"><span><strong>Interval zápisu na NVMe</strong><small>Jak často se dávka vzorků potvrdí v databázi.</small></span><select name="commit_ms"></select></label>
+<label class="setting"><span><strong>RAW měření pro PPK</strong><small>Do SBF uloží družicová měření a dostupné efemeridy pro pozdější výpočet přesné trasy.</small></span><input type="checkbox" name="raw_observations"></label>
+<div class="settings-actions"><span id="startup-note" role="status"></span><button class="primary">Uložit profil</button></div></form></article>
+</section>
+<section id="page-settings" hidden><div class="page-title"><div><h1>Nastavení</h1><p>Příjem dat, úložiště a provoz Raspberry Pi</p></div></div>
+<article class="panel settings-panel" id="wifi-panel"><div class="panel-head"><h2>Wi-Fi připojení</h2><button class="quiet" id="wifi-refresh" type="button">Obnovit</button></div>
+<div class="tool-body"><p>První dostupný profil má přednost při připojování. Pořadí změníš přetažením nebo šipkami.</p>
+<ol id="wifi-list" aria-label="Priorita Wi-Fi profilů"></ol>
+<p id="eduroam-test-result" role="status" hidden></p>
+<div class="actions"><button type="button" class="secondary" id="wifi-add">Přidat profil</button></div>
+<form id="wifi-form" hidden>
+<div class="tool-controls"><label>Typ připojení<select name="kind"><option value="eduroam">eduroam · účet TUL</option><option value="personal">Osobní Wi-Fi · WPA2</option><option value="sae">Osobní Wi-Fi · WPA3</option><option value="open">Otevřená Wi-Fi</option><option value="ap">Vlastní hotspot formula69</option></select></label>
+<label id="wifi-ssid-row">Název sítě (SSID)<input name="ssid" maxlength="32" autocomplete="off"></label>
+<label id="wifi-identity-row">Školní účet TUL<input name="identity" type="email" placeholder="jmeno.prijmeni@tul.cz" autocomplete="off"></label>
+<label id="wifi-password-row"><span id="wifi-password-label">Heslo</span><input name="password" type="password" autocomplete="new-password"></label></div>
+<p id="wifi-eduroam-help">Použij heslo TUL pro vzdálený přístup. Pi ověří certifikát přihlašovacího serveru univerzity.</p>
+<div class="actions"><button class="primary" type="submit">Uložit profil</button><button class="quiet" type="button" id="wifi-cancel">Zrušit</button></div></form>
+<p id="wifi-note" role="status"></p></div></article>
+<article class="panel settings-panel" id="receiver-card"><div class="panel-head"><h2>Záloha na microSD přijímače</h2><i data-icon="drive"></i></div>
+<div class="settings-inner"><p id="sd-status" role="status">Čekání na stav DSK1.</p>
+<p>V části <strong>NMEA/SBF Logging Streams</strong> vyber zprávy a interval pro DSK1. Pro PPK zvol měřicí a navigační bloky SBF. Zápis ovládá <strong>Enable Logging</strong>.</p>
+<div class="actions"><button type="button" class="primary" id="sd-open" aria-expanded="false" aria-controls="sd-editor" disabled>Nastavit obsah záznamu</button><a id="sd-window" class="quiet" target="_blank" rel="noopener" hidden>Otevřít samostatně ↗</a></div></div>
+<div id="sd-editor" hidden></div></article>
+<article class="panel settings-panel"><div class="panel-head"><h2>Ručně spuštěný záznam</h2><i data-icon="sliders"></i></div><form id="settings-form">
+<label class="setting"><span><strong>Frekvence polohy</strong><small>Počet polohových zpráv z přijímače za sekundu.</small></span><select name="rate_hz"></select></label>
+<label class="setting"><span><strong>Interval zápisu</strong><small>Po této době logger potvrdí dávku vzorků v databázi.</small></span><select name="commit_ms"></select></label>
+<label class="setting"><span><strong>RAW měření pro PPK</strong><small>Uloží do SBF družicová měření a dostupné efemeridy. Pro výpočet potřebuješ také souběžný záznam základny.</small></span><input type="checkbox" name="raw_observations"></label>
+<div class="settings-actions"><span id="settings-note" role="status"></span><button class="primary">Uložit nastavení</button></div></form></article>
+<article class="panel settings-panel"><div class="panel-head"><h2>RTK korekce</h2><i data-icon="antenna"></i></div><form id="rtk-form">
+<label class="setting"><span><strong>Zdroj RTCM 3</strong><small>Raspberry předá přijaté korekce přes USB do mosaic-X5.</small></span><select name="source"><option value="off">Vypnuto</option><option value="tcp">Základna přes TCP</option><option value="serial">Sériové USB rádio</option></select></label>
+<label class="setting" data-rtk="tcp"><span><strong>IPv4 základny</strong><small>Server poskytující binární proud RTCM 3.</small></span><input name="host" placeholder="192.168.1.20" maxlength="15"></label>
+<label class="setting" data-rtk="tcp"><strong>TCP port základny</strong><input type="number" name="port" min="1" max="65535"></label>
+<label class="setting" data-rtk="serial"><span><strong>USB rádio</strong><small>Připoj rádio s transparentním sériovým výstupem RTCM.</small></span><select name="radio"></select></label>
+<label class="setting" data-rtk="serial"><strong>Rychlost rádia (Bd)</strong><select name="baud"><option>9600</option><option>19200</option><option>38400</option><option>57600</option><option>115200</option><option>230400</option><option>460800</option></select></label>
+<label class="setting" data-rtk="on"><span><strong>Předávat kopii do pitu</strong><small>Každou platnou zprávu odešle také jako jeden UDP datagram.</small></span><input type="checkbox" name="relay"></label>
+<label class="setting" data-rtk="relay"><strong>IPv4 příjemce v pitu</strong><input name="relay_host" maxlength="15" placeholder="192.168.1.30"></label>
+<label class="setting" data-rtk="relay"><strong>UDP port v pitu</strong><input name="relay_port" type="number" min="1" max="65535"></label>
+<div class="settings-actions"><span id="rtk-note" role="status"></span><button class="primary">Uložit RTK</button></div></form>
+<div class="settings-inner"><dl><div><dt>Zdroj korekcí</dt><dd id="rtk-state">—</dd></div><div><dt>Poslední zpráva</dt><dd id="rtk-age">—</dd></div><div><dt>Přijato / do USB / do pitu</dt><dd id="rtk-count">—</dd></div><div><dt>Chyby CRC korekcí</dt><dd id="rtk-crc">—</dd></div></dl><p id="rtk-error"></p></div></article>
+<article class="panel settings-panel"><div class="panel-head"><h2>Přijímač</h2><i data-icon="antenna"></i></div><div class="settings-inner"><dl><div><dt>Zařízení</dt><dd id="device-name">—</dd></div><div><dt>Přijato přes USB</dt><dd id="rx">—</dd></div><div><dt>Chyby CRC</dt><dd id="crc">—</dd></div></dl><div id="receiver-link-row" hidden><a id="receiver-link" class="secondary" target="_blank" rel="noopener">Rozhraní přijímače <i data-icon="external"></i></a></div><p id="device-error"></p></div></article></section>
+<div id="pi-overview" class="pi-overview" hidden>
+  <article class="panel"><div class="panel-head"><h2>Datové toky Raspberry Pi</h2><small id="pi-flow-stamp"></small></div><div id="pi-streams"></div></article>
+  <div class="ov-pair">
+    <article class="panel"><div class="panel-head"><h2>Úložiště NVMe</h2><i data-icon="drive"></i></div><div id="pi-disk" class="ov-instrument"></div></article>
+    <article class="panel"><div class="panel-head"><h2>Vytížení CPU Raspberry Pi</h2><small>Posledních 60 s</small></div><div id="pi-cpu" class="ov-instrument"></div></article>
+  </div>
+</div></main></div>
+<dialog id="start-dialog"><form id="start-form"><h2>Nový záznam jízdy</h2><label>Název jízdy<input name="name" maxlength="80" required placeholder="Např. Test na okruhu"></label><div class="actions"><button type="button" id="cancel" class="secondary">Zrušit</button><button class="primary" type="submit"><i data-icon="record"></i> Spustit záznam</button></div></form></dialog>
+<dialog id="rename-dialog"><form id="rename-form"><h2>Přejmenovat jízdu</h2><label>Název jízdy<input name="name" maxlength="120" required></label><div class="actions"><button type="button" data-close="rename-dialog" class="secondary">Zrušit</button><button class="primary" type="submit">Uložit název</button></div></form></dialog>
+<dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Smazat jízdu?</h2><p id="delete-warning"></p><div class="actions"><button type="button" data-close="delete-dialog" class="secondary" autofocus>Zrušit</button><button type="button" class="primary" id="confirm-delete">Smazat včetně dat</button></div></dialog>
+<dialog id="acc-dialog"><form id="acc-mark-form"><h2 id="acc-mark-title">Měřicí místo</h2><label>Název značky<input name="name" required maxlength="100" placeholder="Např. Střecha · bod A"></label><label>Popis fyzického umístění<textarea name="note" maxlength="1200" placeholder="Kam přesně položit střed antény a jak ji orientovat"></textarea></label><small>Známé souřadnice značky (WGS84, volitelné)</small><label>Zeměpisná šířka (°)<input name="lat" type="number" step="any" min="-90" max="90"></label><label>Zeměpisná délka (°)<input name="lon" type="number" step="any" min="-180" max="180"></label><div class="actions"><button type="button" class="secondary" data-close="acc-dialog">Zrušit</button><button class="primary">Uložit místo</button></div></form></dialog>
+</body></html>

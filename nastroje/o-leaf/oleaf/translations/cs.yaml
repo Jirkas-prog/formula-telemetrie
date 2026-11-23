@@ -1,0 +1,14 @@
+configuration:
+  projects_directory:
+    name: Výchozí složka projektů
+    description: Složka v /media nebo /share. Vlastní volbu lze uložit také přímo v nastavení O-Leafu.
+  autosave_delay_ms:
+    name: Prodleva automatického ukládání
+    description: Čas v milisekundách od poslední změny do uložení souboru.
+  compilation_timeout_seconds:
+    name: Limit kompilace
+    description: Nejdelší povolená doba jedné kompilace v sekundách.
+  max_upload_mb:
+    name: Maximální velikost importu
+    description: Největší povolený ZIP projektu nebo pluginu v MB.
+

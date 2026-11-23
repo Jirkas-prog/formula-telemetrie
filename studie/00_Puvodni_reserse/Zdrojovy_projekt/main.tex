@@ -1,0 +1,37 @@
+% !TeX program = xelatex
+% Semestralni prace; sazba TUL 2.3.
+\PassOptionsToPackage{localfonts}{tul}
+\documentclass[FM,SP,twoside]{tulthesis}
+\input{settings}
+
+\TULtitle
+  {Návrh RTK GNSS/IMU systému pro závodní vozidlo Formula Student}
+  {Design of an RTK GNSS/IMU System for a Formula Student Race Car}
+\TULauthor{Jiří Buršík}
+\TULprogramme{B0714A270001}{Mechatronika}{Mechatronics}
+\TULbranch{}{Mechatronika}{Mechatronics}
+\TULsupervisor{doc. Ing. Josef Černohorský, Ph.D.}
+\TULyear{2026}
+
+\begin{document}
+
+% Rubove strany v uvodni casti zapocitat, ale netisknout na ne zapati.
+\begingroup
+\pagestyle{empty}
+\ThesisStart{male}
+\endgroup
+
+\input{frontmatter/abstracts}
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\input{frontmatter/decision-summary}
+\input{chapters/01-vyber-systemu}
+\input{chapters/02-realizace-a-overeni}
+\input{chapters/03-integrace-do-vozidla}
+
+\printbibliography[title={Použité zdroje}]
+
+\end{document}

@@ -1,0 +1,13 @@
+{
+  "number": 8,
+  "title": "Co přinese Docker a jak mu rozumět",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "25cc18e8940e58e2148f4c13ac71f579967e2ac9f96eff80b17764e6a9198767",
+  "sha256_audio": "3f2bfb746229db56025e079193b071b486b9ba1485a6cb9e02a96ec138427d98",
+  "duration_seconds": 153.336,
+  "word_count": 350,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

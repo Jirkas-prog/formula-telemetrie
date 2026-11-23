@@ -1,0 +1,13 @@
+{
+  "number": 1,
+  "title": "Co vlastně stavíš",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "b7f80fa75852ef565a87537baf5cece1ba7702eb19de31d510ab8eb64ba55206",
+  "sha256_audio": "e085119b232ea02c84c8b0febfa1ed28a91b4147cc739a6fdf7ade9121830e16",
+  "duration_seconds": 128.208,
+  "word_count": 311,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

@@ -1,0 +1,899 @@
+\chapter{Výběr RTK GNSS/IMU systému}
+\label{chap:vyber}
+
+\section{Vymezení problému a cíl rešerše}
+
+Cílem navrhovaného systému je rekonstruovat trojrozměrnou trajektorii vozidla
+Formula Student a současně zaznamenat jeho rychlou dynamiku. Výsledkem nemá být
+jen stopa vykreslená na mapě, ale měřicí záznam s dohledatelnou časovou osou,
+stavem RTK řešení, odhadem nejistoty a možností opakovaného zpracování. Systém
+proto musí souběžně vytvářet tři oddělené datové proudy:
+
+\begin{enumerate}
+  \item \textbf{surová data GNSS}: pseudovzdálenosti, nosné fáze, Dopplerův
+        posuv, navigační zprávy, přijaté korekce, čas přijímače a diagnostika;
+  \item \textbf{surová data IMU}: zrychlení, úhlové rychlosti, magnetické
+        pole, teplota, stavová slova, softwarové pořadí a podklady k časování;
+  \item \textbf{řešení v reálném čase}: poloha, rychlost, orientace,
+        kovariance, stav RTK a diagnostické příznaky fúze.
+\end{enumerate}
+
+První dva proudy představují primární měření. Třetí proud slouží během jízdy
+pro telemetrii a rychlé vyhodnocení. Po jízdě se surová data zpracují znovu,
+tentokrát bez omezení na kauzální algoritmus. Lze využít PPK, dopředný a zpětný
+průchod filtrem nebo vyhlazování celé trajektorie. Takové rozdělení chrání
+projekt před situací, kdy chyba v prvním filtru nenávratně znehodnotí měření.
+
+Při zpřesnění zadání jsem oddělil přesnost pohybu \textbf{vůči základnové
+stanici} od přesnosti umístění celé stopy na mapě. Rozhodující je pro mě
+první z nich. Trajektorii proto chci vyhodnocovat především v místním
+souřadném systému ENU (východ, sever, nahoru), navázaném na nehybnou
+základnu. Přibližné absolutní umístění na mapě mi pro první etapu postačuje.
+Neznamená to rezignaci na přesnost měření, ale omezení nákladů na přesné
+geodetické určení počátku soustavy.
+
+Rešerše porovnává veřejně dokumentované parametry dostupných komponent. Údaje
+v tabulkách pocházejí přednostně z dokumentace výrobců; stav trhu je vztažen k
+období 23.~až 30.~září~2026. Volby IMU, LoRa a antén i zdůvodnění
+základnové architektury jsou aktualizovány k 30.~září; data cenových
+podkladů jsou rozlišena v rozpočtu. Číselné parametry jsou podmíněny konfigurací, prostředím,
+firmwarem a licencí. Hodnoty z katalogu proto nejsou výsledkem kalibrace ani
+garancí přesnosti celé sestavy.
+
+\section{Proč nestačí samotné rychlé RTK GNSS}
+
+RTK využívá nosnou fázi a korekce z referenční stanice. Při správně určených
+celých nejednoznačnostech vzniká stav \emph{FIX}; při nevyřešených
+nejednoznačnostech přijímač pracuje ve stavu \emph{FLOAT}. Centimetrová
+přesnost uváděná výrobcem se vztahuje k vhodným podmínkám, kvalitní anténě,
+krátké základně, otevřenému horizontu a právě ke stavu FIX. Neplatí automaticky
+pro průjezd pod stromy, mezi budovami nebo v blízkosti uhlíkových a kovových
+částí vozidla.
+
+Vysoká výstupní frekvence rovněž neznamená, že každá poloha obsahuje stejně
+silnou novou informaci. Přijímač může v různých režimech rychle publikovat
+predikované řešení, zatímco nové surové observace nebo RTK aktualizace vznikají
+pomaleji. U každého výrobku je proto nutné rozlišovat:
+
+\begin{itemize}
+  \item frekvenci sledování a surových observací;
+  \item frekvenci výpočtu absolutní polohy;
+  \item frekvenci skutečného RTK řešení;
+  \item latenci a čas, ke kterému se publikovaná poloha vztahuje.
+\end{itemize}
+
+IMU naopak změří dynamiku s malou latencí a vysokou frekvencí, ale integrací
+jejího biasu vzniká rostoucí chyba rychlosti, polohy a orientace. GNSS a IMU se
+proto doplňují: GNSS dlouhodobě ukotvuje stav v souřadném systému základny
+s možností převodu do globálních souřadnic,
+zatímco IMU interpoluje pohyb mezi GNSS epochami a pomáhá překlenout krátké
+výpadky. Přesnost kombinace určuje nejen kvalita senzorů, ale především společný
+čas, kalibrace orientace a přesně změřená páka mezi fázovým středem antény a
+měřicím bodem IMU.
+
+\section{Návrhové požadavky}
+
+Požadavky v tabulce~\ref{tab:pozadavky} jsou navrženy pro výzkumný logger.
+Systém není v první etapě součástí bezpečnostní funkce vozidla a jeho chyba
+nesmí ovlivnit řízení, odpojovací smyčku ani jiné povinné systémy. Instalace
+však musí splnit aktuální pravidla konkrétního závodu. Pravidla Formula Student
+Germany 2026 požadují dobrou inženýrskou praxi a u autonomního vozidla také
+dokumentaci použitých percepčních senzorů a jejich souladu s místní
+legislativou.
+\cite{fsg-rules-2026}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Návrhové požadavky na roverový měřicí systém}
+  \label{tab:pozadavky}
+  \begin{tabularx}{\textwidth}{@{}L{0.29\textwidth}L{0.30\textwidth}Y@{}}
+    \toprule
+    Vlastnost & Minimální akceptovatelná hodnota & Cílová hodnota \\
+    \midrule
+    Relativní RTK poloha vůči základně, FIX
+      & vodorovně do \SI{2}{cm}, svisle do \SI{3}{cm}
+      & ověřená trajektorie s kovariancí a příznakem kvality \\
+    GNSS observace / RTK řešení
+      & \SI{20}{Hz} / \SI{20}{Hz}
+      & \SI{100}{Hz} / alespoň \SI{50}{Hz} \\
+    Navigační IMU
+      & nejméně \SI{400}{Hz}, \SI{\pm8}{g}, \SI{\pm1000}{\degree\per\second}
+      & nominálně \SI{562.5}{Hz}, \SI{\pm16}{g}, \SI{\pm2000}{\degree\per\second} \\
+    Časová vazba
+      & GNSS PPS, události GPIO a odhad nejistoty času
+      & experimentálně ověřená chyba epoch; pracovní cíl pod \SI{100}{\micro\second} \\
+    Fúzovaný výstup
+      & \SI{100}{Hz}
+      & \SIrange{200}{500}{Hz} včetně orientace a kovariance \\
+    Záznam
+      & tři oddělené binární proudy
+      & kontrolní součty, metadata, konfigurace a události \\
+    Odolnost
+      & bez ztráty dat při výpadku korekcí
+      & bezpečné ukončení při poklesu napájení a automatické zotavení \\
+    Provozní teplota sestavy
+      & \SIrange{0}{60}{\degreeCelsius}
+      & návrh a ověření nejméně pro \SIrange{-10}{70}{\degreeCelsius} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Hodnoty přesnosti v tabulce jsou pracovní cíle pro místní trajektorii,
+nikoli garance absolutní polohy na mapě. Splnění posoudím porovnáním
+s nezávislou referencí a uvedu podmínky i statistiku chyby; samotný příznak
+FIX ani kovariance přijímače takový důkaz nepředstavují.
+
+Podle upřesněného zadání aktivuje ochrana nárazu vozidla vypnutí přibližně při
+\SI{3}{g}. Rozsah \SI{\pm16}{g} proto považuji za přiměřený první návrh.
+Práh ochrany však není horní mez okamžitého zrychlení v místě IMU. Lokální vibrace a mechanický ráz v místě snímače mohou
+být krátkodobě vyšší než zrychlení těžiště, proto musí logger stále ukládat
+maximum každé osy a příznak saturace. Samostatný \SI{\pm200}{g} kanál však pro
+první prototyp není nutný. Plastový kryt se nesmí považovat za kalibrovaný
+mechanický filtr: jeho tuhost, vůle a vlastní rezonance je třeba ověřit z
+naměřeného spektra.
+
+Při \SI{100}{km\per\hour}, tedy přibližně \SI{27.78}{m\per\second}, ujede
+vozidlo mezi vzorky \SI{50}{Hz} asi \SI{0.556}{m}; při \SI{500}{Hz} asi
+\SI{5.56}{cm}. Zvolené nominální ODR \SI{562.5}{Hz} nové IMU odpovídá
+přibližně \SI{4.94}{cm}. Obecně platí
+\begin{equation}
+  \Delta s = \frac{v}{f_\mathrm{s}},
+\end{equation}
+kde $v$ je rychlost vozidla a $f_\mathrm{s}$ vzorkovací frekvence. Tento
+výpočet popisuje prostorový rozestup inerciálních vzorků,
+nikoli přesnost polohy: výslednou přesnost určuje především GNSS, časová
+synchronizace, bias IMU a kvalita fúze. Pro sledování trajektorie a pohybu karoserie předpokládám, že přibližně
+\SI{500}{Hz} postačí. Tento předpoklad ověřím proti naměřené šířce pásma;
+pro analýzu vysokofrekvenčních vibrací může být nutné jiné nastavení.
+
+\section{Průzkum trhu RTK GNSS přijímačů}
+
+\subsection{Hodnoticí kritéria}
+
+Pro rover jsou rozhodující vícefrekvenční příjem, přístup k surovým
+observacím, nejméně jeden konfigurovatelný PPS výstup, nízká latence, příjem
+RTCM~3, robustnost proti multipath a rušení, otevřená dokumentace a rozhraní
+vhodná pro záznam. Samotný počet kanálů není vhodným kritériem, pokud výrobce
+nedokládá chování přijímače v dynamice.
+
+\subsection{Porovnání kandidátů}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{Srovnání kandidátů na roverový GNSS přijímač}
+  \label{tab:gnss}
+  \begin{tabularx}{\textwidth}{@{}L{0.18\textwidth}L{0.15\textwidth}L{0.18\textwidth}Y@{}}
+    \toprule
+    Přijímač & Frekvence & Výrobní údaj RTK & Posouzení pro projekt \\
+    \midrule
+    Septentrio mosaic-X5 / mosaic-go X5
+      & poloha až \SI{100}{Hz}; sada uvádí měření \SI{100}{Hz} a RTK \SI{50}{Hz}
+      & cm třída, rychlost \SI{3}{cm\per\second}; PPS a dva event vstupy
+      & Preferovaná varianta. SBF raw, USB, sériová rozhraní, SD a kvalitní
+        diagnostika rušení. Před nákupem potvrdit konkrétní RTK režim.
+        \cite{septentrio-mosaic,septentrio-mosaic-go,septentrio-hw-manual} \\
+    Septentrio mosaic-G5 P6
+      & poloha i raw až \SI{100}{Hz}
+      & vodorovně \SI{0.6}{cm}+\SI{0.5}{ppm}, svisle \SI{1}{cm}+\SI{1}{ppm}
+      & Novější, perspektivní modul. Vhodný jako náhrada X5, pokud dodavatel
+        nabídne vývojovou desku, termín a cenu odpovídající projektu.
+        \cite{septentrio-g5-p6} \\
+    Unicore UM980
+      & poloha a vybraná raw data až \SI{50}{Hz}
+      & vodorovně \SI{0.8}{cm}+\SI{1}{ppm}, svisle \SI{1.5}{cm}+\SI{1}{ppm}
+      & Velmi dobrý poměr výkon/cena; PPS \SI{20}{ns}. Vyžaduje pečlivý výběr
+        nosné desky a ověření tepelného i napájecího návrhu.
+        \cite{unicore-um980,unicore-protocol} \\
+    u-blox ZED-F9P
+      & RTK až \SI{20}{Hz} podle varianty a konfigurace
+      & přibližně \SI{1}{cm}+\SI{1}{ppm}
+      & Výborný pro nízkonákladovou základnu a první laboratorní prototyp;
+        nesplní cílových \SI{50}{Hz} roverového RTK.
+        \cite{ublox-f9p} \\
+    NovAtel OEM7720
+      & poloha až \SI{100}{Hz}
+      & profesionální RTK/PPP ekosystém
+      & Technicky silná varianta se dvěma anténními vstupy a přesným časem,
+        avšak s vyšší pořizovací cenou a integračními náklady.
+        \cite{novatel-oem7720} \\
+    Septentrio mosaic-H
+      & poloha až \SI{50}{Hz}
+      & heading \SI{0.15}{\degree} při základně \SI{1}{m}
+      & Dvě antény určují azimut i v klidu. Přínosné pro autonomní režim,
+        ale na malé formuli přidává druhou anténu, kabeláž a přesnou základnu.
+        \cite{septentrio-mosaic-h} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+U mosaic-X5 existuje zdánlivý rozpor mezi produktovou stránkou modulu, která
+uvádí maximální polohový výstup \SI{100}{Hz}, a stránkou vývojové sady
+mosaic-go X5, která uvádí \SI{100}{Hz} pro měření a \SI{50}{Hz} pro RTK.
+Hardware manuál navíc obsahuje příkon pro konfiguraci RTK \SI{100}{Hz}.
+\cite{septentrio-mosaic,septentrio-mosaic-go,septentrio-hw-manual}
+Nejde bezpečně předpokládat, že libovolná zakoupená deska poskytne
+\SI{100}{Hz} centimetrové řešení se všemi konstelacemi a zprávami. Do poptávky
+proto musí být uveden požadovaný firmware, výstupní zprávy, počet konstelací,
+režim korekcí a požadavek na písemné potvrzení frekvence.
+
+\subsection{Vícekriteriální posouzení GNSS}
+
+Tabulka~\ref{tab:gnss-score} je inženýrské posouzení pro tuto konkrétní práci,
+nikoli obecný žebříček výrobků. Hodnota 5 znamená nejlepší shodu s požadavkem.
+Cena je hodnocena podle očekávané třídy kompletní vývojové sestavy, protože
+samotný LGA modul bez nosné desky není srovnatelný s hotovým přijímačem.
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Bodové hodnocení GNSS kandidátů pro rover (1 až 5)}
+  \label{tab:gnss-score}
+  \begin{tabularx}{\textwidth}{@{}Y*{5}{>{\centering\arraybackslash}p{0.10\textwidth}}@{}}
+    \toprule
+    Kritérium / váha & X5 & G5 P6 & UM980 & F9P & \shortstack{OEM\\7720} \\
+    \midrule
+    RTK a raw frekvence / 25\,\% & 4 & 5 & 4 & 2 & 5 \\
+    Časování a raw data / 20\,\% & 5 & 5 & 4 & 4 & 5 \\
+    Robustnost RF / 20\,\% & 5 & 5 & 3 & 3 & 5 \\
+    Integrace prototypu / 15\,\% & 5 & 3 & 3 & 5 & 3 \\
+    Nákladovost / 10\,\% & 3 & 2 & 5 & 5 & 1 \\
+    Podpora a životnost / 10\,\% & 5 & 4 & 3 & 5 & 5 \\
+    \midrule
+    Vážené skóre / 5 & 4,55 & 4,30 & 3,65 & 3,65 & 4,30 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Frekvenční kritérium zahrnuje požadavek nejméně \SI{50}{Hz} RTK. Časování
+zohledňuje PPS, event vstupy, dostupnost raw formátu a dokumentaci; robustnost
+RF potom zejména multipath, odolnost proti rušení a diagnostiku. Nákladovost je
+relativní odhad bez závazné nabídky a výsledky jsou zaokrouhleny na dvě místa.
+
+\subsection{Volba přijímače a nosné desky}
+
+Pro rover volím \textbf{Septentrio mosaic-X5 na desce ArduSimple
+simpleRTK3B Pro}. Původně jsem kvůli ceně uvažoval i o variantě InCase PIN
+od GNSS.store za 499,99~EUR bez DPH. Aktuální nákupní varianta simpleRTK3B Pro
+za 569~EUR bez DPH umožní spojit rover, základnu i obě antény do jedné
+objednávky u evropského dodavatele. Rozdíl neposuzuji pouze podle ceny desky,
+ale i podle dostupnosti, podpory, dopravy a vyvedených rozhraní.
+\cite{gnssstore-x5-incase,ardusimple-x5}
+
+V rozpočtu zůstává pouze jeden X5 a jedna levnější přenosná základna ZED-F9P.
+Základna nepotřebuje rychlý polohový výstup, ale kompatibilní RTCM a současný
+záznam observací. Druhou stacionární stanici na FM TUL neobjednávám. G5 P6
+ponechávám jako novější alternativu pro budoucí návrh; UM980 jako možnost
+při nutnosti významně snížit cenu. Nejde o současně nakupované přijímače.
+
+Jednoanténní X5 neurčuje přímo natočení karoserie v klidu. Za jízdy lze
+využít směr vektoru rychlosti, ten však při smyku není totožný s podélnou osou
+vozu. Tuto odlišnost musí respektovat filtr. Magnetometr nové IMU může pomoci
+s orientací, ale nenahrazuje dvouanténní GNSS heading ani kalibraci.
+
+
+\subsection{Co má být vlastním přínosem práce}
+
+Při porovnávání hotových přijímačů a vývojových desek jsem si položil
+otázku, zda musím pro smysluplnou práci navrhovat také vlastní GNSS
+hardware. Za hlavní přínos však považuji časově provázaný sběr, vlastní
+rádiový firmware, správu základny, fúzi a experimentální ověření.
+Návrh RF přijímače nebo jeho nosné desky není podmínkou tohoto cíle.
+Hotový přijímač může být stejně legitimním základem práce.
+
+Vývojovou desku volím kvůli přístupu k rozhraním, měřicím bodům a vlastnímu
+mechanickému uspořádání, nikoli proto, že by samotné otevřené provedení
+automaticky měřilo přesněji. U základny srovnávám zejména dvě různá
+provedení stejného přijímače ZED-F9P; tuto úvahu rozvádím v
+oddílu~\ref{sec:base-board}.
+
+\section{Průzkum trhu IMU}
+
+\subsection{Kritéria výběru}
+
+Počet os ani nejvyšší vzorkovací frekvence samy o sobě nevystihují vhodnost
+IMU. Při výběru posuzuji měřicí rozsah, šířku pásma a latenci filtrů, šum,
+teplotní závislost a stabilitu biasu. Pro záznam je důležité také SPI,
+přerušovací výstup, FIFO a možnost odhadnout čas skutečného měření. Přebuzení
+senzoru vede ke ztrátě amplitudy, kterou pozdější zpracování neobnoví.
+
+Devět os znamená tři osy akcelerometru, tři gyroskopu a tři magnetometru.
+Nejde o devět nezávislých měření polohy ani o záruku kvalitnější inerciální
+navigace. Přidaný magnetometr dává jiný druh informace a současně přináší
+nové požadavky na umístění, kalibraci a detekci rušení.
+
+\subsection{Porovnání kandidátů}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{IMU posouzené pro první prototyp; rozsahy jsou katalogová maxima}
+  \label{tab:imu}
+  \begin{tabularx}{\textwidth}{@{}L{0.22\textwidth}L{0.24\textwidth}Y@{}}
+    \toprule
+    Senzor & Rozsah / rozhraní & Posouzení pro tuto práci \\
+    \midrule
+    ST ISM330DHCX
+      & \SI{\pm16}{g}, \SI{\pm4000}{\degree\per\second}; SPI, FIFO, INT
+      & Původní šestiosá volba. Nízký šum a vhodná časová rozhraní, bez kompasu.
+        \cite{st-ism330dhcx,st-ism330dhcx-ds} \\
+    TDK ICM-20948 / Adafruit
+      & \SI{\pm16}{g}, \SI{\pm2000}{\degree\per\second}; SPI, FIFO, INT
+      & Současná volba. Magnetometr navíc, dostupná deska u RPiShopu;
+        vyšší šum a čip ve stavu EOL.
+        \cite{tdk-icm20948,adafruit-icm20948,tdk-icm20948-status} \\
+    ST LSM6DSO32X
+      & \SI{\pm32}{g}, \SI{\pm2000}{\degree\per\second}; SPI
+      & Varianta při prokázané nedostatečné rezervě akcelerometru.
+        \cite{st-lsm6dso32x} \\
+    Bosch BMI088
+      & \SI{\pm24}{g}, \SI{\pm2000}{\degree\per\second}; SPI
+      & Šestiosá alternativa orientovaná na dynamiku a vibrace.
+        \cite{bosch-bmi088} \\
+    TDK ICM-42688-P
+      & \SI{\pm16}{g}, \SI{\pm2000}{\degree\per\second}; SPI, externí hodiny
+      & Alternativa pro pozdější vlastní desku; nemá magnetometr.
+        \cite{tdk-icm42688p} \\
+    ADIS16507-3 / SBG Pulse-40
+      & až \SI{\pm40}{g}; výstup řádově \SI{2}{kHz}
+      & Vyšší kalibrovaná třída. Do prvního rozpočtu ji nezařazuji.
+        \cite{adis16507,sbg-pulse40} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Vývoj volby od ISM330DHCX k ICM-20948}
+
+V první variantě jsem počítal s \textbf{ISM330DHCX na desce SparkFun
+SEN-19764}. Pro plánovaný sběr kolem \SI{500}{Hz} nabízela dostatečnou
+frekvenční rezervu, rozsah a dokumentaci. Při snaze nakupovat od běžných
+evropských distributorů jsem následně uvažoval o vývojové desce ST
+STEVAL-MKI210V2K se stejným senzorem od Farnellu. Změna nosné desky tehdy
+neměnila samotnou šestiosou koncepci.\cite{sparkfun-ism330dhcx,farnell-ism330dhcx}
+
+Při dalším výběru jsem zohlednil možnost využít také kompas. Magnetometr může
+dodat doplňkovou informaci o orientaci například při inicializaci nebo při
+malé rychlosti, kdy směr z GNSS rychlosti není dostatečně stabilní. Proto
+jsem pro první prototyp zvolil \textbf{Adafruit ICM-20948 se STEMMA QT/Qwiic},
+kód RPiShopu ADA076. Při kontrole 30.~9.~2026 byla deska nabízena za
+449~Kč s DPH a uveden byl jeden skladový kus. Jde o snímek dostupnosti,
+nikoli o záruku pozdějšího dodání.\cite{rpishop-icm20948}
+
+Rozhodující je pro mě souběh přidaného magnetometru, dostupnosti hotového
+modulu a možnosti koupit jej společně s Raspberry Pi a LoRa sadami. Nákup
+tak zůstává u dvou dodavatelů. Netvrdím, že ISM330DHCX byla technicky
+nevhodná nebo obecně nedostupná; zůstává smysluplnou alternativou, pokud
+nová IMU nesplní požadavky při měření.
+
+Změna má i nevýhody. Typická katalogová hustota šumu gyroskopu je u
+ICM-20948 přibližně 0,015, u ISM330DHCX 0,005
+$(^{\circ}/\mathrm{s})/\sqrt{\mathrm{Hz}}$ za podmínek příslušných
+datasheetů.\cite{tdk-icm20948,st-ism330dhcx-ds}
+Nejde o přímý trojnásobek výsledné chyby trajektorie, ale o důvod zahrnout
+šum a drift do validace. Navíc TDK uvádí ICM-20948 ve stavu
+\textbf{EOL (End of Life)}.\cite{tdk-icm20948-status}
+Skladový modul je použitelný pro tento prototyp; pro opakovanou výrobu bych
+musel řešit náhradu. Současný výběr tedy není dlouhodobou platformovou
+garancí.
+
+\subsection{Vzorkování a využití kompasu}
+
+Pro první měření volím pevné rozsahy \SI{\pm16}{g} a
+\SI{\pm2000}{\degree\per\second}. Akcelerometr a gyroskop chci provozovat
+v režimu se zapnutým digitálním filtrem a děličem nastaveným na 1.
+Tabulky konfigurace datasheetu pro tento režim uvádějí vztah
+\begin{equation}
+  f_\mathrm{ODR}=\frac{1125}{1+d}\ \mathrm{Hz},
+  \qquad d=1,\quad f_\mathrm{ODR}=\SI{562.5}{Hz}.
+\end{equation}
+Magnetometr AK09916 poskytuje nejvýše \SI{100}{Hz}.
+\cite{tdk-icm20948,adafruit-icm20948}
+V textu proto rozlišuji nominální frekvenci a skutečně změřenou periodu.
+Zaokrouhlené označení \enquote{IMU kolem 500~Hz} neznamená, že všech devět
+os dodává nové měření přesně pětsetkrát za sekundu.
+
+Šířku pásma digitálních filtrů zvolím podle naměřených vibrací a požadované
+dynamiky. Jejich zpoždění musím zahrnout do časového modelu. Vyšší počet
+výstupních vzorků nemůže nahradit chybějící fyzikální šířku pásma.
+Původní nastavení \SI{833}{Hz} patřilo k ISM330DHCX; na nový senzor jej
+nepřenáším.
+
+Kompas budu používat podmíněně. Kovové části způsobují stálé i směrově závislé
+zkreslení pole (hard-iron a soft-iron), zatímco proudy ve vozidle mohou rušení
+měnit za jízdy. Naplánuji proto kalibraci namontovaného modulu a porovnání při
+vypnuté a zapnuté výkonové elektronice. Měření s neobvyklou velikostí pole
+nebo velkou inovací filtru označím a do korekce orientace nezařadím.
+Magnetický sever je navíc nutné odlišit od zeměpisného severu.
+
+V hlavním záznamu uchovám i odmítnutá magnetická data a důvod odmítnutí.
+Filtr musí fungovat také bez magnetometru, aby jeho rušení nepoškodilo
+GNSS/IMU řešení. Přínos kompasu vyhodnotím porovnáním téže jízdy se zapnutými
+a vypnutými magnetickými aktualizacemi; předem jej nepovažuji za prokázaný.
+
+\subsection{Rezerva rozsahu a kontrola saturace}
+
+Logger bude po blocích vyhodnocovat maxima jednotlivých os a počet vzorků
+nad 80\,\% plného rozsahu. Pro akcelerometr jde při zvolené konfiguraci o
+\SI{12.8}{g}. Hodnoty blízké mezním digitálním kódům budou označeny jako
+podezření na saturaci. Nárazová ochrana kolem \SI{3}{g} ani 3D tištěný kryt
+nevylučují lokální špičku, gravitační složku či rezonanci držáku.
+
+Pokud měření ukáže nedostatečnou rezervu, zvážím LSM6DSO32X s rozsahem
+\SI{\pm32}{g}. Zachoval bych koncepci přímého sběru, ale musel bych změnit
+ovladač, konfiguraci, časový model a případně zapojení; nejde o prostou
+výměnu bez dalších úprav. Vyšší průmyslovou IMU bych pořizoval až při
+doloženém problému se stabilitou biasu nebo driftem.
+
+\section{Výpočetní a komunikační architektura roveru}
+
+\subsection{Role Raspberry Pi 5}
+
+Výpočetním uzlem bude \textbf{Raspberry Pi 5 se 2~GB RAM a 64bitovým
+Raspberry Pi OS}. Čtyřjádrový procesor, USB a PCIe poskytují vhodný základ
+pro logger a online filtr; skutečnou výpočetní rezervu ověřím při současném
+záznamu, fúzi a rádiovém přenosu.\cite{raspberry-pi5}
+Počítám s Active Coolerem a vlastním NVMe SSD připojeným přes oficiální
+\textbf{M.2 HAT+}. Aktuální nákupní cena HAT+ je 349~Kč s DPH, nikoli původní
+orientační částka 400~Kč. HAT+ podporuje formáty SSD 2230 a 2242; vlastní
+disk formátu 2280 by vyžadoval jiný adaptér.\cite{rpishop-m2hat}
+
+\subsection{Přímý sběr bez pomocného časovacího mikrokontroléru}
+
+Desku Adafruit připojím přes pájecí vývody SPI k Raspberry Pi a její INT
+na samostatný GPIO. STEMMA QT/Qwiic konektor vyvádí I2C, nikoli SPI.
+Desku budu napájet z \SI{3.3}{V}; její převodníky úrovní umožňují připojení
+SPI a INT k odpovídající logice Raspberry Pi. Pin FS/FSYNC je výjimka:
+pracuje na \SI{1.8}{V} a nesmí na něj být přímo přiveden signál
+\SI{3.3}{V}.\cite{adafruit-icm20948,adafruit-icm20948-pcb}
+
+Pro sběr chci využít FIFO a přerušení data-ready. Nejprve ověřím režim,
+ve kterém jednotlivé hrany odpovídají požadovaným novým inerciálním vzorkům.
+Obsluha přečte stavové registry, počet bajtů a dostupná data v bloku.
+Magnetometr při SPI komunikaci zpřístupní vnitřní pomocné I2C rozhraní
+senzoru; jeho nové hodnoty musím odlišit od opakovaně čteného posledního
+měření.\cite{tdk-icm20948}
+
+Na ICM-20948 nelze bez úpravy přenést FIFO tagy, konfiguraci watermarku ani
+interní časové značky z původního návrhu s ISM330DHCX. V první implementaci
+nepředpokládám samostatný absolutní hardwarový timestamp u každého raw
+vzorku. Časovou osu sestavím z pořadí vzorků, skutečně změřené periody a
+zachycených událostí. Přetečení, reset nebo nejednoznačnost přiřazení
+označím jako přerušení časové kontinuity.
+
+Hrany INT i GNSS PPS lze zaznamenávat pomocí GPIO character-device API v2.
+Kernel k události připojuje časovou značku a pořadové číslo.
+\cite{linux-gpio-chardev}
+To omezuje vliv opožděného probuzení uživatelského procesu, ale standardní
+Linux ani běžný GPIO vstup negarantují bezchybný hardwarový záchyt okamžiku
+hrany. FIFO chrání před krátkým zpožděním čtení; samo neřeší nejistotu epochy.
+Přímé připojení je proto návrhová volba, kterou ověřím zátěžovým testem,
+nikoli již prokázané deterministické řešení.
+
+\subsection{Navržené propojení}
+
+mosaic-X5 bude předávat data po USB, zatímco PPS povede samostatně na GPIO.
+Před zapojením zkontroluji vyvedení, polaritu a napěťovou úroveň konkrétní
+desky simpleRTK3B Pro. Raspberry Pi nepřipouští libovolné napěťové úrovně na
+GPIO. LoRa jednotku připojím datovým USB-C kabelem; ESP32 uvnitř sady obstará
+rádiové rámcování. Nepřebírá úlohu časovacího mikrokontroléru pro IMU.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      block/.style={draw,rounded corners,align=center,text width=36mm,
+        minimum height=13mm,inner sep=3pt,font=\small,fill=tul!8},
+      data/.style={-{Latex[length=2mm]},thick},
+      timing/.style={-{Latex[length=2mm]},thick,dashed},
+      lab/.style={font=\scriptsize,fill=white,inner sep=2pt}
+    ]
+    \node[block] (base) at (0,0) {ZED-F9P\\ANN-MB2-00};
+    \node[block] (tx) at (5,0) {XIAO \(+\) Wio\\správa \(+\) raw log*};
+    \node[block] (rx) at (10,0) {XIAO \(+\) Wio\\rover};
+    \node[block] (gnss) at (0,-3) {mosaic-X5\\ANN-MB2-00};
+    \node[block] (pi) at (5,-3) {Raspberry Pi 5\\Raspberry Pi OS};
+    \node[block,text width=42mm] (ssd) at (10,-3) {\mbox{SSD \(+\) M.2 HAT+}\\\mbox{\footnotesize 3 proudy \(+\) metadata}};
+    \node[block] (imu) at (5,-5.8) {Adafruit ICM-20948\\akcelerometr, gyro, kompas};
+    \draw[data,<->] (base) -- node[lab,above=8mm]{UART / RTCM \(+\) UBX} (tx);
+    \draw[data] (tx) -- node[lab,above=8mm]{LoRa 868 MHz} (rx);
+    \draw[data] (rx.south) -- ++(0,-.7) -| node[lab,pos=.7,right]{USB / RTCM} (pi.north);
+    \draw[data,<->] (gnss.east) -- node[lab,above=8mm]{USB / SBF \(+\) RTCM} (pi.west);
+    \draw[timing] (gnss.south) -- ++(0,-.6) -| node[lab,pos=.3,below]{PPS / GPIO} ([xshift=-10mm]pi.south);
+    \draw[data] (imu.north) -- node[lab,right]{SPI \(+\) INT} (pi.south);
+    \draw[data] (pi) -- node[lab,above]{PCIe} (ssd);
+  \end{tikzpicture}
+  \caption{Cílová architektura se samostatnou základnou. Hvězdička označuje
+  raw log vyžadující doplnění lokálního úložiště; při vývoji jej zajistí
+  notebook přes USB. Ze čtyř LoRa sad jsou ve spoji dvě. Čárkovaně je PPS.}
+  \label{fig:architektura}
+\end{figure}
+
+\section{Časová synchronizace a datové formáty}
+
+\subsection{Jednotná časová osa}
+
+PPS označuje hranici sekundy a zpráva GNSS jí přiřadí číslo týdne a sekundy.
+Z opakovaných PPS událostí odhadnu převod mezi monotónními hodinami Linuxu
+a GNSS časem. V této základně zaznamenám také události IMU. Z pořadí měření
+a naměřené periody vytvořím odhad epoch; do modelu zahrnu zpoždění digitálních
+filtrů i jejich případnou odlišnost pro akcelerometr a gyroskop.
+
+Každý inerciální záznam bude obsahovat surová slova, softwarové pořadové
+číslo, odhad času a příznaky kvality. Zachovám i původní timestampy událostí,
+stavy FIFO a údaje nutné k pozdější rekonstrukci. Softwarový čítač sám
+neprokazuje, že senzor žádný vzorek neztratil; musí se porovnat s periodou,
+počtem dat a indikací přetečení. Po ztrátě vazby nelze chybějící časovou
+informaci potichu doplnit jako jisté měření.
+
+Čas příchodu USB paketu ani okamžik ukončení SPI čtení nejsou automaticky
+časem fyzikálního měření. Přesnost zvolené metody ověřím osciloskopem nebo
+logickým analyzátorem. Jako pracovní cíl používám chybu časového přiřazení
+pod \SI{100}{\micro\second}; nejde o specifikaci Raspberry Pi ani o výsledek
+již provedeného testu. Při rychlosti \SI{100}{km\per\hour} odpovídá časová
+chyba \SI{1}{ms} posunu přibližně \SI{2.78}{cm}.
+
+Pokud základní metoda nevyhoví, prověřím pomocnou vazbu přes FSYNC.
+Nejdříve je nutné vyřešit převod na \SI{1.8}{V}, způsob zachycení události
+a význam příslušných registrů. Pouhé přivedení PPS na tento pin nepovažuji
+za hotovou synchronizaci. Převodník ani tato rozšiřující varianta zatím
+nejsou součástí oceněné základní elektroniky.
+
+\subsection{Tři proudy a metadata}
+
+Každá jízda dostane identifikátor a uloží:
+\begin{description}
+  \item[\texttt{gnss.sbf}] nativní observace a navigační i diagnostické bloky X5;
+  \item[\texttt{imu.bin}] typované raw záznamy akcelerometru a gyroskopu,
+    nové magnetické vzorky, teplotu a podklady k časování;
+  \item[\texttt{nav.bin}] online polohu, rychlost, orientaci, kovarianci
+    a diagnostiku filtru;
+  \item[\texttt{events.jsonl}] PPS, výpadky, přetečení, saturaci a stav napájení;
+  \item[\texttt{manifest.yaml}] verze firmwaru a dekodéru, nastavení filtrů,
+    rozsahy, skutečné periody, kalibraci a geometrii montáže;
+    dále identifikátor základny, její použité souřadnice, způsob jejich
+    určení, výšku antény a definici místního souřadného systému.
+\end{description}
+Události a manifest jsou doprovodná metadata, nikoli další hlavní měřicí
+proud. Magnetometr zůstává součástí \texttt{imu.bin}; jeho rozdílný typ a
+příznak nového vzorku zabrání vydávání opakovaných hodnot za měření při
+\SI{562.5}{Hz}. Přijaté RTCM rámce zachovám v diagnostickém záznamu korekcí.
+Současně se musí ukládat raw data základny potřebná pro PPK.
+
+Primární soubory budou binární, verzované a blokově chráněné kontrolními
+součty. CSV použiji pro export. Konfigurace a kalibrace se uloží pro každou
+relaci tak, aby pozdější změna ovladače nezměnila význam již pořízených dat.
+
+\subsection{Orientační datový objem}
+
+Při navrženém inerciálním záznamu 64~B a nominálních \SI{562.5}{Hz} vzniká
+36~kB/s, tedy 129,6~MB za hodinu. Samostatný typ magnetického záznamu o 32~B
+při \SI{100}{Hz} přidá nejvýše 3,2~kB/s neboli 11,52~MB za hodinu.
+Celkem jde přibližně o 0,141~GB/h v desetinných jednotkách, bez GNSS,
+navigačního výstupu a událostí. Velikosti rámců jsou návrhové předpoklady,
+nikoli velikosti interních FIFO paketů senzoru.
+
+Celkový objem stanovím podle skutečně aktivovaných SBF bloků. SSD má
+poskytnout dostatečnou kapacitu i zapisovací rezervu. Logger bude uzavírat
+a synchronizovat bloky průběžně; celou jízdu nesmí držet pouze v RAM.
+
+\section{Fúze v reálném čase a postprocessing}
+
+V první etapě navrhuji volně vázaný error-state Kalmanův filtr (ESKF).
+Stav zahrne polohu, rychlost, orientaci a biasy akcelerometru a gyroskopu.
+Každé nové inerciální měření použiji k propagaci. GNSS poloha a rychlost
+provedou korekci v odpovídající epoše, nikoli až v době přijetí zprávy.
+Součástí modelu bude páka mezi IMU a anténou (lever arm). Magnetometr přidám
+jako samostatnou pomalejší a podmíněnou aktualizaci.
+
+Navržená publikační frekvence kombinovaného řešení je \SIrange{200}{500}{Hz}.
+Je odlišná od frekvence raw IMU i GNSS. Po jízdě mohu nativní inerciální
+záznam převzorkovat na přesných \SI{500}{Hz}, ale až po vhodné filtraci a
+s použitím rekonstruované časové osy. Převzorkování nevytváří další nezávislá
+absolutní měření polohy.
+
+Pro postprocessing počítám s PPK z observací základny a roveru a následným
+dopředným a zpětným vyhlazením trajektorie. ESKF lze doplnit
+Rauchovým--Tungovým--Striebelovým vyhlazovačem; přínos této kombinace pro
+GNSS/IMU lokalizaci popisuje i publikovaná studie.\cite{wang-esfk-rts}
+RTKLIB je použitelný jako otevřená referenční cesta po převodu do RINEX,
+ale je nutné ověřit podporu konkrétních signálů a porovnat výstup s řešením
+přijímače.\cite{takasu-rtklib,rtklib-site}
+Těsně vázaná integrace jednotlivých GNSS observací je případným dalším
+rozšířením, nikoli nutnou podmínkou prvního prototypu.
+
+Výstup zachová stav FIX/FLOAT/SINGLE, stáří korekcí, kovarianci, inovace a
+příznaky odmítnutých měření. Vyhlazená trajektorie není automaticky
+referenční pravdou: její přesnost musí být ověřena nezávislým měřením
+a nesmí být zaměňována s hustotou výstupních bodů.
+
+\section{Základnová stanice a přenos korekcí}
+
+\subsection{Jediná přenosná základna}
+
+Pro RTK potřebuje rover včasná referenční data ze základny nebo ze síťové
+služby. V tomto návrhu je bude poskytovat \textbf{simpleRTK2B Budget s
+u-blox ZED-F9P} a anténou \textbf{u-blox ANN-MB2-00}. Základna
+zůstane během jízdy nehybná. Stejnou sadu lze testovat na univerzitě
+a odvézt na závody. Trvalá stanice na FM TUL ani integrace do LiANE
+nejsou podmínkou návrhu.
+
+\subsection{Relativní přesnost a umístění na mapě}
+
+ZED-F9P umožňuje určit souřadnice základny režimem survey-in nebo zadat
+pevnou polohu. Chyba zadané polohy se přenáší do absolutních souřadnic
+roveru; survey-in sám nezaručuje centimetrové geodetické zaměření.
+\cite{ublox-f9p-integration}
+Pro můj cíl však není nutné v první etapě pořizovat takové zaměření jen
+kvůli mapovému podkladu. Při krátké základně se chyba jejího absolutního
+umístění projeví převážně společným posunem stopy. To neznamená, že každá
+relativní vzdálenost bude automaticky centimetrově přesná: nadále záleží
+na observacích, vícecestném šíření, geometrii i správném FIX.
+
+Pro měřicí relaci zafixuji použité souřadnice a mechanickou polohu antény.
+Uložím definici počátku ENU, orientaci os a referenční výšku. Rozliším
+elipsoidickou výšku GNSS od výšky nad mapovým výškovým systémem; pro
+první analýzu sleduji zejména místní složku Up. Po přemístění základny
+nebo novém survey-in nesmím bez dalšího překrýt stopy z různých dní.
+Pro takové srovnání znovu ustavím společný referenční bod nebo doložím
+transformaci mezi soustavami. Jde o můj návrh vyhodnocení, nikoli tvrzení
+o již ověřené přesnosti.
+
+\subsection{Proč simpleRTK2B místo hotového Holybro}
+\label{sec:base-board}
+
+Jako alternativu pro \emph{základnu}, nikoli pro rychlý rover, jsem
+posuzoval Holybro H-RTK F9P Helical. Varianta UART nabízí USB-C a další
+UART; provedení DroneCAN má rovněž vyvedený UART2. Výrobce uvádí
+raw výstup \SI{20}{Hz} a RTK polohu \SI{8}{Hz}. Součástí sestavy je
+helická anténa, kryt a kabeláž.\cite{holybro-f9p-uart,holybro-f9p-can}
+Omezení rychlosti polohového výstupu samo o sobě tuto alternativu
+nevylučuje jako statickou základnu: četnost korekcí není totožná
+s požadovanou četností řešení pohybujícího se X5.
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Úvaha o provedení základny; nejde o porovnání kvality GNSS čipu}
+  \label{tab:base-board}
+  \begin{tabularx}{\textwidth}{@{}L{0.25\textwidth}YY@{}}
+    \toprule
+    Varianta & Praktický přínos & Důsledek pro můj návrh \\
+    \midrule
+    Holybro F9P Helical, UART
+      & hotové mechanické provedení a anténa
+      & vhodná alternativa; menší volnost v uspořádání vlastní skříně \\
+    Holybro F9P Helical, DroneCAN
+      & integrace do existující sběrnice DroneCAN, také UART2
+      & CAN nyní nevyužiji; není zdrojem vyšší přesnosti GNSS \\
+    simpleRTK2B Budget
+      & přístupné UART, USB, PPS a rozšiřující konektory
+      & volím pro vlastní montáž a diagnostiku; anténa a kryt jsou zvlášť \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Obě řešení využívají ZED-F9P, proto z názvu desky nevyvozuji rozdíl
+v přesnosti přijímače. U simpleRTK2B oceňuji snadné připojení ESP32
+a měřicích přístrojů, vlastní volbu antény a možnost objednat oba GNSS
+přijímače společně.\cite{ardusimple-f9p-guide}
+Ceny je nutné porovnávat včetně antény, kabeláže a krytu, nikoli jako
+holou desku proti kompletnímu Holybro. CAN by dával smysl pro delší
+robustní sběrnici nebo návaznost na autopilot; pro krátké propojení uvnitř
+základny volím jednodušší UART.
+
+\subsection{Samostatná základna s ESP32 a webovou správou}
+
+Cílově chci provozovat základnu bez trvale připojeného notebooku.
+ZED-F9P bude vytvářet RTCM, zatímco XIAO ESP32S3 obstará konfiguraci,
+stavovou diagnostiku, webové rozhraní a obsluhu Wio-SX1262. GNSS připojím
+obousměrně přes UART1. Podle revize desky ověřím nastavení IOREF na
+\SI{3.3}{V}, společnou zem, napájení a nekolidující piny XIAO.
+Sada XIAO/Wio není zásuvný XBee modul a do patice simpleRTK2B se přímo
+nezasouvá.\cite{ardusimple-f9p-guide,seeed-xiao-wio}
+
+ESP32 podporuje režim Wi-Fi přístupového bodu i klienta a může obsluhovat
+webový server.\cite{esp32-wifi}
+Z toho odvozuji možnost místní správy telefonem bez internetu. Vlastní
+rozhraní má zobrazovat survey-in, použité souřadnice, stav záznamu,
+RTCM tok a vytížení rádia; změnu konfigurace během jízdy omezím.
+Vzdálená internetová správa je jiný režim: vyžaduje dostupnou síť,
+například hotspot, a zabezpečený přístup. Zakoupený kit neobsahuje
+mobilní modem ani hotovou aplikaci pro správu RTK základny.
+
+Samostatnost nesmí být vykoupena ztrátou raw dat pro PPK. Do finální
+základny proto musím doplnit a ověřit místní úložiště, například microSD
+s vhodným rozhraním, a nezávislé napájení. Firmware oddělí ukládání
+observací od odesílání RTCM; výpadek rádia nesmí zastavit zápis.
+Rozhraní, kapacita a cena úložiště zatím nejsou uzavřené ani zahrnuté
+v oceněném košíku. Samotná interní flash není předem ověřenou náhradou
+dlouhého surového záznamu.
+
+V první laboratorní etapě konfiguraci a raw log zajistí existující
+týmový notebook přes USB. RTCM pak mohu porovnat přímou UART cestou
+s hostitelským přenosem. RTKBase či ELT\_RTKBase zůstávají alternativou
+pro základnu s linuxovým počítačem, ne firmwarem pro XIAO.
+\cite{rtkbase,elt-rtkbase}
+Notebook odpojím až po ověření místního loggeru a zotavení po výpadku
+napájení. Druhé Raspberry Pi se kvůli správě základny zatím neobjednává.
+
+\subsection{Volba čtyř sad XIAO ESP32S3 + Wio-SX1262}
+
+Původně uvažované dva modemy Waveshare SX1262 LoRa HAT nahrazuji
+\textbf{čtyřmi sadami Seeed Studio XIAO ESP32S3 + Wio-SX1262},
+kód RPiShopu SEE319. Cena aktualizovaného seznamu je 339~Kč s DPH za sadu.
+\cite{rpishop-xiao-wio}
+Dvě sady tvoří aktivní spoj základna--rover. Pro zbývající dvě plánuji
+laboratorní ověřování firmwaru a provozní rezervu. Neplánuji povinnou mesh
+síť ani automatické přeposílání přes všechny čtyři jednotky.
+
+Sada pro pásmo 862--930~MHz obsahuje XIAO, rádiovou desku a antény.
+USB datový kabel není součástí. Předinstalovaný Meshtastic není v návrhu
+zaměněn za transparentní RTCM modem: počítám s jeho nahrazením vlastním
+firmwarem pro bod--bod přenos. Výrobce uvádí dodanou FPC anténu jako
+testovací; pro spolehlivý provoz na trati ověřím vhodnější anténu a montáž.
+\cite{seeed-xiao-wio}
+\enquote{Nízkofrekvenční LoRa} zde znamená sub-GHz pásmo kolem 868~MHz,
+nikoli fyzikální pásmo LF ani variantu 433~MHz.
+
+Cílová datová cesta bude:
+základna ZED-F9P, UART/XIAO vysílače, rádiový spoj,
+XIAO přijímače, USB/Raspberry Pi a vstup RTCM mosaic-X5.
+Přenosový rámec navrhnu s číslem sekvence, délkou, identifikací fragmentu
+a kontrolou integrity. Neúplné nebo zastaralé zprávy zahodím a tuto událost
+zaznamenám. Obnova spojení nesmí spustit přehrávání staré fronty korekcí.
+
+\subsection{Propustnost, dosah a rádiová omezení}
+
+Kilometrová trať je cílem ověřovacího testu, nikoli katalogovou garancí
+zakoupené sady. Pro orientaci lze použít vztah pro volnoprostorový útlum
+\begin{equation}
+ L_\mathrm{FS}=32{,}44+
+ 20\log_{10}(f_\mathrm{MHz})+20\log_{10}(d_\mathrm{km}).
+\end{equation}
+Na \SI{1}{km} vychází přibližně \SI{91.2}{dB} pro 868~MHz a
+\SI{100.0}{dB} pro 2,4~GHz. Rozdíl asi \SI{8.8}{dB} podporuje mou volbu
+sub-GHz spoje, ale nezahrnuje antény, zastínění vozidlem, terén,
+Fresnelovu zónu ani rušení.
+
+RTCM základny nemusí běžet stejně rychle jako výstup roveru. Začnu
+měřením skutečného datového toku při omezené sadě potřebných zpráv, například
+MSM4 při \SI{1}{Hz}, a ověřím zachování FIX na X5. Nejde o předem potvrzenou
+konečnou konfiguraci. Teprve z naměřených velikostí paketů zvolím spreading
+factor, šířku pásma, kódování a případnou fragmentaci.
+
+Pro každou zprávu spočtu skutečný čas ve vzduchu včetně preambule a režie.
+Požadovanou dobu vysílání lze zapsat
+\begin{equation}
+ D_\mathrm{req}=\frac{\sum_i T_{\mathrm{air},i}}{T_\mathrm{pozorování}}.
+\end{equation}
+Ztráty a opakování tento podíl dále zvětšují. Nejvyšší přenosová rychlost
+a nejlepší citlivost transceiveru nejsou dosažitelné současně při jednom
+nastavení.\cite{sx1262}
+
+Podle českého VO-R/10/05.2025-5 se limity liší mezi jednotlivými úseky
+pásma. Například úsek 868,0--868,6~MHz pracuje s limitem 25~mW e.r.p.
+a při režimu omezeném klíčovacím poměrem s 1\,\%; úsek 869,4--869,65~MHz
+má odlišné podmínky včetně možnosti 10\,\%. Oprávnění stanovuje také
+podmínky přístupu ke spektru a šířky pásma.\cite{ctu-vor10}
+Tyto hodnoty nepředstavují hotovou konfiguraci modemu.
+
+Pouhý název SX1262, detekce CAD či jednoduchý test obsazení kanálu
+neprokazují vyhovující LBT režim. Při vlastním firmwaru musím doložit soulad
+konkrétní konfigurace. Široký kanál nesmí přesahovat zvolený povolený
+úsek; nelze například automaticky přenést rychlost pro 500kHz kanál do
+úseku širokého pouze 250~kHz. Podmínky znovu ověřím před provozem a pro zemi
+každého závodu.
+
+Pokud RTCM nevychází do dovoleného vysílacího času a současně nesplní
+požadované stáří korekcí, bude nutná úprava zpráv nebo přenosové cesty.
+Dosah sám o sobě takový problém neřeší. Před jízdou je rozhodující
+společný test propustnosti, rádiové shody a skutečné dostupnosti RTK FIX.
+
+\subsection{NTRIP a chování při výpadku}
+
+NTRIP umožňuje přenos RTCM přes IP síť a ponechávám jej jako kontrolní
+a záložní cestu.\cite{bkg-ntrip}
+RTK2Go a Centipede-RTK mohou sloužit při laboratorním srovnání podle
+dostupnosti a podmínek služby; nejsou zaručenou součástí závodní
+infrastruktury.\cite{rtk2go,centipede}
+
+Ztráta rádiových korekcí nesmí zastavit logger. Systém uchová raw data
+a označí změnu kvality GNSS. Současný raw log základny umožní pozdější
+PPK i tehdy, když rádiový spoj během jízdy nefungoval. Pro offline PPK
+tedy není nutné, aby korekce dorazily v reálném čase; pro online RTK je
+jejich včasný příjem zásadní.
+
+\section{Antény, mechanika a napájení}
+
+\subsection{Od Budget Survey ke dvěma ANN-MB2-00}
+
+Pro rover i základnu volím stejnou anténu \textbf{u-blox ANN-MB2-00},
+celkem tedy dva kusy. Každá zahrnuje 5m kabel se SMA konektorem.
+\cite{ardusimple-annmb2}
+Původně jsem k jedné ANN-MB2 zvažoval Budget Survey Tripleband IP66 za
+98~EUR bez DPH. Její praktickou výhodou je geodetický závit 5/8 palce
+a odpojitelný kabel TNC--SMA o délce \SI{2.5}{m}.
+\cite{ardusimple-budget-survey}
+Po rozhodnutí vytvořit vlastní 3D tištěné kryty dávám přednost
+sjednocení antén. Druhá ANN-MB2 stojí 61~EUR, takže výměna snižuje
+oceněnou sestavu o 37~EUR, tedy 902,06~Kč při použitém kurzu.
+Nejde o přidání třetí antény ani o dvouanténní heading.
+
+ANN-MB2 má nízké provedení přibližně
+$108{,}5\times92{,}9\times24{,}7$~mm a dokumentovaný referenční bod.
+Její pevný 5m kabel však není ideální pro malou krabičku: při návrhu
+musím vyřešit trasu, rezervu a odlehčení tahu, ne automaticky předpokládat
+zkrácení kabelu.\cite{ublox-annmb2-ds}
+Sjednocení mi usnadní montážní díly a případnou záměnu kusů. Není to
+důkaz lepší RF kvality. Katalogové údaje o fázovém středu obou antén
+nepovažuji bez shodné metodiky a montážních podmínek za přímý žebříček
+přesnosti celé soustavy.
+
+Třípásmová anténa navíc nezmění vybraný dvoupásmový ZED-F9P L1/L2 na
+třípásmový přijímač. U základny využiji pouze společně podporované
+signály; mosaic-X5 může využít širší příjem.\cite{ublox-f9p,septentrio-mosaic}
+U obou desek před zapojením ověřím napájení aktivní antény a SMA připojení.
+
+\subsection{Vlastní kryt a vodivá plocha pod anténou}
+
+Anténu ponechám v jejím původním pouzdře a vlastní 3D tisk použiji jako
+držák a kryt sestavy. Jako první variantu navrhuji nevodivé víko bez
+uhlíkového či kovového plniva, anténu nad vodivou podložkou a elektroniku
+na izolovaných distančních sloupcích pod ní. Je to konstrukční hypotéza
+k ověření, nikoli záruka elektromagnetického stínění.
+
+Výrobce uvádí charakterizaci fázového středu ANN-MB2 na kruhové vodivé
+ploše o průměru \SI{120}{mm}; změna jejího tvaru a velikosti může změnit
+výsledek.\cite{ublox-annmb2-ds}
+Tento rozměr není hranicí, pod kterou anténa přestane fungovat, ani
+zárukou přesnosti při jakékoli montáži. Pro prototyp mohu vyzkoušet
+hliníkovou podložku podobné velikosti. Integrovaný magnet ji k hliníku
+nepřidrží, proto navrhnu mechanické uchycení. Kryt, zemní plochu a
+vzdálenost od LoRa, Wi-Fi a DC/DC ověřím srovnávacím měřením.
+
+Sleduji C/N0, dostupnost FIX, opakovatelnost místní polohy a chování
+při zapnuté elektronice; srovnám varianty s víkem a bez víka a různá
+uspořádání podložky. Anténa musí mít volný výhled. Vlastní kryt nenahradí
+kvalitní anténní konstrukci ani zkoušku vícecestného šíření.
+
+\subsection{Umístění IMU a napájení}
+
+IMU upevním na tuhý držák s definovanou orientací. Změřím třírozměrný
+lever arm k fázovému středu GNSS antény a rotaci os vůči vozidlu
+(boresight). Blízkost těžiště je vhodná pro inerciální měření, ale nové
+využití magnetometru může vyžadovat kompromis kvůli magnetickému rušení.
+Za riziko považuji také magnet v pouzdře ANN-MB2 a feromagnetické
+montážní díly: IMU neumístím těsně pod anténní magnet bez ověření pole.
+Případné pružné uložení připustím až po změření rezonancí a fázového posunu.
+
+Napájecí návrh musí vycházet ze skutečné palubní sítě. Podle upřesnění
+z 12.~října zajišťuje elektronické jištění palubní PMU. Návrh zahrne
+ochranu proti přepólování a přepětí, filtraci a řízené ukončení záznamu při
+poklesu napětí. DC/DC měnič a energetický doběh nejsou součástí původního
+rozpočtu; napájení rozvíjí oddíl~\ref{sec:napajeni-vozidlo}. Ověřím také přístup ke GPIO pod M.2 HAT+, chlazení SSD
+a Raspberry Pi a zajištění konektorů proti vibracím. Tyto části jsou
+podmínkou funkční instalace, nikoli nepodstatným příslušenstvím.
+
+\section{Výsledek výběru}
+
+Pro první prototyp jsem zvolil mosaic-X5 na simpleRTK3B Pro, jednu přenosnou
+základnu ZED-F9P, obě výše uvedené antény, Adafruit ICM-20948 a Raspberry Pi 5
+se 2~GB RAM, Active Coolerem, M.2 HAT+ a vlastním SSD. Rádiový nákup obsahuje
+čtyři XIAO/Wio sady. Elektronika je rozdělena pouze mezi RPiShop a ArduSimple.
+
+Původní ISM330DHCX zůstává v rešerši jako vysvětlení postupu výběru a jako
+technická alternativa. Novou IMU volím kvůli možnosti využít kompas a
+praktické dostupnosti, současně přijímám potřebu ověřit její vyšší šum,
+časování a magnetické rušení. Žádnou z těchto vlastností dosud nepovažuji
+za experimentálně potvrzenou.
+
+Hlavními podmínkami úspěchu zůstávají úplnost raw záznamů, prokazatelná
+časová vazba a reprodukovatelná validace. Přibližně pěticentimetrový
+rozestup inerciálních vzorků při \SI{100}{km\per\hour} sám neprokazuje
+centimetrovou přesnost trajektorie.
+
+Výběr podřizuji zejména relativní přesnosti vůči nehybné základně.
+simpleRTK2B a společný typ antény mi dávají prostor pro vlastní mechaniku
+a správu přes ESP32; nejde o tvrzení, že hotová sestava Holybro by byla
+pro základnu nepoužitelná. Samostatný provoz bez notebooku je cílem
+implementace, který vyžaduje místní raw logger, napájení a ověření.

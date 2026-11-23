@@ -1,0 +1,14 @@
+configuration:
+  projects_directory:
+    name: Default project directory
+    description: Folder in /media or /share. Each workspace can override this in O-Leaf settings.
+  autosave_delay_ms:
+    name: Autosave delay
+    description: Milliseconds after the last edit before saving a file.
+  compilation_timeout_seconds:
+    name: Compilation timeout
+    description: Maximum duration of a compilation in seconds.
+  max_upload_mb:
+    name: Maximum upload size
+    description: Maximum project or plugin ZIP size in MB.
+

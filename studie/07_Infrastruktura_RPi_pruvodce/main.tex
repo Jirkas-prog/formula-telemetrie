@@ -1,0 +1,795 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+  \setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+  \setsansfont{lmsans10-regular.otf}\setmonofont{lmmono10-regular.otf}[BoldFont=lmmono10-regular.otf]
+\fi
+\usepackage[czech]{babel}
+\usepackage{microtype}
+\usepackage[left=27mm,right=22mm,top=22mm,bottom=24mm]{geometry}
+\usepackage{amsmath,booktabs,array,tabularx,longtable}
+\usepackage{enumitem,xcolor,xurl,fancyhdr,listings,tikz}
+\usetikzlibrary{arrows.meta,positioning,babel}
+\usepackage[unicode,colorlinks=true,linkcolor=blue!35!black,citecolor=blue!35!black,urlcolor=blue!45!black]{hyperref}
+\hypersetup{pdftitle={Studie 07: Infrastruktura Raspberry Pi - pruvodce vlastni realizaci},pdfauthor={Resersni podklad k bakalarske praci}}
+\setlength{\emergencystretch}{3em}\setlength{\parskip}{0.35em}\setlength{\parindent}{1.1em}
+\setlist{itemsep=0.22em,topsep=0.35em,leftmargin=*}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\pagestyle{fancy}\fancyhf{}\fancyfoot[L]{\small Studie 07 \textbullet{} Průvodce vlastní realizací}\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}\renewcommand{\footrulewidth}{0.3pt}\raggedbottom
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,keepspaces=true,showstringspaces=false,frame=single,rulecolor=\color{black!15},backgroundcolor=\color{black!2},xleftmargin=0.5em,xrightmargin=0.5em,aboveskip=0.6em,belowskip=0.6em}
+\newcommand{\krok}[1]{\par\noindent\textbf{#1}\par}
+\newcommand{\kontrola}[1]{\par\noindent\textbf{Kontrolní bod:} #1\par}
+\newcommand{\zdroj}[3]{\bibitem{#1}#2. \url{#3}. [cit.~2026-11-15].}
+\begin{document}
+\noindent{\small\bfseries STUDIE 07 \hfill Verze 1.0 / 15. 11. 2026}\par\vspace{0.7em}
+{\LARGE\bfseries Infrastruktura Raspberry Pi\par}
+\vspace{0.5em}\noindent{\large Průvodce vlastní instalací, databázemi, webem\newline a prostředím pro výpočty}\par\vspace{0.8em}
+
+\section{Cíl: sestavit systém a rozumět mu}
+Tato studie je návod k \textbf{samostatné realizaci}, nikoli hotový instalátor. Instalaci OS, sestavení služeb, měření jejich nároků a výpočtové algoritmy provede autor bakalářské práce. Přiložené krátké konfigurace slouží jako vysvětlené příklady. Na Raspberry Pi nebyl v rámci této studie spuštěn žádný příkaz.
+
+\textbf{Doporučený základ: Raspberry Pi OS Lite 64-bit, přístup přes SSH, jeden Docker Engine a Docker Compose pro InfluxDB a Grafanu.} Sběr ze senzorů a vlastní online výpočty začít jako běžné programy v Linuxu; po ověření je spouštět pomocí systemd. Docker uvnitř Dockeru není pro tento účel potřeba. Hotová Grafana poskytne první webové rozhraní, InfluxDB~2 vlastní správu databáze.
+
+\subsection{Závazné vstupy a dosud neověřené údaje}
+Výchozí zařízení je \textbf{Raspberry Pi 5 se 2 GB RAM, Active Cooler, M.2 HAT+ a jediné NVMe SSD}. Systém, programy i trvalé záznamy jsou na tomto SSD. \textbf{Žádná SD, záložní médium ani replikace nejsou součástí návrhu.} Obsluha je vzdálená, z počítače přes síť. Z podkladů vyplývá GNSS mosaic-X5 přes USB a PPS, IMU ICM-20948 přes SPI/INT; cíle jsou GNSS až 100~Hz a IMU přibližně 500~Hz. Skutečné režimy, frekvence a datové toky se musí změřit.\cite{projekt}
+
+\textbf{Důležitý závěr pro 2 GB:} samotné logování se jeví jako rozumný cíl, ale pro souběh loggeru, výpočtů, InfluxDB a Grafany zatím nemáme doloženou paměťovou rezervu. Návod proto rozlišuje malý \emph{laboratorní pokus na Pi} a \emph{provoz při jízdě}. Databázi a vizualizaci lze podle výsledků ponechat na Pi, spouštět až po jízdě, nebo provozovat na PC. Záznam na Pi na jejich dostupnosti nemá záviset.
+
+\subsection{Jak s návodem pracovat}
+Příkazy označené \textbf{Windows} patří do PowerShellu na PC; příkazy \textbf{Pi} do Bash po SSH. Nevykonávat celý dokument jako skript. Za každou etapou je kontrolní bod. Zapisovat skutečné verze, výstupy a problémy do vlastního protokolu. Číselné rozpočty níže jsou návrhové odhady, nikoli výsledky experimentu. Technické zdroje a GitHub repozitáře jsou soustředěny na konci.
+
+\clearpage
+\section{Pojmy, které potřebuješ před instalací}
+\par\noindent\begin{tabularx}{\textwidth}{L{30mm}Y}
+\toprule Pojem & Význam v tomto projektu\\\midrule
+OS a kernel & Linux obsluhuje CPU, paměť, SSD a periferie. Raspberry Pi OS dodává kernel, nástroje a balíčky. Lite znamená variantu bez desktopu.\\\addlinespace
+Proces a služba & Proces je běžící program. Služba má navíc pravidla spuštění, ukončení, restartu a logování; na hostiteli je spravuje systemd.\\\addlinespace
+Image & Balíček souborů pro vytvoření kontejneru. Tag označuje vydání, digest konkrétní obsah. Image OS pro Imager a kontejnerový image jsou různé věci.\\\addlinespace
+Kontejner & Izolovaný proces či skupina procesů se soubory z image. Sdílí kernel hostitele; není to samostatné virtuální Raspberry Pi.\\\addlinespace
+Docker Engine & Služba na Pi, která kontejnery vytváří a řídí. Docker Desktop na samotné Pi v tomto postupu neinstalujeme.\\\addlinespace
+Docker Compose & Popis služeb v YAML a příkazy pro jejich společnou správu. Vytváří běžné kontejnery vedle sebe, ne kontejnery uvnitř jiného Dockeru.\\\addlinespace
+Volume & Trvalé úložiště kontejneru spravované Dockerem. V tomto projektu leží na stejném SSD. Přežije výměnu kontejneru, ale není zálohou.\\\addlinespace
+Port a síť & InfluxDB má HTTP API na portu 8086, Grafana web na 3000. Kontejnery v Compose se oslovují názvem služby.\\\addlinespace
+API a token & API je rozhraní pro programy. Token je přístupové tajemství s oprávněními; nesmí být součástí veřejného repozitáře nebo JavaScriptu v prohlížeči.\\\addlinespace
+Databáze a dotaz & Databáze organizuje uložená měření. Dotaz vybírá čas, signál a agregaci. Grafana dotazy odesílá a vykresluje odpovědi.\\
+\bottomrule
+\end{tabularx}\par
+Základní fungování Compose a trvalých volumes popisuje dokumentace Dockeru.\cite{compose,volumes}
+
+\subsection{Tři různé významy slova log}
+\textbf{Měřicí záznam} obsahuje GNSS/IMU data pro následné výpočty. \textbf{Provozní log programu} říká například, že se odpojilo USB nebo selhal zápis. \textbf{Databázová časová řada} obsahuje hodnoty připravené pro dotazy a grafy. Konzolový výpis kontejneru není náhradou měřicího záznamu.
+
+\kontrola{Vlastními slovy vysvětlit, proč odstranění kontejneru nemusí odstranit data a proč současně volume nechrání před poruchou NVMe.}
+
+\clearpage
+\section{Doporučená architektura a význam webu}
+\begin{figure}[htbp]\centering
+\begin{tikzpicture}[b/.style={draw,rounded corners,align=center,font=\small,fill=blue!4,text width=43mm,minimum height=13mm},a/.style={-{Latex[length=2mm]},thick}]
+\node[b] (s) at (0,0) {GNSS + IMU\\USB, PPS, SPI, INT};
+\node[b] (l) at (0,-2.0) {Vlastní sběr / logger\\Linux + systemd};
+\node[b] (r) at (0,-4.0) {Raw segmenty na NVMe\\SBF + IMU + metadata};
+\node[b] (e) at (6,-4.0) {Import / export hodnot\\hotový DB klient};
+\node[b] (d) at (6,-2.0) {InfluxDB\\kontejner 1};
+\node[b] (g) at (6,0) {Grafana\\kontejner 2};
+\node[b,text width=106mm,fill=green!4] (pc) at (3,2.0) {Prohlížeč na PC přes SSH tunel\\Grafana: grafy \quad InfluxDB UI: databáze, tokeny, dotazy};
+\draw[a] (s)--(l);\draw[a] (l)--(r);\draw[a] (r)--(e);\draw[a] (e)--(d);\draw[a] (g)--node[right,font=\scriptsize]{dotaz}(d);\draw[a] (pc.east)-|(g.east);
+\end{tikzpicture}
+\caption{Vlastní návrh. Šipka exportu znamená odvozená data na témže SSD, nikoli druhé záložní médium. Databáze a Grafana mohou později běžet na PC.}
+\end{figure}
+
+\textbf{Grafana je již hotová webová aplikace.} Umožní vybrat jízdu a čas, zobrazit stav RTK, rychlost, signály IMU nebo diagnostiku. Pro první funkční celek nepotřebuješ vlastní frontend. InfluxDB~2 má samostatné webové rozhraní pro vytvoření bucketů, tokenů a průzkum dat. Grafana není univerzální správce databáze. Její interní databáze pro uživatele a dashboardy není úložištěm všech senzorových vzorků.\cite{grafana-start,influx-install}
+
+Pro první cvičení nahradíme celou levou větev \textbf{ručně vytvořenými třemi hodnotami}. Až bude srozumitelné ukládání, dotazování a restart, připojí se skutečný zdroj. Logger nebude synchronně čekat na vykreslení stránky ani na každý databázový zápis.
+
+\textbf{Volba provozu:} při jízdě prioritně přijímat a ukládat data; prohlížení a těžké dotazy jsou odložitelné. Při práci na stole lze zkoušet všechny služby současně s omezenou zátěží. Po jízdě lze pro analýzu použít PC; jde o pracovní zpracování, nikoli požadavek automatického zálohování.
+
+\clearpage
+\section{Volby a alternativy: proč tento základ}
+\small
+\begin{longtable}{@{}L{33mm}L{57mm}L{60mm}@{}}
+\toprule Volba & Důvod doporučení & Alternativa a kdy ji zvolit\\\midrule\endhead
+Pi OS Lite 64-bit & Přímá návaznost na dokumentaci a hardware Pi, bez RAM pro lokální desktop. & Ubuntu Server dává smysl při zkušenosti s Ubuntu. Buildroot/Yocto až při potřebě vlastního udržovaného obrazu; začátečníkovi přidávají práci.\\\addlinespace
+Běžný Linux & Nejprve ověřit funkčnost a časování celé cesty. & PREEMPT\_RT, pokud měření ukáže nevyhovující latence. Neřeší samo trvanlivost dat na disku.\\\addlinespace
+Zephyr & Není vybraným hostitelem této infrastruktury. & Podpora desky Pi~5 existuje. To však neznamená podporu stejného Linuxového Docker/Grafana stacku ani všech potřebných periferií. Vhodnější samostatná větev pro vyhrazený sběr, případně MCU.\\\addlinespace
+Docker Compose & Dvě hotové služby, čitelná konfigurace, stejné rozhraní na Pi i PC. & Nativní balíčky ušetří část režie a jsou legitimní. Podman lze použít při odpovídající zkušenosti. Kubernetes a Docker-in-Docker zde nepřinášejí potřebnou vlastnost.\\\addlinespace
+InfluxDB 2 pro první cvičení & Webová správa, bucket, tokeny a ucelená cesta do Grafany přes Flux. & InfluxDB~3 je novější hlavní směr. Má SQL a odlišné rozhraní; rozhodnutí podrobně níže. SQLite je jednodušší pro malá lokální metadata, ale nenahradí hotový Influx/Grafana postup.\\\addlinespace
+Grafana & Hotové grafy, časový výběr, proměnné a datové zdroje. & Vlastní web až pro konkrétní chybějící ovládání měření. Portainer spravuje kontejnery, nikoli význam měřených dat.\\\addlinespace
+Python venv & Snadné experimenty a izolované knihovny pro vlastní výpočty. & C/C++ pro naměřené kritické úseky; výpočtový kontejner pro přenositelnost. JupyterLab především na PC pro offline analýzu.\\
+\bottomrule
+\end{longtable}
+\normalsize
+Tabulka je návrhovým hodnocením pro tento projekt, nikoli obecným žebříčkem produktů. Podpora Pi v Zephyru je doložena aktuální dokumentací; její seznam periferií není totožný se seznamem hardwaru fyzicky osazeného na desce.\cite{pi-start,zephyr,venv,sqlite}
+
+\textbf{Odpověď na původní otázku RTOS:} požadavek pravidelného vzorkování a požadavek zachovat log jsou dva různé problémy. Časy měření ideálně pocházejí ze senzorů a hardwarových událostí. Linuxová latence se musí vejít do kapacity FIFO a front. Trvanlivost záznamu závisí na zápisu, synchronizaci, napájení a SSD. Podrobnosti zůstávají ve studii~06.\cite{studie06,fsync}
+
+\clearpage
+\section{Paměťový rozpočet: stačí 2 GB?}
+\subsection{Rozpočet samotného loggeru není rozpočet databázového serveru}
+Studie~06 odhadovala přibližně 864~MiB v běžném a 1328~MiB v náročnějším scénáři loggeru, včetně 128~MiB fronty. \textbf{Nešlo o měření a nebyly v tom InfluxDB ani Grafana.} Tyto hodnoty zde používáme pouze jako výchozí projektový model. Využitelnou paměť neurčovat z nápisu 2~GB: zjistit \texttt{MemTotal} v konkrétním OS.\cite{studie06}
+
+\begin{table}[htbp]\centering\small
+\caption{Vlastní plánovací odhad; jednotlivé řádky nejsou garantovaná maxima.}
+\par\noindent\begin{tabularx}{\textwidth}{Yrr}
+\toprule Část & Menší scénář [MiB] & Vyšší scénář [MiB]\\\midrule
+OS + logger + online výpočty z modelu 06 & 864 & 1328\\
+Docker Engine a pomocné procesy (odhad) & 100 & 160\\
+InfluxDB~2 (odhad pro malou zátěž) & 512 & 1024\\
+Grafana (plánovací rozpočet) & 512 & 768\\
+Volná bezpečnostní rezerva (návrh) & 256 & 256\\\midrule
+\textbf{Celkem} & \textbf{2244} & \textbf{3536}\\
+\bottomrule
+\end{tabularx}\par\end{table}
+
+Grafana uvádí minimálně 512~MB RAM a jedno CPU jádro; to není limit celé sestavy. Pro jednoduchost zde pro ni rezervujeme nejméně 512~MiB. Odhady databáze a Dockeru jsou naše plánovací předpoklady, nikoli zveřejněná minima výrobce. Nároky databáze rostou s kardinalitou, cache, kompakcemi a dotazy.\cite{grafana-install,influx-schema}
+
+\begin{equation}
+M_{\mathrm{celkem}}=M_{\mathrm{OS+sběr+výpočet}}+M_{\mathrm{Docker}}+M_{\mathrm{DB}}+M_{\mathrm{web}}+M_{\mathrm{rezerva}}.
+\end{equation}
+Již nižší scénář převyšuje 2048~MiB. \textbf{Z dostupných podkladů tedy nelze potvrdit, že plná sestava na 2GB Pi při jízdě vyhoví.} Malá demonstrace bez skutečného sběru může fungovat: laboratorní limity 768~MiB pro DB a 512~MiB pro Grafanu dávají 1280~MiB pro kontejnery, ale zbytek musí pokrýt OS, Docker a rezervu. Limit paměť nevytvoří; při jeho dosažení může proces ukončit OOM killer.\cite{docker-memory}
+
+\subsection{Rozumný postup bez nákupu dalšího Pi}
+Nejprve spustit jen DB, změřit stav, pak Grafanu. Pro jízdu ponechat databázové služby vypnuté, dokud společný test neprokáže rezervu. Pokud nevyhoví, přesunout pouze DB/Grafanu nebo offline výpočty na PC, případně spouštět analýzu po jízdě na témže Pi. Vyšší RAM je alternativa pro prokázanou potřebu, nikoli nutná podmínka prvního pokusu. Swap či zram není náhradou kapacity pro časově citlivý sběr.
+
+\clearpage
+\section{Kolik dat a kolik RAM pro fronty a výpočty}
+\subsection{Datový tok a zpoždění zápisu}
+Pro návrh je třeba znát skutečné binární formáty. Model IMU: 64~B na vzorek včetně časů, sekvence a režie, 500~vzorků/s. Model GNSS: 100~kB/s SBF, \emph{nikoli} odhad odvozený jen ze 100~Hz polohy. Raw observables mohou mít jiný tok podle počtu družic a bloků. Model IMU tedy dává 32~kB/s; dohromady 132~kB/s, přibližně 475~MB/h. Vše v této větě je ilustrativní model k nahrazení měřením.
+\begin{equation}
+R=\sum_i f_i b_i,\qquad V=Rt,\qquad t_{\mathrm{fronta}}=\frac{B_{\mathrm{fronta}}}{R}.
+\end{equation}
+Při uvedených 132\,000~B/s překlene 128~MiB asi 1017~s (17~min). Při 1~MiB/s pouze 128~s. Prakticky je nutná rezerva pro bloky a správu fronty. U Python objektů mohou být nároky mnohem vyšší než u souvislého binárního bufferu. Fronta přežívá pouze za běhu procesu a napájení; není trvalý záznam.
+
+\subsection{Vzorky do grafu nejsou totéž co zdroj pro filtr}
+Do raw logu uložit plnou potřebnou frekvenci. Dashboardu může stačit např. 5--10~Hz vybraných hodnot. To je návrh pro zobrazení, \textbf{nikoli povolení zahodit IMU vzorky před vlastním algoritmem}. Tříhodinová jízda při 500~Hz obsahuje 5,4 milionu IMU vzorků. Větší databázový dotaz nad celou jízdou proto nemusí být levný, přestože je příjem jen několik desítek kB/s.
+
+\subsection{Paměť výpočtového prostředí}
+Souvislé pole 12 hodnot typu float64 pro 500~Hz po dobu tří hodin zabere:
+\begin{equation}
+500\cdot10800\cdot12\cdot8=518\,400\,000\ \mathrm{B}\approx494\ \mathrm{MiB}.
+\end{equation}
+To je jen jedno pole, bez časů, indexů, kopií a Python procesu. Uložení plné matice kovariance 15\,$\times$\,15 ve float64 pro každý takový vzorek by vyžadovalo:
+\begin{equation}
+500\cdot10800\cdot225\cdot8=9\,720\,000\,000\ \mathrm{B}\approx9{,}05\ \mathrm{GiB}.
+\end{equation}
+\textbf{Online filtr} s pevným stavem a krátkým oknem může mít malou pracovní paměť. \textbf{Offline vyhlazování} s historií celé jízdy je jiná úloha; plánovat PC, blokové zpracování nebo ukládání mezivýsledků. Volbu algoritmu a jeho implementaci tato studie nepředepisuje.
+
+\clearpage
+\section{Etapa 1: standardní obraz a první SSH přihlášení}
+\subsection{Preferovaná instalace přímo na NVMe z počítače}
+Potřebuješ USB--NVMe adaptér vhodný pro svůj SSD, Raspberry Pi Imager, síť a stabilní napájení. Adaptér pro M.2 SATA není totéž. \textbf{Zápis image smaže vybraný disk}; podle modelu a kapacity zkontroluj, že jde o cílové NVMe. Tento návod sám nic neflashuje.\cite{pi-start,pi-hat}
+\begin{enumerate}
+\item V Imageru vyber Raspberry Pi~5 a \textbf{Raspberry Pi OS Lite (64-bit)}. Lze použít oficiální uložený obraz z 6.~10.~2026 v projektové složce instalace; jeho datum není tvrzení, že je dnes nejnovější. Pro studium začni standardním obrazem, nikoli předkonfigurovaným vlastním image.
+\item Vyber správné NVMe jako úložiště. Nastav hostname \texttt{formula-logger}, uživatele např. \texttt{logger}, vlastní heslo nebo SSH klíč a povol SSH. Nastav časové pásmo a pro Wi-Fi také síť a zemi. Hesla nevkládej do textu práce.
+\item Pro první start je nejjednodušší Ethernet do routeru s DHCP. Pro Wi-Fi musí být konfigurace již v obrazu. Uložení přihlašovacích údajů a SSH se musí vztahovat právě na zapisované NVMe.
+\item Spusť zápis a ověření. Disk bezpečně odeber z PC a při vypnutém napájení namontuj do HAT+. Připoj síť, pak napájení. První start nech dokončit.
+\item Ve Windows otevři PowerShell a přihlas se. Když nefunguje \texttt{.local}, najdi IP v seznamu DHCP routeru a použij ji místo jména.
+\end{enumerate}
+\begin{lstlisting}
+# Windows
+ssh logger@formula-logger.local
+\end{lstlisting}
+\textbf{Proč takto:} obraz již obsahuje bootovací oddíl i Linux. Není to běžný PC instalátor, který z flashky interaktivně instaluje OS na jiný disk. Imager přímo připraví médium k bootu. Postup SSH dokumentuje Raspberry Pi.\cite{pi-remote}
+
+\krok{Na Pi ověř, co skutečně běží}
+\begin{lstlisting}
+findmnt /
+lsblk -o NAME,SIZE,MODEL,FSTYPE,MOUNTPOINTS
+uname -m
+dpkg --print-architecture
+cat /etc/os-release
+free -m
+\end{lstlisting}
+\kontrola{Root je na NVMe, obvykle \texttt{/dev/nvme0n1p2}; kernel hlásí \texttt{aarch64}, balíčky \texttt{arm64}. Zapsat OS, kernel, MemTotal a velikost volného místa. Samotný úspěšný SSH login neprokazuje boot z NVMe.}
+
+\clearpage
+\section{Odbočka: dočasná USB flash a existující NTFS}
+\subsection{Když nemáš USB--NVMe adaptér}
+Dočasná USB flash může sloužit jako startovací systém, ze kterého zapíšeš standardní obraz na NVMe. Po dokončení se odpojí; není to záloha ani trvalá součást sestavy. Nejde o SD. Příprava projektu obsahuje podrobný starší ruční postup; následuje jeho princip.\cite{instalace,pi-hat}
+\begin{enumerate}
+\item Imagerem připrav USB flash s Lite OS, hostname \texttt{formula-setup}, uživatelem a SSH. Nabootuj z USB a příkazem \texttt{findmnt /} potvrď, že neběžíš z cílového SSD.
+\item Ve Windows otevři PowerShell ve složce projektových instalačních podkladů s obrazem a přenes jej na USB systém:
+\begin{lstlisting}
+# Windows, in the folder containing the standard image
+scp .\2026-10-06-raspios-trixie-arm64-lite.img.xz logger@formula-setup.local:
+\end{lstlisting}
+Na Pi spusť \texttt{sha256sum} nad přeneseným souborem a porovnej celý výsledek s \texttt{SHA256SUMS.txt} v instalačních podkladech. Příkazem \texttt{lsblk -o NAME,SIZE,MODEL,FSTYPE,MOUNTPOINTS} zjisti cílový SSD. Žádný jeho oddíl nesmí být připojený; případně odpoj jednotlivé datové oddíly pomocí \texttt{sudo umount} s jejich ověřeným názvem, nikdy běžící rootfs.
+\item Na Pi nainstaluj Imager příkazy \texttt{sudo apt update} a \texttt{sudo apt install rpi-imager}. Nejprve přečti \texttt{rpi-imager --cli --help}, protože přepínače závisí na verzi. Teprve po kontrole cíle proveď zápis. Příklad pro obvyklé jméno SSD:
+\end{enumerate}
+\begin{lstlisting}
+# Pi booted from USB, TARGET IS ERASED:
+sudo rpi-imager --cli --disable-eject \
+  ~/2026-10-06-raspios-trixie-arm64-lite.img.xz /dev/nvme0n1
+\end{lstlisting}
+Čisté NVMe nepřebírá SSH, Wi-Fi a uživatele z běžící USB instalace. Pro první boot po Ethernetu lze po zápisu připojit boot oddíl NVMe a podle dokumentace připravit \texttt{ssh} a \texttt{userconf.txt} s hashem hesla.\cite{pi-remote}
+\begin{lstlisting}
+# Pi: only after confirming the target partition with lsblk
+sudo mkdir -p /mnt/nvme-boot
+sudo mount /dev/nvme0n1p1 /mnt/nvme-boot
+sudo touch /mnt/nvme-boot/ssh
+printf '%s:' 'logger' | sudo tee /mnt/nvme-boot/userconf.txt >/dev/null
+openssl passwd -6 | sudo tee -a /mnt/nvme-boot/userconf.txt >/dev/null
+sync
+sudo umount /mnt/nvme-boot
+\end{lstlisting}
+Heslo se zadává interaktivně. Při přerušení znovu vytvoř celý řádek souboru. V \texttt{sudo raspi-config} nastav \emph{Advanced Options / Boot Order / NVMe/USB}; pak \texttt{sudo poweroff}, odpoj USB a nabootuj SSD. Pokud zařízení vůbec nebootuje z USB, nejprve vyřeš konfiguraci EEPROM podle dokumentace; vzdálené SSH nemůže opravovat systém, který ještě neběží.\cite{pi-config}
+
+\subsection{Pokud už existuje rozdělení 64 GiB ext4 + NTFS}
+V podkladech z 2.~11.~2026 je tato varianta připravena. \textbf{Nový návod nepředepisuje její smazání.} Docker a databázové volumes ponech na linuxovém ext4, raw logy mohou zůstat v ověřeném \texttt{/srv/logs} na NTFS. Kontroluj skutečné připojení a oprávnění; DB volumes nepřesouvej na NTFS či SMB. Při čisté instalaci je nejjednodušší standardní ext4 a přístup k souborům po síti. Tím se nepopírá existující potřeba čtení NTFS ve Windows.\cite{ntfs-priprava}
+
+\clearpage
+\section{Etapa 2: základní orientace v Linuxu}
+\krok{Aktualizace po prvním startu (Pi)}
+\begin{lstlisting}
+sudo apt update
+sudo apt full-upgrade
+sudo reboot
+\end{lstlisting}
+Po restartu se znovu přihlas. \texttt{apt update} obnoví seznam balíčků, \texttt{full-upgrade} provede aktualizaci systému. \texttt{sudo} spouští konkrétní příkaz s právy správce. Před jízdou aktualizace nezaváděj bez opakování ověřovacích testů. Změny kernelu mohou ovlivnit periferie i časování.
+
+\krok{Příkazy, které budeš používat průběžně}
+\begin{lstlisting}
+pwd
+ls -lah
+mkdir -p ~/formula-lab
+cd ~/formula-lab
+df -h /
+free -m
+timedatectl status
+systemctl --failed
+journalctl -b -p warning --no-pager
+vcgencmd get_throttled
+vcgencmd measure_temp
+\end{lstlisting}
+\texttt{pwd}/\texttt{cd}/\texttt{ls} pracují s adresáři, \texttt{df} s místem na disku, \texttt{free} s RAM. Hodnota \texttt{MemAvailable} je užitečnější pro rezervu než pouhá \texttt{free}: část RAM Linux používá jako uvolnitelnou cache. \texttt{journalctl} čte systémový deník; může vyžadovat \texttt{sudo}. Bitová maska \texttt{get\_throttled} obsahuje aktuální i historické stavy, proto nenulovou hodnotu nerozebírat jen jako přítomnou teplotu.\cite{pi-config}
+
+\subsection{Umístění souborů a oprávnění}
+\texttt{\textasciitilde/formula-lab} bude obsahovat konfiguraci experimentu. Docker má vlastní data, obvykle pod \texttt{/var/lib/docker}; skutečnou cestu zjistíš později. Raw měřicí logy mají vlastní adresář mimo kontejnery. Pro první standardní instalaci postačí pracovní složka uživatele. Později lze vytvořit \texttt{/srv/formula}; pokud už používáš NTFS, zachovej ověřený \texttt{/srv/logs}.
+
+Hesla, tokeny a měřicí soubory nepatří do Gitu. Do repozitáře patří Compose, popis verzí, vlastní programy a export nastavení dashboardů bez tajných údajů. Konfigurační soubory před spuštěním otevři a přečti; existence hotového GitHub projektu neznamená, že je vhodný pro tvůj hardware.
+
+\kontrola{Po restartu znovu funguje SSH; root je stále na NVMe; systém má správný čas a nezobrazuje nevysvětlené chyby napájení. Vysvětlit rozdíl mezi restartem jednoho programu a restartem celého Pi.}
+
+\clearpage
+\section{Etapa 3: Docker Engine a Compose}
+\textbf{Použij oficiální návod pro Debian arm64.} Stránka Dockeru pro Raspberry Pi OS řeší především 32bitovou větev a pro 64 bitů odkazuje na Debian. Následující příkazy jsou pro čistý Pi OS založený na Debianu~13 Trixie; předem ověř předchozí kontrolní bod. Na systému s jinou instalací Dockeru nejdříve řeš konfliktní balíčky podle dokumentace, ne automatickým mazáním.\cite{docker-pi,docker-debian}
+
+\krok{Přidej podepsaný repozitář a balíčky (Pi)}
+\begin{lstlisting}
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg \
+  -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null <<'EOF'
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: trixie
+Components: stable
+Architectures: arm64
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
+\end{lstlisting}
+Podepsaný repozitář umožní spravovat aktualizace přes apt. Pevné \texttt{trixie} a \texttt{arm64} jsou zde záměrné: pomáhají rozumět, pro který systém postup platí. Nepoužívej je beze změny na jiné distribuci. Balíček Compose je doplněk příkazu \texttt{docker}; příkaz má mezeru, \texttt{docker compose}, ne historické \texttt{docker-compose}.
+
+\krok{Ověř službu a první kontejner}
+\begin{lstlisting}
+sudo systemctl status docker --no-pager
+sudo docker version
+sudo docker compose version
+sudo docker run --rm hello-world
+sudo docker info --format '{{.DockerRootDir}}'
+\end{lstlisting}
+\texttt{hello-world} vyžaduje stažení malého image. Volba \texttt{--rm} odstraní skončený testovací kontejner. V tomto návodu se používá \texttt{sudo docker}; přidání uživatele do skupiny \texttt{docker} lze provést později s vědomím, že poskytuje velmi široká oprávnění k hostiteli.\cite{docker-postinstall}
+
+\kontrola{Uložit verze Dockeru a Compose. Vysvětlit, co je klient a co daemon. Dokázat najít běžící kontejnery pomocí \texttt{sudo docker ps}.}
+
+\clearpage
+\section{Etapa 4: přečti si dvouslužbový Compose}
+Na Pi přejdi pomocí \texttt{cd \textasciitilde/formula-lab} do pracovní složky a otevři \texttt{nano compose.yaml}. Vlož následující text; uložíš jej přes Ctrl+O, Enter a editor ukončíš Ctrl+X. Pokud nano chybí, doinstaluj \texttt{sudo apt install nano}. Soubor je také v příloze \texttt{ukazky}. Odsazení jsou mezery. Zatím jej pouze přečti a validuj.
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+name: formula-lab
+services:
+  influxdb:
+    image: influxdb:2.9.1
+    ports:
+      - "127.0.0.1:8086:8086"
+    volumes:
+      - influx-data:/var/lib/influxdb2
+      - influx-config:/etc/influxdb2
+    mem_limit: 768m
+    memswap_limit: 768m
+    restart: "no"
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+  grafana:
+    image: grafana/grafana:13.3.1
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    mem_limit: 512m
+    memswap_limit: 512m
+    restart: "no"
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  influx-data:
+  influx-config:
+  grafana-data:
+\end{lstlisting}
+\textbf{Význam:} \texttt{image} vybírá hotový program. Levá část \texttt{ports} určuje rozhraní a port hostitele; \texttt{127.0.0.1} dovolí přístup jen lokálně na Pi, později přes SSH tunel. Volumes uchovají DB a dashboardy. \texttt{mem\_limit} je strop; stejný \texttt{memswap\_limit} nedovoluje kontejneru další swap. \texttt{restart: "no"} vyžaduje vědomé spuštění laboratoře. Rotace konzolových logů omezuje jejich růst, nikoli velikost databáze.\cite{docker-memory,volumes,grafana-docker,influx-compose}
+
+\begin{lstlisting}
+# Pi, in ~/formula-lab
+sudo docker compose config --quiet
+\end{lstlisting}
+\kontrola{Validace skončí bez chyby. Absence chyby YAML neznamená ověřenou dostatečnost RAM nebo správné zapojení senzorů.}
+
+\clearpage
+\section{Verze InfluxDB: vědomě oddělit dvojku a trojku}
+\textbf{Tento praktický postup je pro InfluxDB 2.9.1 a Flux.} Je to pedagogická volba kvůli integrovanému UI a přímočarému propojení s Grafanou. Není to tvrzení, že řada~2 je nejnovější. Oficiální dokumentace označuje InfluxDB~3 Core za aktuální hlavní stabilní řadu. Pro dlouhodobý projekt před závaznou volbou znovu posoudit podporu a migrační cenu.\cite{influx-install,influx3}
+
+\par\noindent\begin{tabularx}{\textwidth}{L{30mm}Y Y}
+\toprule Oblast & InfluxDB 2 v návodu & InfluxDB 3 Core jako alternativa\\\midrule
+Organizace dat & Organizace, bucket, retenční doba. & Databáze a tabulky, jiná administrace.\\\addlinespace
+Dotazy & Flux a odpovídající režim datového zdroje v Grafaně. & SQL/InfluxQL; Flux se nepřenáší.\\\addlinespace
+Webová správa & Integrovaná webová aplikace. & Pro webové prostředí lze přidat InfluxDB 3 Explorer. Další službu započítat do RAM.\\\addlinespace
+Dlouhé dotazy & Testovat cache, kardinalitu a zátěž. & Core má limity dotazu dané počtem souborů; výchozí nastavení přibližně odpovídá 72 hodinám. Není to tvrzení o 72hodinovém mazání dat.\\\addlinespace
+Python klient & \texttt{influxdb-client}. & Jiný klient a dotazy; ověřit konkrétní řadu.\\
+\bottomrule\end{tabularx}\par
+Omezení Core platí i pro starší časové rozsahy; zvýšení limitů může zvýšit nároky. Nespoléhat na zjednodušené tvrzení, že lze dotazovat jen poslední tři dny.\cite{influx3-query,influx3-config}
+
+\subsection{Proč nepoužívat tag latest}
+Při ověření 15.~11.~2026 existovaly image \texttt{influxdb:2.9.1} a \texttt{grafana/grafana:13.3.1} pro \texttt{linux/arm64}. To bylo ověřeno čtením manifestů registru, nikoli spuštěním na Pi. Webové stránky InfluxDB uváděly jiné aktuální číslování a oznámení přesměrování tagu \texttt{latest}; metadata oficiálních Docker images v téže rešerši stále uváděla řadu~2. Proto návod záměrně \textbf{neodvozuje skutečný obsah latest z banneru dokumentace}.\cite{official-influx,dockerfiles}
+
+Před vlastním pokusem ověř dostupnost tagů, po stažení si zaznamenej digest a datum. Tag lze přeznačit, digest je přesnější identifikace obsahu. Při pozdější změně hlavní řady použij samostatný laboratorní projekt a postup migrace; neotvírej jediná důležitá data naslepo novým image. Testovací bucket níže obsahuje jen umělé hodnoty.
+
+\clearpage
+\section{Etapa 5: InfluxDB a vzdálený přístup do webu}
+\krok{Spusť pouze databázi (Pi)}
+\begin{lstlisting}
+cd ~/formula-lab
+sudo docker compose pull influxdb
+sudo docker compose up -d influxdb
+sudo docker compose ps
+sudo docker compose logs --tail=60 influxdb
+curl --fail http://127.0.0.1:8086/health
+free -m
+sudo docker stats --no-stream
+\end{lstlisting}
+\texttt{pull} stáhne image, \texttt{up -d} vytvoří a spustí službu na pozadí. Pokud \texttt{/health} krátce po startu neodpoví, přečti log a zopakuj kontrolu; spuštěný proces ještě nemusí být připraven přijímat data. Základní instalaci a úložiště popisuje výrobce.\cite{influx-compose}
+
+\krok{Otevři SSH tunel z druhého PowerShellu (Windows)}
+\begin{lstlisting}
+ssh -N -o ExitOnForwardFailure=yes -L 18086:127.0.0.1:8086 -L 13000:127.0.0.1:3000 logger@formula-logger.local
+\end{lstlisting}
+Okno nech otevřené; běžící tunel nemusí vypisovat text. Prohlížeč na PC otevře \url{http://127.0.0.1:18086}. PC port 18086 vede tunelem na port 8086 na Pi. Pro Grafanu bude připraven PC port 13000. Čísla na PC jsou zvolena odlišně, aby nekolidovala s běžnými místními službami. Když jsou obsazená, změň pouze levá čísla.\cite{openssh}
+
+\krok{Proveď úvodní nastavení InfluxDB v prohlížeči}
+Vytvoř vlastního uživatele a silné heslo, organizaci \texttt{formula} a bucket \texttt{lab}. Pro bucket nastav \textbf{retenci 7 dní}. To je záměrné automatické mazání starých \emph{zkušebních} hodnot, nikoli politika pro raw měřicí záznam. V \emph{Load Data / API Tokens} vytvoř jeden token pouze pro zápis do \texttt{lab} a druhý pouze pro čtení z \texttt{lab}. Pojmenuj je např. \texttt{lab-writer} a \texttt{grafana-lab-reader}. Přesné názvy položek UI se mohou lišit.\cite{influx-token}
+
+Tokeny si bezpečně ulož při vytvoření. Řada~2.9 standardně ukládá tokeny jako hash, takže původní tajnou hodnotu nelze později jednoduše vyčíst. Administrátorský token nepoužívej v Grafaně ani v budoucím exporteru.\cite{influx-api}
+
+\kontrola{Přihlášení funguje přes tunel, existuje bucket \texttt{lab}, umíš vysvětlit jeho retenci. Znáš rozdíl mezi heslem webového účtu a API tokenem. Zatím neběží Grafana.}
+
+\clearpage
+\section{Etapa 6: zapiš tři vlastní zkušební body}
+Než se přidají senzory, ověř celou cestu třemi umělými hodnotami. Následující příkazy neměří fyzikální veličinu a neobsahují algoritmus bakalářské práce. Na Pi vytvoří textový \emph{line protocol} s časy za poslední dvě sekundy:
+\begin{lstlisting}
+# Pi, in ~/formula-lab
+python3 - <<'PY' > demo.lp
+import time
+t = time.time_ns()
+for i, value in enumerate((1.0, 2.0, 1.5)):
+    stamp = t - (2 - i) * 1_000_000_000
+    print(f"demo,source=manual value={value} {stamp}")
+PY
+cat demo.lp
+\end{lstlisting}
+Řádek obsahuje measurement \texttt{demo}, tag \texttt{source=manual}, číselný field \texttt{value} a UNIX čas v nanosekundách. Tyto časy jsou časy vytvoření příkladu na Pi, nikoli GNSS epochy. Formát a HTTP API popisuje dokumentace.\cite{influx-write,influx-api}
+
+\krok{Vlož write token skrytě a odešli data}
+\begin{lstlisting}
+read -r -s -p 'Write token pro lab: ' INFLUX_TOKEN
+printf '\n'
+printf 'header = "Authorization: Token %s"\n' "$INFLUX_TOKEN" |
+  curl --config - --silent --show-error --fail-with-body \
+    --request POST \
+    'http://127.0.0.1:8086/api/v2/write?org=formula&bucket=lab&precision=ns' \
+    --header 'Content-Type: text/plain; charset=utf-8' \
+    --data-binary @demo.lp \
+    --write-out '\nHTTP %{http_code}\n'
+unset INFLUX_TOKEN
+\end{lstlisting}
+Příkaz \texttt{read -s} neukazuje token při psaní. Hlavičku předáváme curl přes standardní vstup, aby tajná hodnota nebyla přímo argumentem procesu. Očekávaná odpověď při úspěšném zápisu do InfluxDB~2 je \textbf{HTTP 204}. Chybu neignoruj: 401 značí autentizaci, 403 oprávnění, 400 může znamenat neplatný formát. Opakuj s opraveným tokenem nebo daty.
+
+V InfluxDB Data Explorer otevři editor Flux a spusť:
+\begin{lstlisting}
+from(bucket: "lab")
+  |> range(start: -15m)
+  |> filter(fn: (r) => r._measurement == "demo")
+  |> filter(fn: (r) => r._field == "value")
+\end{lstlisting}
+\kontrola{Vidíš tři body s hodnotami 1, 2 a 1,5. Pokud test opakuješ, vzniknou nové časy a více bodů. Prázdný výsledek nejprve řeš kontrolou času a rozsahu dotazu, ne reinstalací databáze.}
+
+\clearpage
+\section{Etapa 7: hotový web v Grafaně}
+\krok{Spusť druhou službu a znovu změř RAM (Pi)}
+\begin{lstlisting}
+sudo docker compose pull grafana
+sudo docker compose up -d grafana
+sudo docker compose logs --tail=60 grafana
+free -m
+sudo docker stats --no-stream
+\end{lstlisting}
+Přes již otevřený SSH tunel navštiv na PC \url{http://127.0.0.1:13000}. U čistého oficiálního image je počáteční účet \texttt{admin} s heslem \texttt{admin}; při prvním přihlášení heslo změň. U existujícího volume se používají již uložené údaje.\cite{grafana-start,grafana-docker}
+
+\krok{Přidej datový zdroj InfluxDB}
+V nabídce pro připojení/datové zdroje přidej InfluxDB a nastav:
+\par\noindent\begin{tabularx}{\textwidth}{L{40mm}Y}
+\toprule Pole & Hodnota pro tuto laboratoř\\\midrule
+Query language & \texttt{Flux}\\
+URL & \texttt{http://influxdb:8086}\\
+Organization & \texttt{formula}\\
+Default bucket & \texttt{lab}\\
+Token & Čtecí token \texttt{grafana-lab-reader}\\
+Min time interval & Pro první tři body např. \texttt{1s}\\
+\bottomrule
+\end{tabularx}\par
+Klikni na \emph{Save \& test}. URL záměrně není \texttt{localhost}: z pohledu Grafany by to byl její vlastní kontejner. Jméno \texttt{influxdb} přeloží společná Compose síť. URL \texttt{127.0.0.1:18086} slouží jen prohlížeči na PC, nikoli Grafaně uvnitř Pi.\cite{grafana-influx}
+
+\krok{Vytvoř první dashboard}
+Přidej vizualizaci \emph{Time series}, vyber tento datový zdroj a vlož dotaz z přílohy \texttt{demo.flux}:
+\begin{lstlisting}
+from(bucket: "lab")
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r._measurement == "demo")
+  |> filter(fn: (r) => r._field == "value")
+  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+\end{lstlisting}
+Nastav posledních 15 minut, zapni vykreslení bodů a ulož dashboard. Pokud se body agregací sloučí, zúž časový rozsah nebo dočasně vynech poslední řádek dotazu. Automatické obnovování pro první pokus vypni; později začni třeba 5~s, ne jedním dotazem na každý IMU vzorek.
+
+\kontrola{Vysvětlit všechna tři místa: prohlížeč na PC, Grafana kontejner, InfluxDB kontejner. Umět ukázat skutečně uložené body i dotaz, který je vybral.}
+
+\clearpage
+\section{Etapa 8: co přežije zastavení a výměnu kontejneru}
+\subsection{Malý experiment se zkušebním bucketem}
+Na Pi ve složce Compose proveď následující kroky jednotlivě. Nejde o simulaci výpadku napájení; jde o kontrolu životního cyklu kontejnerů.
+\begin{lstlisting}
+sudo docker compose stop grafana
+sudo docker compose start grafana
+sudo docker compose stop influxdb
+sudo docker compose start influxdb
+sudo docker compose down
+sudo docker volume ls
+sudo docker compose up -d influxdb
+sudo docker compose up -d grafana
+\end{lstlisting}
+Po každém obnovení znovu ověř body a dashboard, případně rozšiř časový rozsah. \texttt{stop} zastaví kontejnery, \texttt{start} je spustí. \texttt{down} odstraní kontejnery a síť projektu, ale běžné pojmenované volumes zůstávají. \textbf{Nepřidávej \texttt{-v}: to by žádalo odstranění volumes a dat.} Nepoužívej nekriticky \texttt{volume prune}.\cite{volumes}
+
+\begin{lstlisting}
+sudo docker volume inspect formula-lab_influx-data
+sudo docker volume inspect formula-lab_grafana-data
+sudo docker image inspect influxdb:2.9.1 --format '{{json .RepoDigests}}'
+sudo docker image inspect grafana/grafana:13.3.1 --format '{{json .RepoDigests}}'
+\end{lstlisting}
+Název projektu \texttt{formula-lab} stabilizuje jména volumes. Pokud název změníš, může vzniknout jiná prázdná sada: to samo neznamená, že původní data byla smazána. Před ručním zásahem vždy zjisti, jaké volume který kontejner skutečně používá.
+
+\subsection{Co tímto experimentem nebylo prokázáno}
+Databáze má vlastní mechanismy zápisu a obnovy; v InfluxDB~2 je součástí cesty WAL. Úspěšná HTTP odpověď je potvrzení podle pravidel DB, nikoli záruka proti fyzické poruše jediného SSD. Ani journal filesystemu neznamená, že jsou trvale zapsána všechna poslední uživatelská data.\cite{influx-storage,fsync}
+
+Při poruše NVMe může přestat fungovat celý OS. RAM fronta není řešení takové poruchy. Při výpadku napájení se obsah RAM ztratí. Zde se nepřidává druhá kopie; tato hranice je důsledkem zadané architektury.
+
+\kontrola{Data a dashboard přežijí vytvoření nových kontejnerů nad stejnými volumes. Zaznamenat digest obou images a fakt, že test proběhl jen s umělými daty.}
+
+\clearpage
+\section{Návrh skutečných dat: raw, metadata a časové řady}
+\subsection{Co je hlavní měřicí záznam}
+Pro GNSS ponechat potřebné \textbf{SBF bloky}, ne pouze polohu nebo NMEA. Pro IMU uchovat raw hodnoty, sekvence, časování, nastavení rozsahu, ODR a kalibraci. U GNSS není záznam polohy automaticky dostačující pro PPK. Výběr bloků a konfigurace senzoru patří do realizace měřicí části práce; tato infrastruktura je sama nedoplňuje.\cite{projekt}
+
+Navržené uspořádání jedné jízdy na témže NVMe:
+\begin{lstlisting}
+sessions/2026-11-15_test01/
+  manifest.json
+  gnss_0001.sbf
+  imu_0001.bin
+  events.jsonl
+  derived/
+    results.csv
+\end{lstlisting}
+Je to návrh datového kontraktu, nikoli již existující obsah. Manifest má uvádět identifikaci jízdy, jednotky, formát/verzi, verze firmwaru a programu, nastavení senzorů, kalibraci a použitou časovou základnu. Odvozené výsledky a databázový index nejsou nezávislou zálohou raw souborů: leží na stejném SSD a nemusí obsahovat vše potřebné k rekonstrukci původního měření.
+
+\subsection{Příklad schématu pro InfluxDB 2}
+\par\noindent\begin{tabularx}{\textwidth}{L{31mm}Y Y}
+\toprule Measurement & Tags pro výběr & Fields s hodnotami\\\midrule
+\texttt{gnss} & \texttt{vehicle}, \texttt{sensor}, \texttt{run\_id} & \texttt{lat\_deg}, \texttt{lon\_deg}, \texttt{speed\_mps}, \texttt{fix}, \texttt{seq}\\\addlinespace
+\texttt{imu} & Stejné malé sady identifikátorů & \texttt{ax\_mps2}, \texttt{gx\_rads}, další osy, \texttt{seq}\\\addlinespace
+\texttt{health} & Identifikace zařízení/jízdy & \texttt{queue\_bytes}, \texttt{dropped}, \texttt{write\_lag\_s}, \texttt{temp\_c}\\
+\bottomrule\end{tabularx}\par
+Tagy jsou indexované a jejich kombinace vytvářejí série. Sekvenci vzorku, souřadnici ani jedinečný text každé události nedávat do tagů. \texttt{run\_id} je praktický pro dashboard, ale roste s počtem jízd; retence a počet sérií se musí hlídat.\cite{influx-schema}
+
+\subsection{Čas a opakovaný import}
+Do DB timestampu patří definovaná epocha měření převedená na UTC/UNIX. GNSS čas není bez převodu totožný s UTC; zohlednit časový systém a přestupné sekundy. Monotónní čas hostitele používej pro pořadí a intervaly, nikoli přímo jako UNIX datum. Uchovej také čas přijetí a kvalitu synchronizace. Linuxový příjem USB není okamžik měření.
+
+V InfluxDB~2 určuje bod measurement, sada tagů a timestamp; opakovaný zápis sloučí fields a konfliktní hodnotu přepíše. Pro opakovatelný import zachovej identitu bodu i čas a zabraň kolizím různých vzorků. \textbf{Počet bodů v DB sám neprokáže bezeztrátový sběr.} Úplnost ověřovat v raw záznamu podle sekvencí a očekávaných epoch.\cite{influx-duplicates}
+
+\clearpage
+\section{Napojení loggeru: co sestavit a co bude vlastní práce}
+\subsection{Základní hranice mezi sběrem a databází}
+Nejprve sestav cestu senzor $\rightarrow$ příjem $\rightarrow$ omezená fronta $\rightarrow$ raw segment na NVMe. Teprve pak přidej export hodnot do DB. Pro první funkční verzi je nejsnazší \textbf{import uzavřených segmentů po jízdě}. Odpadne závislost sběru na HTTP, dotazech a kompakcích DB.
+
+Další varianta je průběžný exporter, který čte uzavřené segmenty se zpožděním. Jeho požadavky:
+\begin{enumerate}
+\item Zapisovat dávky, nikoli zakládat HTTP požadavek na každý IMU vzorek. Velikost a interval dávky určit měřením.
+\item Při nedostupnosti DB omezit frontu a čekání. Raw logger pokračuje nezávisle; exporter později pokračuje ze známého místa.
+\item Uložit checkpoint až po potvrzení zápisu. Pád mezi zápisem a checkpointem vede k opakování dávky, proto je důležitá stabilní identita bodů.
+\item Neplatné nebo částečně přijaté dávky nesmí jen zmizet. Evidovat chybu, nezvyšovat checkpoint přes chybějící data a mít možnost import zopakovat.
+\item Pro zobrazení vybrat signály a nižší frekvenci; kompletní potřebný raw stream zůstává zachován.
+\end{enumerate}
+Checkpoint není druhá záloha dat a exporter nemusí vytvářet další trvalou frontu kopií: zdrojem pro opakování jsou existující raw segmenty na stejném SSD.
+
+\subsection{Které hotové součásti použít}
+\textbf{Oficiální Python klient InfluxDB~2} poskytuje model bodů, komunikaci a dávkování. Jeho příklady použij pro malý importer, s explicitním uzavřením/flushem a kontrolou chyb. Klient sám nevyřeší správný GNSS čas ani návrh raw logu.\cite{python-client}
+
+\textbf{Telegraf} je hotový sběrač provozních metrik s pluginy. Hodí se pro CPU, RAM a disk nebo pro vhodně připravený vstupní formát. Nepředpokládej, že automaticky rozumí projektovému SBF/IMU streamu, synchronizaci PPS či kalibraci. Přidej jej až tehdy, když nahradí konkrétní potřebný kus kódu.\cite{telegraf}
+
+\subsection{Co ponechat mimo první Compose}
+Přímý přístup k SPI, přerušení, PPS a identifikaci USB se nejprve lépe ověřuje na hostitelském Linuxu. Pozdější kontejnerizace sběru je možná, ale vyžaduje konkrétní zařízení a oprávnění. Automatické použití \texttt{privileged: true} nebo připojení celého hostitele by zakrylo, co aplikace opravdu potřebuje. Kontejner sám nezlepší přesnost časování.
+
+\kontrola{Zastavení InfluxDB nesmí zastavit příjem a zápis raw dat. Nejprve to prokaž na krátkém zkušebním záznamu; počet přijatých a uložených vzorků vyhodnoť nezávisle na Grafaně.}
+
+\clearpage
+\section{Prostředí pro vlastní výpočty}
+\subsection{První varianta: Python v odděleném venv na Pi}
+Pro vlastní experimentální algoritmy začni prostředím \texttt{venv}. Odděluje knihovny projektu od systémových balíčků. Venv vytvoř přímo na cílové platformě; nekopíruj Windows venv na ARM Linux. Nepoužívej \texttt{sudo pip} ani přepisování ochrany systémového Pythonu.\cite{venv}
+
+\begin{lstlisting}
+# Pi
+sudo apt install python3-venv python3-pip
+mkdir -p ~/formula-calc
+cd ~/formula-calc
+python3 --version
+python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install --only-binary=:all: numpy scipy
+.venv/bin/python -c "import numpy, scipy; print(numpy.__version__, scipy.__version__)"
+.venv/bin/python -m pip freeze > requirements-pi.lock.txt
+\end{lstlisting}
+NumPy poskytuje pole a základní numeriku, SciPy další numerické metody. Nejsou zde vybrané místo tvého algoritmu, ale jako prostředí, ve kterém ho můžeš napsat. Volba \texttt{--only-binary=:all:} zabrání nečekané dlouhé kompilaci na 2GB Pi. Když pro daný Python/ARM nejsou odpovídající wheels, nejprve zvol podporovanou kombinaci verzí podle balíčku; neřeš to automaticky kompilací celého SciPy na Pi.\cite{numpy,scipy}
+
+\krok{Jak budeš pouštět vlastní kód}
+V adresáři si později vytvoříš svůj \texttt{main.py}. Jeho logika není součástí tohoto balíčku. Potom jej spustíš explicitním interpreterem:
+\begin{lstlisting}
+.venv/bin/python main.py
+/usr/bin/time -v .venv/bin/python main.py
+\end{lstlisting}
+Pro druhý příkaz může být potřeba \texttt{sudo apt install time}. Příkaz ukáže mimo jiné maximální residentní paměť; není to spotřeba celého systému. Závislosti zmraz až po funkčním pokusu. Na PC vytvoř samostatné prostředí a vlastní záznam verzí; stejné jméno balíčku nemusí znamenat stejný binární build.
+
+\subsection{Offline vývoj a průběžný výpočet jsou různé režimy}
+\textbf{Offline na PC:} NumPy/SciPy, případně pandas a JupyterLab pro průzkum a grafy. JupyterLab je pracovní webové prostředí, ne nutná součást loggeru. Notebook může skrývat pořadí buněk a stav proměnných; ověřený výpočet převést také do reprodukovatelného skriptu.\cite{jupyter}
+
+\textbf{Online na Pi:} načítat bloky, držet omezenou historii, nepřidávat data bez limitu do listů/DataFrame a průběžně ukládat výsledky. Čtení a zápis oddělit od drahého výpočtu. Číselné jádro se může později přesunout do C/C++, pokud profilování prokáže konkrétní problém.
+
+\clearpage
+\section{Spouštění vlastního programu po startu a výpočty v Dockeru}
+\subsection{systemd až po funkčním ručním spuštění}
+Až existuje tvůj fungující program, lze vytvořit \texttt{/etc/systemd/system/formula-calc.service}. Následuje \textbf{šablona pro budoucí dlouho běžící online program}, ne hotová služba z této studie. Uživatele a cesty uprav podle své instalace. Pokud program zatím jen zpracuje soubor a skončí, spouštěj ho ručně nebo navrhni samostatnou dávkovou službu.
+\begin{lstlisting}
+[Unit]
+Description=Formula online calculation
+After=local-fs.target
+
+[Service]
+Type=simple
+User=logger
+WorkingDirectory=/home/logger/formula-calc
+ExecStart=/home/logger/formula-calc/.venv/bin/python -u /home/logger/formula-calc/main.py
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
+\end{lstlisting}
+Nejdříve ověř ruční start, oprávnění k datům a korektní reakci programu na SIGTERM. Při ukončení má přestat přijímat nové úlohy, dokončit zvolenou dávku a uzavřít soubory. Restart po chybě může znovu zpracovat poslední kus dat; sekvence a checkpointy tomu musí odpovídat. Čas 30~s je návrh k přizpůsobení, nikoli prokázaná doba flush.\cite{systemd}
+\begin{lstlisting}
+# Pi, only after creating and reviewing the unit and main.py
+sudo systemctl daemon-reload
+sudo systemctl start formula-calc
+systemctl status formula-calc --no-pager
+journalctl -u formula-calc -n 50 --no-pager
+sudo systemctl stop formula-calc
+# Enable at boot only after the start/stop test:
+sudo systemctl enable formula-calc
+\end{lstlisting}
+Pro data na samostatném oddílu přidej odpovídající \texttt{RequiresMountsFor=} a ověření připojení; zejména existující NTFS varianta už definuje kontrolu \texttt{/srv/logs}. Pouhá existence adresáře nedokazuje přítomnost datového svazku.
+
+\subsection{Kdy dát výpočet do kontejneru}
+Až znáš závislosti a ruční příkaz, vytvoříš vlastní Dockerfile s podporovaným ARM64 základem, instalací připnutých knihoven a jedním vstupním příkazem. Pro offline úlohu připoj vstupní data jen ke čtení a oddělený výstupní adresář pro zápis. Pro Pi a PC lze sestavit vícearchitekturní image. Kontejner zlepší reprodukovatelnost prostředí, ale nezmění potřebnou RAM algoritmu ani nezaručí časový deadline.\cite{docker-build}
+
+\clearpage
+\section{Hotové repozitáře a hranice vlastní webové aplikace}
+Nejprve používej vydané balíčky a oficiální images; zdrojové repozitáře slouží pro porozumění a příklady. Není nutné všechny naklonovat ani sestavovat ze zdrojů. Převzaté části označ, zachovej licenci a zaznamenej konkrétní verzi nebo commit.
+
+\small
+\begin{longtable}{@{}L{44mm}L{58mm}L{48mm}@{}}
+\toprule Projekt na GitHubu & Co z něj využít & Co od něj neočekávat\\\midrule\endhead
+\texttt{docker/compose}\cite{repo-compose} & Implementace a dokumentace řízení služeb. & Sám neimplementuje logger.\\\addlinespace
+\path{docker/awesome-compose}\cite{awesome} & Malé příklady sítí, volumes a propojení. & Ne hotovou ověřenou telemetrii pro formuli.\\\addlinespace
+\texttt{influxdata/influxdb}\cite{repo-influx} a \texttt{influxdata-docker}\cite{dockerfiles} & DB a oficiální Docker konfigurace. Vybrat správnou hlavní řadu. & Hlavní větev nemusí odpovídat řadě~2 návodu.\\\addlinespace
+\texttt{grafana/grafana}\cite{repo-grafana} & Hotová webová aplikace a datové zdroje. & Přímou správu senzorového sběru.\\\addlinespace
+\path{influxdata/influxdb-client-python}\cite{python-client} & Klient a ukázky pro InfluxDB~2. & Dekódování SBF či výpočty filtru.\\\addlinespace
+\texttt{influxdata/telegraf}\cite{telegraf} & Hotové pluginy a provozní metriky. & Automatické zvládnutí přesného časování IMU.\\\addlinespace
+\texttt{numpy/numpy}, \texttt{scipy/scipy}\cite{repo-numpy,repo-scipy} & Numerické stavební bloky a příklady. & Hotový vlastní algoritmus práce.\\\addlinespace
+\path{jupyterlab/jupyterlab}\cite{repo-jupyter} & Prostředí pro interaktivní offline práci. & Trvalou službu nutnou při jízdě.\\\addlinespace
+\texttt{fastapi/fastapi}\cite{fastapi} & Pozdější jednoduché API vlastního ovládání. & Kompletní frontend a bezpečný přístup k Dockeru bez návrhu.\\\addlinespace
+\texttt{node-red/node-red}\cite{nodered} & Vizuální propojení událostí a hotových integrací. & Tvrdý realtime sběr 500~Hz.\\
+\bottomrule\end{longtable}
+\normalsize
+
+\subsection{Kdy vlastní web dává smysl}
+Pokud chceš pouze zobrazovat křivky a dotazovat data, stačí Grafana a InfluxDB UI. Pokud potřebuješ tlačítko \emph{zahájit jízdu}, zadat označení nebo spustit vlastní výpočet, definuj nejprve tyto tři funkce. Pak lze doplnit malou aplikaci FastAPI s jednoduchou stránkou a odkazy na Grafanu. \textbf{Nedávat webu Docker socket a nepřidávat další Docker Engine.} Rozhraní pro ovládání má nabízet omezené konkrétní akce, ne obecné spouštění shellových příkazů.
+
+Portainer je volitelná webová správa kontejnerů; pro dva kontejnery má Compose dostatečné příkazy. Jeho přístup k Dockeru představuje široká práva. Node-RED má smysl, pokud skutečně nahradí několik potřebných integrací; nezařazovat jej jen proto, že bývá v IoT ukázkách.\cite{portainer}
+
+\clearpage
+\section{Ověření před společným provozem na 2GB Pi}
+\subsection{Měř stejné scénáře, měň vždy jednu část}
+\begin{enumerate}
+\item \textbf{A:} čistý OS po startu, potom samotný sběr a raw zápis v cílových frekvencích.
+\item \textbf{B:} A + vlastní online výpočet, nejdelší očekávaná jízda s rezervou.
+\item \textbf{C:} malý DB/Grafana laboratorní pokus bez sběru; nejprve jednotlivé služby.
+\item \textbf{D:} B + import do DB + jeden běžný dashboard; teprve pokud předchozí měření ukázala prostor.
+\item \textbf{E:} D + náročnější dotaz a kompakce DB. Zkoumat špičky, nejen klid po startu.
+\end{enumerate}
+Začít krátkým testem, pak alespoň hodinou a nakonec očekávanou délkou jízdy s rezervou. Bez dat o latenci a ztrátách nevyvozovat, že procenta CPU pod 100 znamenají úspěch.
+
+\krok{Základní pozorování na Pi}
+\begin{lstlisting}
+free -m
+vmstat 1 60
+sudo docker stats --no-stream
+sudo docker compose ps -a
+sudo docker inspect --format '{{.State.OOMKilled}}' \
+  "$(sudo docker compose ps -aq influxdb)"
+sudo journalctl -k -b --no-pager
+df -h /
+sudo docker system df
+vcgencmd get_throttled
+\end{lstlisting}
+Ve výpisu kernelu hledat OOM, chyby NVMe/USB a I/O; neodvozovat příčinu každého pádu jen z návratového kódu 137. \texttt{vmstat} sleduje mimo jiné swap a čekání. \texttt{docker stats} je pohled na kontejnery, ne účetnictví celé RAM; cache a paměť hostitele vyžadují samostatný pohled.\cite{docker-memory}
+
+\par\noindent\begin{tabularx}{\textwidth}{L{44mm}Y}
+\toprule Veličina & Návrh kritéria před přijetím konfigurace\\\midrule
+RAM & \texttt{MemAvailable} drží alespoň 256~MiB i při zátěži; návrhová rezerva, ne univerzální norma. Bez OOM a bez dlouhodobého swapování.\\\addlinespace
+Úplnost & Žádné nevysvětlené mezery sekvencí; ztráty evidované a lokalizované. Počet v DB nestačí.\\\addlinespace
+Zápis a fronta & Fronta zůstává omezená, backlog dlouhodobě neroste. Změřit maximum a percentily doby synchronizace.\\\addlinespace
+Časování & Vlastní tolerance epoch a latency splněna i při dotazech a zátěži SSD.\\\addlinespace
+Disk a napájení & Dost místa pro plánovanou jízdu, bez nových nevysvětlených chyb úložiště a napájení.\\
+\bottomrule\end{tabularx}\par
+
+\clearpage
+\section{Provozní rozhodnutí, chyby a minimální údržba}
+\subsection{Když společný provoz nevyhoví}
+\textbf{První volba:} při jízdě zastavit Grafanu a DB, sbírat raw data a importovat až následně. \textbf{Druhá volba:} provozovat DB/Grafanu na PC se stejným Compose; browser pak může přistupovat na jeho lokální porty bez SSH tunelu. Přenos po síti smí ovlivnit pouze dostupnost živého zobrazení, nikoli samotný záznam na Pi. \textbf{Třetí volba:} více RAM, pokud celá DB musí běžet na vozidle. Žádná z možností nevyžaduje zavedení záložní SD.
+
+\subsection{Stručná diagnostika}
+\par\noindent\begin{tabularx}{\textwidth}{L{40mm}Y}
+\toprule Příznak & První ověření\\\midrule
+SSH nedostupné & Napájení, DHCP adresa, SSH nastavení správného image, bootovací médium. \texttt{.local} může být pouze problém překladu jména.\\\addlinespace
+Web nelze otevřít & Běží tunel a služba? PC používá 18086/13000. Vzdálený port není přímo otevřen do LAN.\\\addlinespace
+Grafana nevidí DB & URL musí být \texttt{http://influxdb:8086}; správný režim Flux, organizace, bucket a read token.\\\addlinespace
+Graf je prázdný & Časový rozsah, UTC, název measurement/field, retence a skutečný HTTP výsledek zápisu.\\\addlinespace
+Kontejner skončil & \texttt{ps -a}, \texttt{logs}, stav OOM, místo na disku; ne automatický restart celé sestavy.\\\addlinespace
+Po změně názvu nejsou data & Připojené volumes, název Compose projektu; nové prázdné volume může být důvodem.\\\addlinespace
+Disk se plní & Velikost DB, raw souborů a konzolových logů. Nespouštět mazání důležitých dat jako univerzální opravu.\\
+\bottomrule\end{tabularx}\par
+
+\subsection{Co udržovat od začátku}
+Zapisovat verze OS, kernelu, Dockeru, tagy/digesty, konfiguraci a kalibraci. Dashboard exportovat jako JSON do vlastního repozitáře bez tokenů. Retenci pro skutečné jízdy určit zvlášť; 7denní \texttt{lab} je pouze experiment. Před jízdou kontrolovat kapacitu, čas, napájení a stav sběru. Síť a web mají být nástrojem obsluhy, ne podmínkou pokračování sběru.
+
+\textbf{Automatické spouštění služeb je až poslední krok.} Laboratorní Compose má záměrně \texttt{restart: "no"}. Teprve po měření lze vybrané služby změnit např. na \texttt{unless-stopped} a znovu aplikovat \texttt{docker compose up -d}. Rozhodnutí musí odpovídat provoznímu režimu; dvě hladové služby po bootu nesmějí vytlačit logger.
+
+\clearpage
+\section{Pořadí vlastní práce a doporučená videa}
+\subsection{Ověřitelné výstupy jednotlivých sezení}
+\begin{enumerate}
+\item \textbf{Linux a SSD:} vlastnoručně připravené NVMe, SSH, záznam verze a bootovacího zařízení. Umíš se znovu přihlásit po restartu.
+\item \textbf{Docker:} vysvětlený Compose, jedna běžící DB, vytvořený bucket a tokeny. Umíš přečíst log a službu zastavit.
+\item \textbf{Datová cesta:} tři umělé body, dotaz v DB a vlastní první panel v Grafaně. Umíš vysvětlit URL a porty.
+\item \textbf{Persistence:} protokol zastavení a nového vytvoření kontejnerů se stejnými daty; zaznamenané digesty.
+\item \textbf{Výpočtové prostředí:} samostatný venv a vlastní malý program nad vlastním testovacím vstupem. Změřená RAM a doba běhu.
+\item \textbf{Měření:} raw logger, metadata a kontrola sekvencí. Až potom importer, dashboard skutečných signálů a společný zátěžový test.
+\end{enumerate}
+
+\subsection{Videa v doporučeném pořadí}
+\begin{enumerate}
+\item \textbf{Learning Docker Compose.} Videokurz, na který odkazuje oficiální Compose Quickstart. Zaměřit se na image, služby, sítě a volumes; přístup může vyžadovat účet/předplatné. Přímý odkaz je v seznamu zdrojů; kurz doporučuje dokumentace Dockeru v části \emph{Where to go next}.\cite{compose,video-compose}
+\item \textbf{InfluxDB For Beginners, InfluxData.} Přehled instalace, zápisu a dotazování. Ber jej jako orientaci v pojmech a vždy zkontroluj použitou hlavní řadu; příkazy tohoto návodu patří řadě~2. Video je odkazováno z katalogu výrobce.\cite{video-influx}
+\item \textbf{Getting started with Grafana dashboard design, Grafana Labs.} Ukázka návrhu a struktury dashboardu. Po zhlédnutí si navrhni jednu stránku: stav záznamu, RTK stav, rychlost, kapacita a případné chyby. Webinář je označen on-demand, může požadovat registraci.\cite{video-grafana}
+\item \textbf{Introduction to Realtime Linux, Jan Altenberg / The Linux Foundation.} Doplňkově pro rozdíl mezi rychlostí, latencí a deadline. Starší přednáška vysvětluje principy; aktuální instalaci kernelu z ní nepřebírat.\cite{video-rt}
+\end{enumerate}
+Ověřeny byly veřejné odkazy a popisy témat, nikoli úplné přepisy videí. Technické kroky studie se opírají o dokumentaci a ověření konfigurace, ne o domnělý obsah přednášek.
+
+\subsection{Závěr a otevřené otázky pro experiment}
+Začni standardním Linuxem, dvěma hotovými službami a malým testovacím datasetem. Vlastní web zatím není nutný; vlastní práce spočívá v propojení zdrojů, definici času a formátu, ověření úplnosti a vlastních výpočtech. O tom, zda při jízdě poběží i DB a Grafana, rozhodne společné měření paměti a latencí. Stále chybí naměřený datový tok, parametry SSD/napájení a nároky tvého algoritmu. \textbf{Tato studie poskytuje postup, nikoli tvrzení, že je sestava už zprovozněná nebo spolehlivost experimentálně prokázaná.}
+
+\clearpage
+\section*{Zdroje, dokumentace a repozitáře}
+\addcontentsline{toc}{section}{Zdroje, dokumentace a repozitáře}
+U online zdrojů je datem přístupu 15.~11.~2026. Verze uvedené v příkladech jsou konkrétní volbou této studie; odkazy s \texttt{latest}, hlavní větve repozitářů a webové články se mohou měnit. Lokální podklady jsou uvedeny cestou relativní ke složce bakalářské práce. Číselné paměťové odhady a návrhy testů jsou vlastní, není u nich předstíráno měření výrobce.
+\begin{thebibliography}{99}\small
+\bibitem{projekt} Projekt bakalářské práce. \emph{README a hardwarové zadání GNSS/IMU}. Lokální podklad: \path{Samotná_BAKALÁŘKA/rtk-gnss-bakalarka/README.md}. Kontrola 15.~11.~2026; cílové parametry, nikoli protokol skutečného zařízení.
+\bibitem{studie06} \emph{Studie 06: Operační systém a spolehlivé logování}, verze 2.0, 25.~10.~2026. \path{Studie/06_OS_a_spolehlive_logovani/main.tex}. Model pro samotný logger, bez InfluxDB/Grafany.
+\bibitem{instalace} \emph{Příprava Raspberry Pi 5: standardní obraz a postup USB/NVMe}. \path{Doplňkové_materiály/Raspberry_Pi_5_instalace/CTI_ME_INSTALACE.txt}; původní část z 25.~10.~2026 a ověřovací soubory obrazu.
+\bibitem{ntfs-priprava} \emph{Příprava 64 GiB ext4 + NTFS}, 2.~11.~2026. \path{Doplňkové_materiály/Raspberry_Pi_5_instalace/NVMe_NTFS_2026-11-02/CTI_ME.txt}. Existující alternativa; tato studie její image ani konfiguraci nemění.
+\zdroj{pi-start}{Raspberry Pi. \emph{Getting started}; Imager, příprava média a první start}{https://www.raspberrypi.com/documentation/computers/getting-started.html}
+\zdroj{pi-hat}{Raspberry Pi. \emph{M.2 HAT+}; montáž, NVMe a boot}{https://www.raspberrypi.com/documentation/accessories/m2-hat-plus.html}
+\zdroj{pi-remote}{Raspberry Pi. \emph{Remote access}; SSH a ruční příprava headless přístupu}{https://www.raspberrypi.com/documentation/computers/remote-access.html}
+\zdroj{pi-config}{Raspberry Pi. \emph{Configuration}; raspi-config, boot a diagnostika}{https://www.raspberrypi.com/documentation/computers/configuration.html}
+\zdroj{zephyr}{Zephyr Project. \emph{Raspberry Pi 5 (Cortex-A76)}; target rpi\_5 a podporované periferie}{https://docs.zephyrproject.org/latest/boards/raspberrypi/rpi_5/doc/index.html}
+\zdroj{fsync}{Linux man-pages. \emph{fsync(2)}; synchronizace dat a metadat}{https://man7.org/linux/man-pages/man2/fsync.2.html}
+\zdroj{docker-pi}{Docker. \emph{Install Docker Engine on Raspberry Pi OS}; rozlišení 32/64 bitů}{https://docs.docker.com/engine/install/raspberry-pi-os/}
+\zdroj{docker-debian}{Docker. \emph{Install Docker Engine on Debian}; Trixie, arm64 a apt repozitář}{https://docs.docker.com/engine/install/debian/}
+\zdroj{docker-postinstall}{Docker. \emph{Linux post-installation steps}; oprávnění skupiny docker}{https://docs.docker.com/engine/install/linux-postinstall/}
+\zdroj{compose}{Docker. \emph{Docker Compose Quickstart}; služby, síť, persistence, diagnostika a odkaz na videokurz Learning Docker Compose}{https://docs.docker.com/compose/gettingstarted/}
+\zdroj{volumes}{Docker. \emph{Volumes}; trvalá data a životní cyklus}{https://docs.docker.com/engine/storage/volumes/}
+\zdroj{docker-memory}{Docker. \emph{Resource constraints}; paměť, swap a OOM}{https://docs.docker.com/engine/containers/resource_constraints/}
+\zdroj{docker-build}{Docker. \emph{Multi-platform builds}; architektury image}{https://docs.docker.com/build/building/multi-platform/}
+\zdroj{openssh}{OpenBSD / OpenSSH. \emph{ssh(1)}; volby -L a -N}{https://man.openbsd.org/ssh}
+\zdroj{influx-install}{InfluxData. \emph{Install InfluxDB OSS v2}; webové UI a upozornění na hlavní řadu}{https://docs.influxdata.com/influxdb/v2/install/}
+\zdroj{influx-compose}{InfluxData. \emph{Install InfluxDB using Docker Compose}; cesty volumes a konfigurace}{https://docs.influxdata.com/influxdb/v2/install/use-docker-compose/}
+\zdroj{influx-write}{InfluxData. \emph{Get started writing data}; line protocol a vstupní rozhraní}{https://docs.influxdata.com/influxdb/v2/get-started/write/}
+\zdroj{influx-api}{InfluxData. \emph{Write data with the InfluxDB API}; endpoint, token a přesnost času}{https://docs.influxdata.com/influxdb/v2/write-data/developer-tools/api/}
+\zdroj{influx-token}{InfluxData. \emph{Create an API token}; omezení oprávnění}{https://docs.influxdata.com/influxdb/v2/admin/tokens/create-token/}
+\zdroj{influx-schema}{InfluxData. \emph{Schema design}; tags, fields a kardinalita}{https://docs.influxdata.com/influxdb/v2/write-data/best-practices/schema-design/}
+\zdroj{influx-duplicates}{InfluxData. \emph{Handle duplicate data points}; identita a slučování bodů}{https://docs.influxdata.com/influxdb/v2/write-data/best-practices/duplicate-points/}
+\zdroj{influx-storage}{InfluxData. \emph{Storage engine}; WAL, cache a TSM}{https://docs.influxdata.com/influxdb/v2/reference/internals/storage-engine/}
+\zdroj{influx3}{InfluxData. \emph{Set up InfluxDB 3 Core}; odlišná hlavní řada}{https://docs.influxdata.com/influxdb3/core/get-started/setup/}
+\zdroj{influx3-query}{InfluxData. \emph{Query data in InfluxDB 3 Core}; SQL/InfluxQL a časové rozsahy}{https://docs.influxdata.com/influxdb3/core/get-started/query/}
+\zdroj{influx3-config}{InfluxData. \emph{InfluxDB 3 Core configuration options}; query-file-limit}{https://docs.influxdata.com/influxdb3/core/reference/config-options/}
+\zdroj{grafana-install}{Grafana Labs. \emph{Install Grafana}; hardwarová minima}{https://grafana.com/docs/grafana/latest/setup-grafana/installation/}
+\zdroj{grafana-docker}{Grafana Labs. \emph{Run Grafana Docker image}; image a persistence}{https://grafana.com/docs/grafana/latest/setup-grafana/installation/docker/}
+\zdroj{grafana-start}{Grafana Labs. \emph{Get started with Grafana Open Source}; první přihlášení a dashboard}{https://grafana.com/docs/grafana/latest/fundamentals/getting-started/}
+\zdroj{grafana-influx}{Grafana Labs. \emph{Configure the InfluxDB data source}; Flux, URL, organizace a token}{https://grafana.com/docs/grafana/latest/datasources/influxdb/configure/}
+\zdroj{venv}{Python Software Foundation. \emph{venv: Creation of virtual environments}}{https://docs.python.org/3/library/venv.html}
+\zdroj{numpy}{NumPy. \emph{NumPy documentation}; pole a numerické operace}{https://numpy.org/doc/stable/}
+\zdroj{scipy}{SciPy. \emph{User guide}; numerické nástroje}{https://docs.scipy.org/doc/scipy/tutorial/index.html}
+\zdroj{jupyter}{Project Jupyter. \emph{Starting JupyterLab}; pracovní prostředí}{https://jupyterlab.readthedocs.io/en/stable/getting_started/starting.html}
+\zdroj{systemd}{systemd. \emph{systemd.service}; životní cyklus a restart služby}{https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html}
+\zdroj{sqlite}{SQLite. \emph{Appropriate Uses For SQLite}; lokální a vložená databáze}{https://www.sqlite.org/whentouse.html}
+\zdroj{repo-compose}{Docker. \emph{Compose}; zdrojový repozitář}{https://github.com/docker/compose}
+\zdroj{awesome}{Docker. \emph{Awesome Compose}; ukázky, nikoli hotová infrastruktura loggeru}{https://github.com/docker/awesome-compose}
+\zdroj{repo-influx}{InfluxData. \emph{InfluxDB}; repozitář, kontrolovat hlavní řadu a vydání}{https://github.com/influxdata/influxdb}
+\zdroj{dockerfiles}{InfluxData. \emph{influxdata-docker}; oficiální Docker images}{https://github.com/influxdata/influxdata-docker}
+\zdroj{official-influx}{Docker Official Images. \emph{library/influxdb}; metadata tagů a architektur. Doplněno přímým ověřením registry manifestu tagu 2.9.1 dne 15.~11.~2026}{https://github.com/docker-library/official-images/blob/master/library/influxdb}
+\zdroj{repo-grafana}{Grafana Labs. \emph{Grafana}; zdrojový repozitář. Manifest image grafana/grafana:13.3.1 ověřen pro ARM64 dne 15.~11.~2026}{https://github.com/grafana/grafana}
+\zdroj{python-client}{InfluxData. \emph{influxdb-client-python}; klient pro řadu~2, ukázky dávkování}{https://github.com/influxdata/influxdb-client-python}
+\zdroj{telegraf}{InfluxData. \emph{Telegraf}; pluginy a příklady konfigurace}{https://github.com/influxdata/telegraf}
+\zdroj{repo-numpy}{NumPy. \emph{numpy}; zdrojový repozitář}{https://github.com/numpy/numpy}
+\zdroj{repo-scipy}{SciPy. \emph{scipy}; zdrojový repozitář}{https://github.com/scipy/scipy}
+\zdroj{repo-jupyter}{Project Jupyter. \emph{JupyterLab}; zdrojový repozitář}{https://github.com/jupyterlab/jupyterlab}
+\zdroj{fastapi}{FastAPI. \emph{fastapi}; framework pro vlastní API}{https://github.com/fastapi/fastapi}
+\zdroj{nodered}{OpenJS Foundation. \emph{Node-RED}; vizuální aplikace založené na událostech}{https://github.com/node-red/node-red}
+\zdroj{portainer}{Portainer. \emph{Portainer}; webová správa kontejnerových prostředí}{https://github.com/portainer/portainer}
+\zdroj{video-compose}{LinkedIn Learning. \emph{Learning Docker Compose}; videokurz doporučený oficiální dokumentací Dockeru}{https://www.linkedin.com/learning/learning-docker-compose}
+\zdroj{video-influx}{InfluxData. \emph{InfluxDB For Beginners}; video odkazované v katalogu výrobce}{https://www.youtube.com/watch?v=qR9s2Fw8D9I}
+\zdroj{video-grafana}{Grafana Labs. \emph{Getting started with Grafana dashboard design}; on-demand webinář, stránka uvádí 20.~2.~2026}{https://grafana.com/go/webinar/emea-introduction-grafana-dashboard-design/}
+\zdroj{video-rt}{The Linux Foundation / Jan Altenberg. \emph{Introduction to Realtime Linux}; přednáška z roku 2017, principy, ne současný instalační postup}{https://www.youtube.com/watch?v=BKkX9WASfpI}
+\end{thebibliography}
+\end{document}

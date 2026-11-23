@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('web/network.js','utf8');
+const start=source.indexOf('function wifiRequestNetworks('),end=source.indexOf('function renderWifi(');
+const context=vm.createContext({TextEncoder});vm.runInContext(source.slice(start,end),context);
+const make=rows=>JSON.parse(JSON.stringify(context.wifiRequestNetworks(rows)));
+assert.deepEqual(make([{ssid:'LAB-WIFI',hasPassword:true},{ssid:'Backup',password:'testpass'}]),[{ssid:'LAB-WIFI'},{ssid:'Backup',password:'testpass'}]);
+assert.deepEqual(make([{ssid:'Open',open:true,hasPassword:true}]),[{ssid:'Open',password:''}]);
+assert.throws(()=>make([{ssid:'a',password:'short'}]));
+assert.throws(()=>make([{ssid:'a'},{ssid:'a'}]));
+assert.throws(()=>make([{ssid:'ě'.repeat(17)}]));
+console.log('PASS: Wi-Fi order, retained passwords omitted, explicit open network, invalid credentials rejected.');

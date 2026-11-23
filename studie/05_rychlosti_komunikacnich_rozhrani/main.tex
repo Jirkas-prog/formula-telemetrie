@@ -1,0 +1,405 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+  \setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+  \setsansfont{lmsans10-regular.otf}
+  \setmonofont{lmmono10-regular.otf}
+\fi
+\usepackage[czech]{babel}
+\usepackage{microtype}
+\usepackage[left=30mm,right=20mm,top=24mm,bottom=25mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,tabularx,longtable}
+\usepackage{enumitem,xcolor,xurl}
+\usepackage{fancyhdr}
+\usepackage[unicode,colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!45!black]{hyperref}
+\pdfstringdefDisableCommands{\def\textsuperscript#1{#1}}
+\setlength{\emergencystretch}{3em}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{1.2em}
+\setlist{itemsep=0.2em,topsep=0.4em,leftmargin=*}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[L]{\small Rešeršní studie \textbullet{} 21.~10.~2026}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.3pt}
+\raggedbottom
+\newcommand{\studietitle}[3]{\noindent{\small\bfseries STUDIE #1 \hfill Verze 1.0 / 21. 10. 2026}\par\vspace{0.7em}
+{\LARGE\bfseries #2\par}\vspace{0.5em}\noindent{\large #3\par}\vspace{0.8em}}
+\newcommand{\zdroj}[3]{\bibitem{#1}#2. Dostupné z: \url{#3}. [cit.~2026-10-21].}
+\begin{document}
+
+\studietitle{05}{Rychlosti komunikačních rozhraní}{Technické limity a použitelný datový tok CAN, I\textsuperscript{2}C, SPI, UART, RS-485, USB a Ethernetu}
+
+\section{Zaměření a význam výsledků}
+Studie porovnává maximální rychlosti rozhraní a stanovuje podmíněné návrhové rozpočty pro měřicí systém ve vozidle. Vychází z centrální jednotky Raspberry Pi~5, dvou větví CAN, IMU ICM-20948 a uvažovaných převodníků MCP3208 a MAX6675. Cílem je určit, s jakým datovým tokem lze při návrhu rozumně počítat a co musí být ověřeno před prohlášením sestavy za spolehlivou.
+
+\textbf{Základní závěr: nominální Mbit/s nejsou rychlost užitečných dat.} Výsledek omezuje protokol, velikost zpráv, mezery mezi přenosy, kabeláž, koncové obvody i obsluha v operačním systému. Vyšší takt navíc nezvýší vzorkovací frekvenci pomalého senzoru.
+
+Dokument rozlišuje \textbf{doložený limit} součástky či rozhraní, \textbf{vlastní výpočet} přenosové kapacity a \textbf{návrhový rozpočet} s rezervou. Žádná uvedená propustnost není měřením této sestavy. Rešerše byla uzavřena 21.~10.~2026; studii lze číst samostatně a její bibliografie je součástí tohoto souboru.
+
+\subsection{Jednotky a pracovní definice}
+Používají se desetinné jednotky: 1~kbit/s = 1\,000~bit/s, 1~kB/s = 1\,000~B/s a 1~MB/s = 1\,000\,000~B/s. Bajt má osm bitů. Hodiny SPI a I\textsuperscript{2}C jsou uvedeny v Hz; UART v baud. U zde uvažovaného binárního UART odpovídá jeden symbol jednomu bitu, ale start a stop bity nejsou užitečnými daty.
+
+\begin{equation}
+C_{\mathrm{data}}=\frac{N_{\text{užit}}}{t_{\text{přenos}}+t_{\mathrm{mezery}}},\qquad
+R_{\text{návrh}}=u\,C_{\mathrm{data}}.
+\label{eq:budget}
+\end{equation}
+$N_{\text{užit}}$ je počet užitečných bajtů za cyklus. Faktor $u$ je zvolený podíl kapacity, nikoli vlastnost normy. Pro sdílené sběrnice se níže používá jako výchozí plánovací pravidlo $u=0{,}5$, pro vybrané bodové proudy $u=0{,}7$. Tato rezerva nezaručuje termín doručení ani bezchybnost vodičů. U existujícího CAN je rozhodující již přítomný provoz; nelze si automaticky přidělit polovinu celé sběrnice.
+
+\clearpage
+\section{Rychlý přehled pro rozhodování}
+Tabulka~\ref{tab:overview} obsahuje konkrétní pracovní režimy. Nejde o vzájemně zaměnitelné konektory ani o univerzální zaručená maxima. Přesné předpoklady a výpočty následují v dalších oddílech.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Doložené limity a podmíněné rozpočty. kB/s označuje užitečná data.}
+\label{tab:overview}
+\begin{tabularx}{\textwidth}{L{24mm}Y Y}
+\toprule
+Rozhraní & Limit / důležitá varianta & Praktický návrhový bod této studie\\
+\midrule
+CAN Classic & Nejvýše 1~Mbit/s, nejvýše 8~B dat v rámci.\cite{cia}
+& Při 500~kbit/s asi \textbf{14,8~kB/s}; při 1~Mbit/s \textbf{29,6~kB/s}. Plné rámce, 11bitové ID, 50\% zatížení a konzervativní stuffing.\\
+\addlinespace
+CAN FD & Až 64~B; oddělený nominální a datový bitrate. CiA uvádí datovou fázi do 8~Mbit/s.\cite{cia,boschfd}
+& Pro 500~kbit/s / 2~Mbit/s asi \textbf{74~kB/s} v níže definovaném modelu s 64~B a 50\% zatížením. Vyžaduje jiné řadiče než MCP2515.\\
+\addlinespace
+I\textsuperscript{2}C & 100~kHz, 400~kHz, 1~MHz, Hs až 3,4~MHz; UFm 5~MHz je jednosměrné.\cite{i2c}
+& Při 400~kHz a čtení 12~B \textbf{17,8~kB/s} s 50\% rozpočtem. Pro MLX90614 nejvýše 100~kHz.\\
+\addlinespace
+SPI, 1bit SDR & Nemá jedno společné maximum. V projektu limity přibližně 1--10~MHz podle obvodu.
+& Na krátké desce zvolit takt pro každý čip. Model 10~MHz, 16~B a mezera 20~$\mu$s: \textbf{326~kB/s} při $u=0{,}7$.\\
+\addlinespace
+UART, 8N1 & Maximum závisí na řadiči, hodinách a přijímači.
+& 115\,200 baud: \textbf{8,06~kB/s}; 921\,600 baud: \textbf{64,5~kB/s}, při $u=0{,}7$ a před aplikačním rámcováním.\\
+\addlinespace
+RS-485 + UART & Fyzická vrstva; např. THVD1450 podporuje 50~Mbit/s, nikoli na libovolném kabelu.\cite{thvd}
+& Model 1~Mbaud, 32~B dat, 8~B režie, 200~$\mu$s obrat: \textbf{37,3~kB/s} při $u=0{,}7$.\\
+\addlinespace
+USB & USB 2.0: 12/480~Mbit/s; porty USB~3 Pi~5: 5~Gbit/s.\cite{usbhs,usb2,pi5}
+& Bulk nemá garantované minimum. Rozpočet určit dlouhodobým měřením konkrétního zařízení; viz oddíl~\ref{sec:usb}.\\
+\addlinespace
+Ethernet & Pi~5 má 1~Gbit/s Ethernet.\cite{pi5}
+& TCP/IPv4, MTU~1500: modelový strop \textbf{118,7~MB/s}; návrhový cíl \textbf{83~MB/s} při $u=0{,}7$, pokud jej zvládnou oba konce.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\clearpage
+\section{CAN: rychlost rámců, obsazení a latence}
+\subsection{CAN Classic}
+CAN přenáší datové rámce s arbitráží, kontrolními poli a potvrzením. Rychlost nelze odvozovat pouze dělením bitrate osmi. Pro standardní 11bitový identifikátor a 8~B dat má rámec včetně tříbitového intermission 111~bitů před započtením vkládaných bitů. Oblast podléhající bit stuffingu obsahuje 98~původních bitů. Konzervativní horní odhad přidaných bitů je $\lfloor(98-1)/4\rfloor=24$, tedy celkem 135~bitů. Jde o mez pro dimenzování, nikoli tvrzení, že ji každý obsah rámce dosáhne. Struktura a pravidla stuffingu vycházejí ze specifikace Bosch CAN~2.0.\cite{can20}
+
+\begin{equation}
+C_{\mathrm{CAN}}=\frac{8R_b}{L_{\text{rámce}}}, \qquad
+U_{\mathrm{CAN}}=\frac{\sum_i f_iL_i}{R_b}.
+\label{eq:can}
+\end{equation}
+$R_b$ je bitrate, $f_i$ četnost zprávy a $U$ obsazení sběrnice. Druhý vztah musí zahrnout \emph{všechny} zprávy, případně diagnostiku a rezervu na opakování. V tabulce~\ref{tab:can} nejsou chybové rámce ani opakované přenosy.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Vypočtený tok 8B rámců CAN Classic.}
+\label{tab:can}
+\begin{tabularx}{\textwidth}{Y r r r}
+\toprule
+Bitrate a ID & Bez stuffingu, 100\% & Konzervativně, 100\% & Konzervativně, 50\%\\
+\midrule
+500~kbit/s, 11~bitů & 36,04~kB/s & 29,63~kB/s & 14,81~kB/s\\
+1~Mbit/s, 11~bitů & 72,07~kB/s & 59,26~kB/s & 29,63~kB/s\\
+500~kbit/s, 29~bitů & 30,53~kB/s & 25,00~kB/s & 12,50~kB/s\\
+1~Mbit/s, 29~bitů & 61,07~kB/s & 50,00~kB/s & 25,00~kB/s\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Pro rozšířený 29bitový identifikátor se obdobně použije 131~bitů bez stuffingu a konzervativně 160~bitů s ním. Rámce s kratším datovým polem mají menší délku, ale horší poměr režie k datům. Pokud například aplikační čítač zabere jeden z osmi datových bajtů, užitečný tok tabulky dále klesne v poměru $7/8$.
+
+\textbf{Padesátiprocentní zatížení není obecná hranice funkčnosti CAN.} Správně navržená síť může pracovat výše. Při vysokém zatížení ale roste čekání zpráv s nižší prioritou; samotný průměr $U$ neprokazuje dodržení jejich termínů. Pro časově kritické zprávy je nutná analýza priorit, period a nejhorších shluků provozu.
+
+\subsection{CAN FD a CAN XL}
+CAN FD dovoluje delší datové pole a přepnutí na vyšší rychlost v datové části rámce. Například označení 500~kbit/s / 2~Mbit/s znamená dvě rychlosti v jediném rámci. Osm Mbit/s z přehledu CiA je referenční údaj pro dostupná řešení, nikoli povolení použít tuto rychlost s libovolným transceiverem a topologií.\cite{cia,boschfd}
+
+Pro názorné dimenzování se zde volí \textbf{zjednodušený rozpočet} jednoho 64B rámce: 40~bitových dob při nominální rychlosti a 700 při datové rychlosti. Je v něm rezervována režie a stuffing, nejde však o normativní bitově přesnou délku ani zaručenou horní mez pro všechny formáty CAN FD. Skutečný rámec je třeba vyčíslit podle ID, BRS, délky, CRC a obsahu.
+\begin{equation}
+t_{\mathrm{FD,model}}=\frac{40}{R_{\mathrm{nom}}}+\frac{700}{R_{\mathrm{data}}}.
+\end{equation}
+Při 500~kbit/s / 2~Mbit/s vychází 430~$\mu$s a 148,8~kB/s bez provozní rezervy, tedy 74,4~kB/s při $u=0{,}5$. Při 1/5~Mbit/s jde o 180~$\mu$s, 355,6~kB/s a s touto rezervou 177,8~kB/s. Přínos je největší pro delší zprávy; při 8~B se režie více projeví.
+
+MCP2515 podporuje pouze CAN Classic. Přechod na FD vyžaduje odpovídající řadič, transceiver i síť; nestačí změnit nastavení programu. Aktivní klasický uzel bez schopnosti tolerovat FD může FD rámce narušovat. CAN XL uvádí až 2\,048~B a 20~Mbit/s, ale pro stávající dvojici klasických větví nepřináší přímo použitelnou aktualizaci.\cite{mcp2515,cia,boschfd}
+
+\subsection{Kabeláž a příjem do Raspberry Pi}
+U vysokorychlostního CAN je výchozí topologií páteř s krátkými odbočkami, kroucený pár a terminace odpovídající vedení, běžně 120~$\Omega$ na každém fyzickém konci. Dodatečná terminace uprostřed již ukončené sítě zvyšuje zatížení. Delší vedení, odbočky, zpoždění izolátoru a transceiveru zmenšují časovou rezervu. Jedno číslo typu „1~Mbit/s do určitého počtu metrů“ proto není úplná záruka konkrétní instalace.\cite{canphysical}
+
+MCP2515 má dva přijímací buffery a SPI nejvýše 10~MHz při podmínkách tabulky 13-6 katalogového listu. Při 1~Mbit/s může plný 11bitový rámec přicházet přibližně každých 111~$\mu$s před stuffingem. Dva volné buffery tak představují jen řádově několik set mikrosekund prostoru pro obsluhu; kratší rámce mohou přijít ještě rychleji. Přesný okamžik přetečení závisí na filtrech, přepouštění mezi buffery a průběhu obsluhy.\cite{mcp2515}
+
+\textbf{Úspěšné připojení CAN na 1~Mbit/s neprokazuje bezeztrátový záznam plně zatížené sítě.} Je třeba ověřit přerušení, ovladač, sdílení SPI a počítadla ztrát. Režim listen-only negeneruje ACK; pro normální potvrzování na sběrnici musí být jiný aktivní přijímač. Pro Linux je vhodné sledovat stav a statistiky přes SocketCAN, nikoli jen počet řádků v souboru.\cite{socketcan}
+
+\section{I\textsuperscript{2}C: limity režimu a elektrické zátěže}
+\subsection{Kolik dat připadá na takt}
+I\textsuperscript{2}C používá adresování a devátý takt ACK/NACK. Režimy Standard, Fast, Fast-mode Plus a High-speed dovolují postupně 100~kHz, 400~kHz, 1~MHz a až 3,4~MHz. Hs potřebuje podporu příslušného režimu, nejen vyšší hodnotu v konfiguraci; maximální rychlost závisí i na kapacitě. Ultra Fast-mode s 5~MHz je jednosměrná varianta a nenahrazuje běžné čtení senzorů. Zařízení na společném neodděleném úseku musejí tolerovat zvolený režim.\cite{i2c}
+
+Uvažujme 7bitovou adresu, zápis jednobajtového čísla registru, opakovaný START a čtení $N$ bajtů. Přenesou se tři pomocné bajty: adresa pro zápis, registr a adresa pro čtení. Bez časů START/STOP, mezer a případného clock stretchingu:
+\begin{equation}
+C_{\mathrm{I2C}}=\frac{Nf_{\mathrm{SCL}}}{9(N+3)}.
+\label{eq:i2c}
+\end{equation}
+Pro vícebajtovou adresu registru, 10bitové adresování nebo SMBus PEC se počet pomocných bajtů zvýší.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Modelované čtení registrů po I\textsuperscript{2}C.}
+\begin{tabularx}{\textwidth}{Y r r r}
+\toprule
+SCL & 2~B dat, 100\% & 12~B dat, 100\% & 12~B dat, 50\%\\
+\midrule
+100~kHz & 4,44~kB/s & 8,89~kB/s & 4,44~kB/s\\
+400~kHz & 17,78~kB/s & 35,56~kB/s & 17,78~kB/s\\
+1~MHz & 44,44~kB/s & 88,89~kB/s & 44,44~kB/s\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Čtení 12~B tisíckrát za sekundu vyžaduje 135\,000~taktů/s. Zabere nejméně 33,75~\% sběrnice na 400~kHz; při 100~kHz je již časově neproveditelné. Jde o model přenosu, nikoli specifikaci výstupní frekvence konkrétní IMU.
+
+\subsection{Proč 400~kHz nemusí fungovat na každém kabelu}
+Otevřené kolektory/drainy vytvářejí vzestupnou hranu přes pull-up rezistor. Pro jednoduchý RC model platí:
+\begin{equation}
+t_r=0{,}8473R_pC_b,\quad
+R_{p,\max}=\frac{t_{r,\max}}{0{,}8473C_b},\quad
+R_{p,\min}=\frac{V_{\mathrm{DD}}-V_{\mathrm{OL,max}}}{I_{\mathrm{OL}}}.
+\label{eq:pullup}
+\end{equation}
+Výrobce TI popisuje výběr pull-upu podle rychlosti hrany i povoleného proudu v logické nule.\cite{pullup} Pro Fast-mode je limit vzestupné hrany 300~ns.\cite{i2c}
+
+Příklad: $C_b=200$~pF a $R_p=4{,}7$~k$\Omega$ dávají $t_r\approx796$~ns, což pro 400~kHz nevyhovuje. Z horní meze vychází $R_p\le1{,}77$~k$\Omega$. Pokud \emph{všechny} účastnící se obvody zvládnou 3~mA při $V_{\mathrm{OL,max}}=0{,}4$~V a napájení je 3,3~V, vychází dolní mez přibližně 967~$\Omega$. Volba 1,5~k$\Omega$ pak dává asi 254~ns a 1,93~mA. Jde o návrhový příklad s předpokládanou kapacitou, nikoli změřenou kabeláž.
+
+Počítat je nutné i pull-upy na modulech zapojené paralelně, kapacity vstupů a kabelu, převodníky úrovní a zemní rušení. Prosté snížení frekvence neřeší překročení dovolených napětí. Pro asi 1,5m vedení k senzorům ve vozidle nelze bez ověření slíbit ani 100~kHz. Pokud je vzdálené digitální čtení nutné, je vhodné posoudit diferenciální přenos nebo k tomu určený extender.
+
+\textbf{Doporučení:} 100~kHz jako výchozí režim pomalých čidel; 400~kHz pro krátkou lokální sběrnici s doloženou podporou všech čipů a ověřenými hranami. Režim 1~MHz použít až s kompatibilními prvky; MLX90614 jej nepodporuje.
+
+\section{SPI: rychlý vodič, ale často pomalé transakce}
+\subsection{Neexistuje jedno univerzální maximum}
+SPI je rodina běžně používaných způsobů sériové komunikace, nikoli jediná úplná norma s jednotným maximálním taktem. Shodovat se musejí CPOL/CPHA, délka slov, význam CS i časování. Rozhoduje řadič, periferní čip a vedení.\cite{spiadi} U běžného jednobitového SDR přenosu odpovídá jeden takt jednomu bitu v každém směru; plný duplex nezdvojnásobuje kapacitu jednoho směru. QSPI a DDR jsou jiné režimy a jejich čísla nelze bez dalšího přenášet na senzory.
+
+Pro čtení $N$ bajtů s $H$ bajty příkazu/adresy a mezerou $t_g$:
+\begin{equation}
+C_{\mathrm{SPI}}=\frac{N}{8(N+H)/f_{\mathrm{SCK}}+t_g}.
+\label{eq:spi}
+\end{equation}
+Následující mezera 20~$\mu$s je \textbf{výslovně modelový předpoklad}; nebyla naměřena na Raspberry Pi ani zaručena Linuxem.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Vliv velikosti transakce na vypočtený užitečný tok SPI.}
+\begin{tabularx}{\textwidth}{Y r r r r}
+\toprule
+SCK & Data + režie & Doba s mezerou & Tok modelu & Rozpočet 70\%\\
+\midrule
+1~MHz & 16 + 2~B & 164,0~$\mu$s & 97,6~kB/s & 68,3~kB/s\\
+10~MHz & 16 + 2~B & 34,4~$\mu$s & 465,1~kB/s & 325,6~kB/s\\
+40~MHz & 16 + 2~B & 23,6~$\mu$s & 678,0~kB/s & 474,6~kB/s\\
+10~MHz & 256 + 2~B & 226,4~$\mu$s & 1\,130,7~kB/s & 791,5~kB/s\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Čtyřnásobné zvýšení taktu z 10 na 40~MHz v krátké transakci nepřinese čtyřnásobný datový tok. Pomáhá slučování čtení a FIFO, pokud je čip podporuje; větší dávka ale prodlužuje blokování jiných zařízení a čekání prvního vzorku.
+
+\subsection{Podmínky spolehlivého taktu}
+U typického SDR čtení na protilehlých hranách musí polovina periody pokrýt zpoždění hodin k periferii, její čas clock-to-output, návrat dat, setup přijímače a rezervu. Dlouhé vodiče a pomalý převodník úrovní mohou tuto rezervu spotřebovat, přestože oba řadiče deklarují stejný maximální takt. Důležité jsou také překmity, návratová zem a doba uvolnění MISO po ukončení CS.
+
+Na společném SPI lze nastavit různou rychlost pro jednotlivé CS. Pomalý ADC tedy nemusí elektricky určovat takt všech ostatních zařízení, ale jeho transakce zabírá čas společné sběrnice. Je nutné ověřit, že nevybraný modul skutečně uvolní MISO.
+
+Na Pi~5 zajišťuje SPI řadič RP1; nastavení odvozená ze starších BCM řadičů nejsou automaticky přenositelná.\cite{pihw} Linuxové \texttt{SPI\_IOC\_MESSAGE} umožňuje složené transakce. Požadovaná maximální rychlost není důkazem skutečně generované frekvence a API spidev nevrací změřený bitrate.\cite{spidev} Pro závěr o spolehlivosti je třeba měřit SCK i prodlevy, nikoli jen dobu běhu programu.
+
+\section{UART a RS-485}
+\subsection{UART: z baudů na bajty}
+V režimu 8N1 tvoří jeden bajt start bit, osm datových bitů a stop bit:
+\begin{equation}
+C_{\mathrm{UART,8N1}}=\frac{R_{\mathrm{baud}}}{10}.
+\end{equation}
+Pro 8E1 nebo 8N2 se dělí jedenácti. Jde o tok bajtů před vlastními hlavičkami, CRC a případným escapováním. UART nemá jedno maximum společné všem čipům; například ESP32-S3 uvádí až 5~Mbaud při vhodném zdroji hodin, což není specifikace portu použitého GNSS ani Pi~5.\cite{uart}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Tok UART 8N1 bez aplikačního rámcování.}
+\begin{tabularx}{0.85\textwidth}{Y r r}
+\toprule
+Baud & Fyzicky přenesená data & Návrhový rozpočet 70\%\\
+\midrule
+115\,200 & 11,52~kB/s & 8,06~kB/s\\
+460\,800 & 46,08~kB/s & 32,26~kB/s\\
+921\,600 & 92,16~kB/s & 64,51~kB/s\\
+1\,000\,000 & 100,00~kB/s & 70,00~kB/s\\
+3\,000\,000 & 300,00~kB/s & 210,00~kB/s\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Jako výchozí bod pro malý korekční tok RTK postačuje 115\,200 baud, pokud součet všech zapnutých zpráv nepřesáhne rozpočet a přijímač zvládne jejich špičky. Při objemném GNSS výstupu je nutné připočítat observace, navigační zprávy i diagnostiku; samotná velikost RTCM nestačí. Volbu 460\,800 či 921\,600 baud je nutné ověřit na obou stranách.
+
+Spolehlivost omezují odchylky hodin, úrovně, rušení, velikost FIFO a obsluha. RTS/CTS může zabránit přetečení, pokud jej oba konce podporují, ale zastavováním přenosu snižuje okamžitou propustnost. UART s logikou 3,3~V není přímo elektricky zaměnitelný s RS-232 ani RS-485. Bez aplikační kontroly neodhalí všechny změny dat; pro vlastní protokol je vhodný čítač a CRC.
+
+\subsection{RS-485: limit transceiveru není tok protokolu}
+RS-485 popisuje diferenciální elektrický přenos. Adresy, potvrzování, pořadí vysílání ani datový formát samo nedefinuje. Rychlost a dosažitelná délka vedení spolu souvisejí; katalogové maximum rychlosti a maximum vzdálenosti nelze současně předpokládat. Výběr zakončení, páteře, odboček a řízení směru je součást návrhu.\cite{rs485}
+
+Příkladem rozdílu mezi čipy je THVD1450 s rychlostí do 50~Mbit/s a pomalejší varianta THVD1410 do 500~kbit/s.\cite{thvd} Tvrzení „RS-485 má maximálně 10~Mbit/s“ proto není univerzální limit všech současných implementací.
+
+Pro vlastní poloduplexní protokol uvažujme 32~B užitečných dat, 8~B hlavičky a kontroly, UART 8N1 na 1~Mbaud a 200~$\mu$s na obrat a čekání:
+\begin{equation}
+C_{\mathrm{485}}=\frac{32}{40\cdot10/10^6+200\cdot10^{-6}}
+=53{,}33~\mathrm{kB/s}.
+\end{equation}
+S rezervou 30~\% jde o 37,33~kB/s. Mezery jsou zvoleným modelem, nikoli požadavkem normy nebo specifikací Modbus RTU. Dotaz před každou odpovědí, více uzlů a opakování tok dále sníží. Pro vedení ve vozidle je 1~Mbaud možný návrhový kandidát s vhodným hardwarem, nikoli předem ověřený výsledek.
+
+\section{USB a Ethernet}
+\label{sec:usb}
+\subsection{USB: schopnost portu a schopnost zařízení}
+USB~2.0 rozlišuje mimo jiné Full-speed 12~Mbit/s a High-speed 480~Mbit/s; pouhé označení „USB~2.0“ na periferním zařízení nezaručuje High-speed.\cite{usb2,usbhs} Pi~5 má dva porty USB~3 s rychlostí 5~Gbit/s a dva USB~2.\cite{pi5} Zařízení Full-speed se zapojením do rychlejšího portu nezrychlí.
+
+Pro High-speed bulk přenos uvádí Microchip až 13 paketů po 512~B v mikroframu 125~$\mu$s. Z toho plyne ideální strop:
+\begin{equation}
+C_{\mathrm{USB2,bulk}}\le\frac{13\cdot512}{125\cdot10^{-6}}
+=53{,}248~\mathrm{MB/s}.
+\end{equation}
+Jde o ideální naplnění přenosu, ne zaručenou rychlost zařízení.\cite{usbhs} Bulk má kontrolu chyb a opakování, avšak nemá rezervovanou šířku pásma ani pevnou nejhorší latenci.\cite{usbbulk}
+
+Proto nelze poctivě stanovit „spolehlivých 40~MB/s“ pouze ze jména USB. Pro konkrétní zařízení se má změřit udržitelný tok při současném zatížení ostatních portů a ukládání. Například pokud nejnižší doložená ustálená rychlost v testovaných podmínkách činí 30~MB/s, 70\% rozpočet je 21~MB/s. Obě tato čísla jsou pouze příklad výběru rozpočtu, nikoli měření. USB--UART převodník navíc stále omezuje sériový bitrate na druhé straně.
+
+\subsection{Ethernet: přepočet na aplikační data}
+Pro model jednosměrného TCP/IPv4 přenosu přes plně duplexní Ethernet se předpokládá MTU~1500, žádné VLAN ani IP/TCP volby, 20B IPv4 a 20B TCP hlavička. Užitečný segment má 1\,460~B; rámec včetně FCS má 1\,518~B a na lince přibude 8~B preambule/SFD a 12~bajtových dob mezery.\cite{ethernet,ipv4,tcp}
+\begin{equation}
+C_{\mathrm{TCP}}=\frac{R_{\mathrm{link}}}{8}\frac{1460}{1538}.
+\end{equation}
+Pro 100~Mbit/s vychází 11,87~MB/s, pro 1~Gbit/s 118,66~MB/s. Při zvoleném $u=0{,}7$ jde o rozpočty 8,31 a 83,06~MB/s. Zpětná TCP potvrzení v tomto modelu používají druhý směr plného duplexu; ztráty, volby protokolu, malé segmenty a konkurující provoz výsledek zhorší. Zápis na pomalé úložiště může být užším místem než síť.
+
+Pro přenos záznamů je Ethernet vhodný kandidát, ale model kapacity neurčuje přesnost časových značek senzorů. Čas přijetí paketu do aplikace není automaticky čas fyzikálního měření.
+
+\section{Důsledky pro aktuální sestavu}
+\subsection{Limity konkrétních čipů}
+Zdrojem následujících limitů jsou katalogové listy. Uvažované pracovní režimy jsou návrhem pro projekt; jejich funkčnost s konkrétními moduly a ovladači musí být ověřena.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Rozhraní a skutečné omezení vybraných součástek.}
+\begin{tabularx}{\textwidth}{L{27mm}Y Y}
+\toprule
+Součástka & Doložený limit & Význam pro návrh\\
+\midrule
+ICM-20948 & SPI do 7~MHz, I\textsuperscript{2}C do 400~kHz.\cite{icm}
+& SPI zahájit na 1~MHz, vyšší takt až podle potřeby a ověření modulu. Čip sám má VDDIO 1,71--1,95~V; rozhoduje zapojení převodníků na desce.\\
+\addlinespace
+MCP3208 & 100~ksps při 5~V, 50~ksps při 2,7~V; SCK 2/1~MHz při těchto napětích.\cite{mcp3208}
+& Jde o součet konverzí, ne rychlost každého z osmi vstupů. Pro prototyp s 3,3~V volit 1~MHz a ověřit časování a vstupní impedanci.\\
+\addlinespace
+MAX6675 & SCK do 4,3~MHz; konverze až 220~ms.\cite{max6675}
+& Čtení například na 1~MHz je krátké, ale nová data nelze očekávat v kHz. Návrhově 4~Hz na čidlo s dodržením času konverze.\\
+\addlinespace
+MLX90614 & SMBus 10--100~kHz; rovněž PWM výstup.\cite{mlx}
+& Nepatří bez posouzení do 400kHz větve. PWM není nativní analogový výstup; filtrace do ADC je další samostatný návrh.\\
+\addlinespace
+ADS1115 & Nejvýše 860 vzorků/s, multiplexované vstupy.\cite{ads}
+& Čtyři kanály po 500~Hz vyžadují 2\,000 konverzí/s; rychlejší I\textsuperscript{2}C nedostatek neodstraní.\\
+\addlinespace
+MCP2515 & CAN Classic do 1~Mbit/s; SPI do 10~MHz; dva RX buffery.\cite{mcp2515}
+& Nutný test ztrát při současném provozu ostatních periferií. Není řešením CAN FD.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Rozpočet vzorkování a zatížení}
+Pro čtyři polohové vstupy na 500~Hz a MCP3208 uvažujme běžnou 24taktovou transakci na jednu konverzi. Při SCK 1~MHz:
+\begin{equation}
+U_{\mathrm{ADC}}=\frac{4\cdot500\cdot24}{10^6}=4{,}8~\%.
+\end{equation}
+Osm kanálů na stejné frekvenci zabere 9,6~\% času hodin; čtyři rychlé kanály a čtyři teplotní na 10~Hz přibližně 4,896~\%. Nejsou zahrnuty mezery CS a softwarová režie. Údaj sám ale ukazuje, že pro tento úkol není nutné zvyšovat SCK na desítky MHz.
+
+Čtyři 24taktová čtení trvají dohromady alespoň 96~$\mu$s. Kanály nejsou vzorkovány současně: mezi prvním a čtvrtým je v tomto modelu nejméně přibližně 72~$\mu$s, navíc mezery. Přesnost časových značek, ustálení analogového vstupu a pravidelnost periody 2~ms proto vyžadují vlastní ověření.
+
+Podle současných podkladů projektu má CAN~1 pracovat na 1~Mbit/s v listen-only; CAN~2 se uvažuje přibližně na 500~kbit/s a jeho parametry je ještě nutné potvrdit. Pro model čtyř vlastních zpráv CAN~2, každé s 8~B, 11bitovým ID a četností 10~Hz:
+\begin{equation}
+\Delta U_{\mathrm{CAN2}}=\frac{4\cdot10\cdot135}{500\,000}=1{,}08~\%.
+\end{equation}
+Jde výhradně o přírůstek našeho provozu. Celkové zatížení ani čekací doby bez znalosti ostatních zpráv neznáme.
+
+Model IMU s blokem 12~B, jedním příkazovým bajtem a četností 1~kHz spotřebuje na SPI 1~MHz 10,4~\% času hodin. V kombinaci s uvedeným ADC vychází 15,2~\% před mezerami a bez CAN. Tento model neobsahuje magnetometr, stavová pole ani nastavení skutečné výstupní frekvence. \textbf{Součet malých průměrných toků ještě neprokazuje, že se včas vyprázdní buffery CAN.} Dlouhé bloky přenášené jinou periferií mohou způsobit ztráty i při nízkém průměrném vytížení.
+
+\subsection{Volba rozhraní}
+\begin{itemize}
+\item \textbf{Lokální IMU a ADC:} SPI s krátkými vedeními, samostatnými CS a frekvencí odpovídající každému čipu. Začít na 1~MHz, pro CAN řadiče posoudit vyšší SPI takt a prioritní obsluhu.
+\item \textbf{Pomalá lokální čidla:} I\textsuperscript{2}C 100 nebo 400~kHz podle nejpomalejšího připojeného prvku. Vyšší režim musí mít oporu v katalogových listech.
+\item \textbf{Komunikace po vozidle:} využít existující CAN s odsouhlasenými ID a periodami. Pro novou samostatnou větev zvážit CAN FD nebo RS-485 podle potřeb a složitosti uzlů; tato studie sama není důvod přidávat další řídicí jednotky.
+\item \textbf{GNSS a větší soubory:} UART podle skutečně zapnutých výstupů, případně USB; Ethernet pro objemné přenosy záznamů.
+\end{itemize}
+
+\section{Jak stanovit rychlost, na kterou se lze spolehnout}
+\subsection{Ověřovací postup}
+Následuje návrh zkoušky, nikoli již provedený experiment:
+\begin{enumerate}
+\item \textbf{Zafixovat konfiguraci:} přesné moduly a revize, napájení, kabely a konektory, terminace, rezistory, frekvence, velikosti zpráv, verze jádra a ovladačů. Testovat finální zapojení.
+\item \textbf{Ověřit elektrické časování:} osciloskopem hrany a úrovně v nejvzdálenějším bodě; u SPI i CS/setup/hold, u I\textsuperscript{2}C vzestup a proud v nule. Logický analyzátor sám nemusí odhalit nedostatečnou analogovou rezervu.
+\item \textbf{Měřit jednotlivá rozhraní:} alespoň 30 minut v kandidátním režimu, s reálnými délkami zpráv a jejich špičkami. Kde to protokol umožňuje, použít pořadová čísla a nezávislou kontrolu dat.
+\item \textbf{Zatížit sestavu společně:} návrhově alespoň osm hodin se souběžným CAN, senzory, GNSS, ukládáním a síťovým provozem. Přidat zatížení CPU/úložiště a reprezentativní teplotu, napájení a rušení vozidla.
+\item \textbf{Vyhodnotit tok i včasnost:} průměr, nejnižší tok v předem zvoleném časovém okně, maximum a percentily latence, počet chyb, ztracené sekvence, přetečení FIFO, kernelové dropy a zaplnění front. Pro 500Hz měření posuzovat také periodu 2~ms a skutečný čas vzorku.
+\item \textbf{Zvolit provozní nastavení:} použít režim, který splní požadovaný tok s rezervou i časové termíny a nevykazuje neobjasněné ztráty. Pokud elektrické časování nevyhoví, snížit takt nebo upravit vedení; pokud selhává obsluha, řešit fronty, ovladač či rozdělení sběrnic.
+\end{enumerate}
+
+Nulová chyba během testu neznamená matematickou záruku pro všechny budoucí podmínky. Užitečným výstupem je reprodukovatelná tabulka: \emph{konfigurace -- testované podmínky -- dosažený tok -- nejhorší latence -- ztráty -- přijatý provozní limit}. Právě takový výsledek lze v další verzi studie označit jako experimentálně ověřený.
+
+\subsection{Buffery a rozdíl mezi tokem a přesností času}
+Pro vstupní tok $R_{\mathrm{in}}$, nejdelší výpadek obsluhy $t_{\mathrm{stall}}$ a jednorázovou špičku $B_{\mathrm{burst}}$ je nutná alespoň rezerva
+\begin{equation}
+B_{\mathrm{rezerva}}\ge R_{\mathrm{in}}t_{\mathrm{stall}}+B_{\mathrm{burst}}.
+\end{equation}
+Například 50~kB/s a 100~ms výpadku znamená nejméně 5~kB plus špičky. Nesmí se zaměnit buffer aplikace za malý buffer v čipu před SPI: velká fronta v RAM nezachrání rámec ztracený již v MCP2515. Pokud je dlouhodobý výstup pomalejší než vstup, žádný konečný buffer problém trvale nevyřeší.
+
+Příjem dat, jejich označení časem a okamžik měření jsou různé události. Vyšší SPI nebo Ethernet může zkrátit přenos, ale neodstraní neznámé zpoždění senzoru a plánovače. Pro časovou vazbu GNSS, IMU a analogových kanálů je proto třeba odděleně ověřit PPS, data-ready, FIFO a způsob časového značkování.
+
+\section{Závěr}
+Pro aktuální sestavu nejsou hlavní překážkou nominální rychlosti moderních rozhraní. \textbf{CAN Classic na 1~Mbit/s nabízí při plných 8B rámcích přibližně 59--72~kB/s před provozní rezervou; návrhový 50\% rozpočet s konzervativním stuffingem činí 29,6~kB/s.} I\textsuperscript{2}C na 400~kHz dává v modelu čtení 12~B 35,6~kB/s před rezervou, zatímco 115\,200baudový UART 8N1 přenese 11,52~kB/s.
+
+Pro SPI je správnou odpovědí kombinace konkrétního čipu a délky transakce. Uvažované čtyři analogové kanály na 500~Hz spotřebují jen 4,8~\% času SPI na 1~MHz; vyšší frekvence sama o sobě není nutná. Prioritou je ověřit časování měření a včasnou obsluhu CAN. Pomalý převodník nebo senzor nelze urychlit vyšší rychlostí sběrnice.
+
+\textbf{Doporučený výchozí návrh:} CAN podle existující sítě, lokální SPI od 1~MHz s individuální rychlostí zařízení, I\textsuperscript{2}C 100/400~kHz podle kompatibility a UART podle součtu všech výstupních zpráv. U USB a Ethernetu rozhoduje také koncové zařízení a úložiště. Označení „spolehlivé maximum“ je oprávněné až pro přesně popsanou a změřenou sestavu; tato studie poskytuje vypočtené rozpočty a postup, jak takový limit doložit.
+
+\clearpage
+\begin{thebibliography}{99}
+\small
+\zdroj{cia}{CAN IN AUTOMATION. \emph{Information brochures: Controller Area Network}. Srpen 2026; přehled CAN CC, FD a XL}{https://www.can-cia.org/services/publications/information-brochures}
+\zdroj{can20}{ROBERT BOSCH. \emph{CAN Specification, Version 2.0}. Září 1991; části A/B, struktura rámců a bit stuffing. Kopie původního dokumentu}{https://www.mouser.com/datasheet/2/813/can20-2487206.pdf}
+\zdroj{boschfd}{BOSCH SEMICONDUCTORS. \emph{CAN FD}. Popis protokolu a kompatibility}{https://www.bosch-semiconductors.com/products/ip-modules/can-protocols/can-fd/}
+\zdroj{canphysical}{TEXAS INSTRUMENTS. \emph{Controller Area Network Physical Layer Requirements}. SLLA270, leden 2008; topologie, zakončení a zpoždění}{https://www.ti.com/lit/an/slla270/slla270.pdf}
+\zdroj{mcp2515}{MICROCHIP. \emph{MCP2515: Stand-Alone CAN Controller with SPI Interface}. DS20001801K, 2021; přijímací buffery a tab. 13-6}{https://ww1.microchip.com/downloads/en/DeviceDoc/MCP2515-Family-Data-Sheet-DS20001801K.pdf}
+\zdroj{socketcan}{LINUX KERNEL. \emph{SocketCAN -- Controller Area Network}. Dokumentace stavů, konfigurace a statistik}{https://www.kernel.org/doc/html/latest/networking/can.html}
+\zdroj{i2c}{NXP SEMICONDUCTORS. \emph{I2C-bus specification and user manual}. UM10204, rev. 7.0, 1.~10.~2021; protokol, režimy a elektrické parametry}{https://www.nxp.com/docs/en/user-guide/UM10204.pdf}
+\zdroj{pullup}{TEXAS INSTRUMENTS. \emph{I2C Bus Pullup Resistor Calculation}. SLVA689, rev. A; výpočet odporů a doby náběhu}{https://www.ti.com/lit/an/slva689/slva689.pdf}
+\zdroj{spiadi}{ANALOG DEVICES. \emph{AN-1248: SPI Interface}. Aplikační poznámka k rozhraní a časování}{https://www.analog.com/en/resources/app-notes/an-1248.html}
+\zdroj{pihw}{RASPBERRY PI. \emph{Raspberry Pi computer hardware}. Oddíl Serial peripheral interface; Pi~5 a RP1}{https://www.raspberrypi.com/documentation/computers/raspberry-pi.html}
+\zdroj{spidev}{LINUX KERNEL. \emph{SPI userspace API}. Složené transakce a omezení konfigurace rychlosti}{https://www.kernel.org/doc/html/latest/spi/spidev.html}
+\zdroj{uart}{ESPRESSIF SYSTEMS. \emph{ESP32-S3 Series Datasheet}. Verze 2.2; oddíl UART Controller}{https://documentation.espressif.com/esp32-s3_datasheet_en.pdf}
+\zdroj{rs485}{TEXAS INSTRUMENTS. \emph{The RS-485 Design Guide}. SLLA272D, květen 2021; topologie, rychlost a délka vedení}{https://www.ti.com/lit/an/slla272d/slla272d.pdf}
+\zdroj{thvd}{TEXAS INSTRUMENTS. \emph{THVD1450}. Produktová dokumentace rodiny THVD14xx a rychlostních variant}{https://www.ti.com/product/THVD1450}
+\zdroj{usb2}{USB IMPLEMENTERS FORUM. \emph{USB 2.0 Specification}. Dokumentace standardu USB~2.0}{https://www.usb.org/document-library/usb-20-specification}
+\zdroj{usbhs}{MICROCHIP. \emph{High Speed USB}. Developer Help, aktualizace 10.~11.~2023; tabulka transakcí v mikroframu}{https://developerhelp.microchip.com/xwiki/bin/view/applications/usb/speeds-specs/high-speed/}
+\zdroj{usbbulk}{MICROSOFT. \emph{How to send USB bulk transfer requests}. Vlastnosti bulk endpointů a přidělování kapacity}{https://learn.microsoft.com/en-us/windows-hardware/drivers/usbcon/usb-bulk-and-interrupt-transfer}
+\zdroj{pi5}{RASPBERRY PI. \emph{Raspberry Pi 5}. Technické parametry USB a Ethernetu}{https://www.raspberrypi.com/products/raspberry-pi-5/}
+\zdroj{ethernet}{OKSMAN, Vladimir. \emph{Requirements for EFM encapsulation technique}. Příspěvek IEEE 802.3 EFM, listopad 2002; snímek 16, rámec 1518~B, preambule 8~B a mezera 12~B}{https://www.ieee802.org/3/efm/public/nov02/copper/oksman_copper_1_1102.pdf}
+\zdroj{ipv4}{POSTEL, J. \emph{Internet Protocol}. RFC 791, září 1981; struktura IPv4 hlavičky}{https://www.rfc-editor.org/rfc/rfc791}
+\zdroj{tcp}{EDDY, W., ed. \emph{Transmission Control Protocol (TCP)}. RFC 9293, srpen 2022; struktura TCP hlavičky}{https://www.rfc-editor.org/rfc/rfc9293}
+\zdroj{icm}{TDK INVENSENSE. \emph{ICM-20948 Datasheet}. DS-000189, rev. 1.5; rozhraní, napájení a tabulka SPI timing}{https://product.tdk.com/system/files/dam/doc/product/sensor/mortion-inertial/imu/data_sheet/ds-000189-icm-20948-v1.5.pdf}
+\zdroj{mcp3208}{MICROCHIP. \emph{MCP3204/3208: 2.7V 4-Channel/8-Channel 12-Bit A/D Converters with SPI Serial Interface}. DS21298E, 2008; elektrické parametry a kap. 5--6}{https://ww1.microchip.com/downloads/aemDocuments/documents/APID/ProductDocuments/DataSheets/21298e.pdf}
+\zdroj{max6675}{ANALOG DEVICES / MAXIM. \emph{MAX6675}. Katalogový list; elektrické parametry a časování konverze}{https://www.analog.com/media/en/technical-documentation/data-sheets/MAX6675.pdf}
+\zdroj{mlx}{MELEXIS. \emph{MLX90614: Single and dual zone IR sensor in TO39}. Rev. 021, 2.~6.~2026; tabulky SMBus a výstupů}{https://www.melexis.com/-/media/files/documents/datasheets/mlx90614-datasheet-melexis.pdf}
+\zdroj{ads}{TEXAS INSTRUMENTS. \emph{ADS1113, ADS1114, ADS1115}. Katalogový list, rev. E; rychlost převodu a multiplexor}{https://www.ti.com/lit/ds/symlink/ads1115.pdf}
+\end{thebibliography}
+\end{document}

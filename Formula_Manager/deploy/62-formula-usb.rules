@@ -1,0 +1,11 @@
+polkit.addRule(function(action, subject) {
+    if (subject.user !== "formula-manager" ||
+        ["org.freedesktop.udisks2.filesystem-mount","org.freedesktop.udisks2.filesystem-mount-other-seat"].indexOf(action.id) < 0 ||
+        ["vfat","exfat","ntfs","msdos"].indexOf(action.lookup("id.type")) < 0) return;
+    var device = action.lookup("device");
+    if (!device || !/^\/dev\/sd[a-z]+[0-9]*$/.test(device)) return;
+    if (action.lookup("drive.removable.bus") === "usb" ||
+        /(^|\n)ID_BUS=usb(\n|$)/.test(polkit.spawn(["/usr/bin/udevadm","info","--query=property","--name",device]))) {
+        return polkit.Result.YES;
+    }
+});

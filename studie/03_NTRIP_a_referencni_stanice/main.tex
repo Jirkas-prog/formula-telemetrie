@@ -1,0 +1,188 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{lmodern,microtype}
+\usepackage[left=30mm,right=20mm,top=24mm,bottom=25mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,tabularx,longtable}
+\usepackage{enumitem,xcolor,xurl}
+\usepackage{fancyhdr}
+\usepackage[unicode,colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!45!black]{hyperref}
+\setlength{\emergencystretch}{3em}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{1.2em}
+\setlist{itemsep=0.2em,topsep=0.4em,leftmargin=*}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[L]{\small Rešeršní studie \textbullet{} 21.~10.~2026}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.3pt}
+\raggedbottom
+\newcommand{\studietitle}[3]{\noindent{\small\bfseries STUDIE #1 \hfill Verze 1.0 / 21. 10. 2026}\par\vspace{0.7em}
+{\LARGE\bfseries #2\par}\vspace{0.5em}\noindent{\large #3\par}\vspace{0.8em}}
+\newcommand{\zdroj}[3]{\bibitem{#1}#2. Dostupné z: \url{#3}. [cit.~2026-10-21].}
+\begin{document}
+
+\studietitle{03}{RTK přes internet a protokol NTRIP}{Vlastní základna, blízké permanentní stanice a síťové služby}
+\section{Zaměření a rozhodovací otázka}
+Studie posuzuje, zda a v jakých situacích použít NTRIP pro příjem korekcí v měřicí sestavě vozidla Formula Student. Rozlišuje vlastní základnu připojenou k internetu, cizí permanentní stanici v blízkosti tratě a síťovou korekční službu. Cílem je navrhnout vhodnou roli NTRIP v projektu, nikoliv předpokládat jeho dostupnost na dosud neurčené závodní lokalitě.
+
+Výchozí sestava z místního projektu \texttt{rtk-gnss-bakalarka} obsahuje ZED-F9P v základně, mosaic-X5 v roveru, Raspberry Pi 5 a plánovaný vlastní LoRa spoj. Internetový modem, tarif ani poskytovatel korekcí zde nejsou považovány za již zajištěné. Odborné vlastnosti jsou doloženy primárními zdroji; topologie, provozní kroky a volba priorit představují návrh pro tento projekt.
+
+\section{RTK, RTCM a NTRIP nejsou synonyma}
+RTK je metoda výpočtu polohy z fázových observací. RTCM je rodina formátů, v nichž lze předávat měření a další informace. NTRIP (\emph{Networked Transport of RTCM via Internet Protocol}) je aplikační protokol pro distribuci GNSS proudů přes IP síť. BKG jej popisuje jako protokol založený na HTTP; není omezen pouze na jeden obsah dat.\cite{bkg}
+
+NTRIP tedy sám nezaručuje RTK FIX, centimetrovou přesnost, blízkost základny ani kompatibilitu dat. Označení služby \emph{NTRIP} nepostačuje pro výběr streamu: musí být známo, zda obsahuje vhodné RTK observace, nebo například korekce orbit a hodin pro PPP. Proud SSR pro PPP či PPP-RTK nelze automaticky zaměnit za zde navržený MSM proud z jedné základny.
+
+\subsection{Tři role protokolu}
+\par
+\begin{table}[htbp]\centering\small
+\caption{Základní role NTRIP podle BKG a jejich aplikace na projekt.\cite{bkg}}
+\begin{tabularx}{\linewidth}{L{29mm}YY}\toprule
+Role & Funkce & Umístění v návrhu\\\midrule
+NtripServer & Posílá proud ze zdroje do casteru. & Notebook či síťová brána u ZED-F9P.\\
+NtripCaster & Přijímá a zpřístupňuje datové proudy klientům. & Místní počítač nebo dostupný internetový server.\\
+NtripClient & Připojí se k vybranému proudu. & Raspberry Pi ve vozidle nebo funkce přijímače.\\
+\bottomrule\end{tabularx}\end{table}
+\par
+Názvosloví může mást: skutečným HTTP serverem je caster; NtripServer i NtripClient vůči němu vystupují jako klienti. \emph{Mountpoint} označuje konkrétní zpřístupněný proud. Tabulka dostupných proudů (\emph{sourcetable}) pomáhá najít jeho formát a další parametry.\cite{bkg}
+
+\subsection{NTRIP není automaticky síťové RTK}
+Prostý caster nemusí žádná měření interpretovat ani kombinovat. BKG u svého Professional NtripCasteru výslovně uvádí, že sám nevytváří VRS ani nevybírá nejbližší základnu.\cite{caster} Síťové modelování atmosféry, volba stanice a případné vytvoření virtuálního zdroje jsou funkcemi poskytovatele, nikoliv důsledkem samotného použití NTRIP.
+
+\section{Varianty se skutečnou nebo virtuální místní základnou}
+\subsection{Varianta A: vlastní základna u tratě přes internet}
+Datová cesta má podobu
+\begin{center}
+\small
+ZED-F9P $\longrightarrow$ brána u tratě $\longrightarrow$ internetový caster\\
+$\longrightarrow$ internet ve vozidle $\longrightarrow$ NTRIP klient na Pi
+$\longrightarrow$ mosaic-X5.
+\end{center}
+Výhodou je zachování vlastní blízké základny a stejného souřadného počátku jako u rádia. Při správném předání jde o stejný RTCM obsah, který by šel přenést kabelem. Lze proto porovnat vliv transportu bez změny GNSS reference.
+
+Tato varianta však potřebuje připojení na obou koncích: upload základny i download roveru. Selhání připojení u základny může postihnout všechny klienty. Chybu souřadnic, nestabilní stativ nebo zastínění základny internet neřeší. Výhodou návrhu s dostupným casterem a odchozími spojeními je, že není nutné otevírat příchozí port přímo do vozidla za mobilním NAT; dostupnost konkrétní sítě se přesto musí ověřit.
+
+Pro první oživení se navrhuje využít již uvažovaný notebook základny. Samotný ZED-F9P je GNSS zdroj, nikoli automaticky kompletní internetová stanice. Síťová brána musí zajistit přenos, diagnostiku a oddělený záznam surových dat.
+
+\subsection{Varianta B: vlastní základna a NTRIP pouze v místní síti}
+Caster může běžet v depu a klient se připojovat přes místní Wi-Fi nebo jinou IP infrastrukturu. Veřejný internet není podmínkou protokolu. Tato topologie je vhodná pro laboratorní ověření, diagnostiku a sdílení jednoho proudu více zařízeními.
+
+Na trati ale rozhoduje pokrytí místní sítě, poloha přístupových bodů a zastínění vozidlem. NTRIP nezvýší dosah Wi-Fi. Lokální síť může být nezávislá na mobilním operátorovi, současně však vyžaduje vlastní infrastrukturu a test celé trasy. Pro jediný bod--bod experiment je možný i jednodušší transparentní přenos RTCM přes TCP; NTRIP přináší hlavně standardizované připojení, identifikaci proudů a návaznost na další přijímače.
+
+\subsection{Varianta C: blízká permanentní stanice poskytovatele}
+Rover odebírá existující stream z fyzické stanice. Odpadá vlastní základna, její napájení a internetový upload. Místní měřicí počátek je však nyní odvozen od souřadnic a správy cizí stanice.
+
+Při výběru rozhoduje geografická vzdálenost roveru od GNSS stanice, ne vzdálenost internetového serveru. Caster v jiném městě může přenášet data ze základny přímo u tratě; naopak server s krátkým pingem může poskytovat nevhodně vzdálené observace. Prostorová podobnost chyb a síťová latence jsou dvě různá kritéria.
+
+Navržený výběr stanice zahrnuje kontrolu souřadnic, rámce, dostupných konstelací a signálů, kontinuity provozu, aktualizace metadat a odpovědnosti provozovatele. Komunitní stream může být užitečný pro zkoušky, avšak bez doložených parametrů jej nelze považovat za garantovanou referenci pro závod.
+
+\subsection{Varianta D: síťová služba}
+Síťová služba využívá více permanentních stanic. U virtuální referenční stanice se generuje vhodný výstup pro okolí roveru; jiné koncepty předávají hlavní a pomocné informace nebo již upravený proud. CZEPOS rozlišuje služby z jednotlivé stanice, nejbližší stanice a síťové varianty MAX, iMAX a VirtualRS.\cite{czepos-services}
+
+Klient může muset odesílat přibližnou polohu roveru, obvykle větou NMEA GGA. Tato poloha slouží k volbě či vytvoření zdroje; nemusí už být centimetrově přesná. Konkrétní služba určuje požadovaný interval a chování při pohybu. Pravidlo z jedné služby se nemá bez ověření přenášet na jinou.
+
+Síťové řešení nenahrazuje dobrý výhled antény roveru. Zastínění, lokální odrazy a špatné časové přiřazení dat zůstávají problémem vozidla.
+
+\section{Použitelnost v České republice}
+CZEPOS provozuje Zeměměřický úřad jako součást geodetických základů České republiky. Publikuje údaje o stanicích a změnách jejich souřadnic v ETRS89; mezi uvedenými stanicemi je i Liberec (CLIB).\cite{czepos-network} To je vhodné východisko pro školní zkoušku v okolí Liberce, nikoliv důkaz vzdálenosti či kvality služby na libovolném místě.
+
+Pro projekt připadají v úvahu zejména:
+\begin{itemize}
+\item \textbf{RTK3--MSM:} proud z vybrané fyzické stanice;
+\item \textbf{RTK3--NS--MSM:} výběr nejbližší stanice podle odeslané polohy;
+\item \textbf{VRS3--VirtualRS--MSM nebo další síťový profil:} volba podle prokázané kompatibility roveru.
+\end{itemize}
+Služby jsou podle veřejného popisu poskytovány registrovaným uživatelům a zpoplatněny. Parametry a kompatibilitu jednotlivých profilů je třeba ověřit v aktuální konfiguraci služby.\cite{czepos-services} Tato studie neobjednává účet a neuvádí neověřený tarif.
+
+Před terénní zkouškou se má ověřit aktuální stav služby i monitoring síťového řešení, který CZEPOS veřejně poskytuje.\cite{czepos-status,czepos-quality} Dlouhodobý závěr však musí vycházet z vlastního záznamu v době měření. Jednorázově zelený monitoring nepokrývá celou budoucí jízdu.
+
+\section{Lze NTRIP použít s naší sestavou?}
+Technicky ano. Nejpraktičtější výchozí varianta je NTRIP klient na Raspberry Pi, které předá dekódované binární tělo streamu přes vhodné rozhraní do mosaic-X5. Pi zároveň zaznamenává statistiky spojení a RTCM. Výhoda návrhu spočívá v jednom místě pro porovnání LoRa a internetu a pro rozhodování o aktivním zdroji.
+
+Příručka mosaic-X5 uvádí rovněž vestavěné funkce NTRIP klienta, serveru a casteru.\cite{mosaic} Použití vestavěného klienta ale vyžaduje skutečnou síťovou cestu k modulu a odpovídající konfiguraci konkrétní desky. Existence USB konektoru sama neznamená, že GNSS přijímač získal přístup k internetu. Pro první test je proto rozumné držet internetovou obsluhu na Pi a nativní síťové funkce posoudit až podle osazených rozhraní.
+
+Provozní údaje musí obsahovat adresu casteru, port, mountpoint, typ proudu, požadavek GGA, verzi protokolu a způsob autentizace. Hesla se ukládají odděleně od veřejných zdrojových textů a měřicích zpráv. Tato studie nestanovuje konkrétní adresu ani účet, protože poskytovatel pro realizaci ještě nebyl vybrán.
+
+\subsection{Kompatibilita klienta}
+BKG uvádí, že NTRIP 2 přidává mimo jiné podporu chunked transfer encoding a upravuje HTTP komunikaci.\cite{bkg} NTRIP 2 samo o sobě neznamená šifrované spojení. Klient musí rozumět odpovědi služby a oddělit HTTP hlavičky i případné chunked rámování od RTCM. Pravidla HTTP/1.1 jsou popsána v RFC~9112.\cite{http}
+
+Úspěšné navázání TCP spojení ještě není příjmem korekcí. Server může vrátit chybu přihlášení, tabulku proudů nebo textovou chybovou stránku. Doporučená kontrola proto ověří odpověď protokolu a následně validní RTCM rámce, časové značky a ID stanice. Na vstup GNSS se nesmějí přeposílat textové hlavičky.
+
+Pokud služba používá HTTP Basic, kódování Base64 nechrání přihlašovací údaje proti přečtení. RFC~7617 výslovně váže bezpečné použití na ochranu transportu, například TLS.\cite{basic} V návrhu se proto upřednostní ověřené TLS, případně řízená chráněná síť podle možností služby.
+
+\section{Datová náročnost a časové chování}
+Studie 02 odvozuje pro model čtyř konstelací a 1~Hz následující čisté RTCM objemy. Tyto hodnoty se zde používají jako návrhový výpočet, nikoliv jako tarifní údaj.
+\par
+\begin{table}[htbp]\centering\small
+\caption{Vlastní výpočet objemu přijímaných RTCM dat, bez síťové režie.}
+\begin{tabular}{lrrr}\toprule
+Profil & B/s & MB/h & MB za 8 hodin\\\midrule
+MSM4, 1~Hz & 725,3 & 2,611 & 20,889\\
+MSM7, 1~Hz & 1155,3 & 4,159 & 33,273\\
+\bottomrule\end{tabular}\end{table}
+\par
+Pro MSM4 platí například
+$725{,}3\cdot3600\cdot8/10^6=20{,}889$~MB.
+NTRIP nepřidává novou rozsáhlou HTTP hlavičku ke každé RTCM zprávě: jde o průběžný stream. Skutečný provoz ale zahrnuje TCP/IP, potvrzování, případné TLS, GGA a obnovy spojení. Pro plánování prvního osmihodinového testu lze vyhradit přibližně 50--100~MB na jedno připojení s rezervou; jde o vlastní rozpočtový odhad, nikoliv měřenou spotřebu.
+
+U vlastní základny přes internet vzniká obdobný upload na základně. Při více roverech se násobí distribuce na casteru a downloady; jednotlivý zdroj nemusí posílat vlastní kopii každému roveru. Surové GNSS logy, vzdálená plocha a aktualizace operačního systému do uvedené bilance nepatří.
+
+\subsection{Malý objem neznamená malé zpoždění}
+Pro RTK bývá rozhodující časová dostupnost a stabilita spojení, nikoliv měsíční objem dat. Mobilní síť může mít výpadek, změnu buňky, kolísání zpoždění nebo dlouhou frontu i při nízkém průměrném toku. Potvrzovaný TCP přenos pomáhá doručení a pořadí bajtů, ale ztracený segment může zpozdit také následující data. Spolehlivé doručení není časová garance.
+
+Návrhově se proto sleduje stáří epoch až u roveru, nikoliv pouze ping nebo síla mobilního signálu. Doporučený počáteční cíl je shodný se studií 02: 1~Hz observace a vyhodnocování stáří vůči pracovní mezi 2~s. Síť musí být testována na celé trati za podmínek odpovídajících provozu.
+
+\section{Porovnání variant pro projekt}
+\par
+\begin{table}[htbp]\centering\small
+\caption{Návrhové porovnání: hodnocení závisí na místě a ověření infrastruktury.}
+\begin{tabularx}{\linewidth}{L{31mm}YYY}\toprule
+Varianta & Hlavní přínos & Kritická podmínka & Navržená role\\\midrule
+Vlastní základna + LoRa & Přímý spoj bez mobilního internetu. & Airtime, přípustný režim, ztráty a pokrytí. & Kandidát po zkoušce datového toku.\\
+Vlastní základna + NTRIP přes internet & Stejná blízká GNSS reference, dostatečná datová kapacita. & Internet na obou koncích a dostupný caster. & Kontrolní cesta a možný hlavní spoj.\\
+Vlastní základna + místní IP síť & Bez závislosti na veřejném internetu. & Vlastní pokrytí a správa sítě. & Laboratoř a ověřená trať.\\
+Cizí stanice / síťová služba & Odpadá vlastní základna a její obsluha. & Vhodný zdroj, rámec, účet a internet v roveru. & Oživení, srovnání, provoz podle lokality.\\
+\bottomrule\end{tabularx}\end{table}
+\par
+
+Z tabulky neplyne univerzální vítěz. Pokud je vlastní základna stabilní a mobilní pokrytí ověřené, může být NTRIP hlavní cestou. Pokud mobilní síť vypadává, je vhodnější nezávislý vyhovující spoj nebo místní IP infrastruktura. Pokud nelze vlastní základnu umístit, dává smysl externí poskytovatel. Pro rozhodnutí je zásadní výsledek studie 02: u zkoumaných LoRa profilů nelze předpokládat dostatečnou propustnost jen z údaje o dosahu.
+
+\section{Přepínání zdrojů a chování při výpadku}
+Záložní cesta musí mít jasně definováno, zda přenáší \emph{stejnou základnu}, nebo mění \emph{zdroj korekcí}. Dvě cesty ze stejné základny lze srovnávat podle stáří epoch; je třeba potlačit duplicity a zabránit zpětnému přechodu na staré zprávy. Ani zde nesmí software míchat neúplné epochy bez kontroly.
+
+Přepnutí z vlastní základny na CZEPOS je jiná operace. Mění se referenční stanice, případně rámec, virtuální bod a stav ambiguit. Není vhodné slibovat bezeskokový přechod. Pi má změnu zaznamenat, oddělit neplatný přechodový interval a vyhodnotit nové řešení. Současné slepé předávání různých základnových proudů není navrženým režimem.
+
+Při ztrátě korekcí musí dál běžet logger. Navrhuje se omezená fronta, časový dohled nad skutečnou epochou, obnovování spojení s odstupem a samostatné logování stavů přenosu a GNSS. Měření bez validovaných korekcí se nesmí v souhrnu automaticky označit za centimetrové. Surová data základny a roveru zůstávají podkladem pro následné PPK.
+
+\section{Doporučená realizace a ověřovací plán}
+\begin{enumerate}
+\item \textbf{Laboratoř:} zprovoznit NTRIP klienta na Pi, ověřit proud z dostupné služby a přijetí v mosaic-X5. Zjistit firmware, ID a rámec zdroje.
+\item \textbf{Vlastní základna:} stejný proud ZED-F9P přenést kabelem a přes místní nebo internetový caster. Tím oddělit změnu zdroje od změny transportu.
+\item \textbf{Trať:} zaznamenat stáří korekcí, mezery a obnovu spojení po celé trase. Zkoušku opakovat s vozidlem a ostatní elektronikou v provozu.
+\item \textbf{Kontrolované výpadky:} odpojit upload základny, internet roveru a caster samostatně. Ověřit identifikaci příčiny a pokračování záznamu.
+\item \textbf{Externí síť:} srovnat vybraný fyzický a síťový profil; ověřit posun vůči místnímu počátku, nové inicializace a skutečnou přesnost.
+\item \textbf{Rozhodnutí:} vybrat hlavní cestu podle přesnosti, dostupnosti a obsluhy; zálohu ověřit jako samostatný funkční režim.
+\end{enumerate}
+Před testem zbývá zjistit místo tratě, pokrytí a možnost připojení základny, dostupný modem, účet poskytovatele, konkrétní mountpoint a skutečný RTCM tok. Tyto chybějící údaje nebrání návrhu architektury, ale brání konečnému potvrzení závodní dostupnosti.
+
+\section{Závěr: proč, kdy a zda NTRIP použít}
+NTRIP je se zvolenou sestavou technicky použitelný a doporučuje se jej zařadit už do první fáze oživení na Raspberry Pi. Umožní rychle ověřit rover a porovnat přenos stejné vlastní základny s LoRa. Výhodou je standardní distribuce a dostatečná kapacita běžné IP cesty pro modelový datový tok.
+
+Jako hlavní spoj se doporučí tehdy, když měření potvrdí dostupnost potřebné sítě a dostatečně čerstvé korekce na celé trati. Jako jediná cesta se nedoporučí při neověřeném mobilním pokrytí, chybějícím internetu základny nebo nevhodném zdroji. Nepoužití NTRIP musí vycházet z těchto konkrétních omezení; samotná existence vlastní základny není důvodem jej odmítnout. Vlastní základna a NTRIP se mohou přímo doplňovat.
+
+\begin{thebibliography}{99}\small
+\zdroj{bkg}{BUNDESAMT FÜR KARTOGRAPHIE UND GEODÄSIE. \emph{Real-Time: Ntrip}. Oddíly Ntrip, Documentation a Ntrip Version 2.0}{https://igs.bkg.bund.de/ntrip/about}
+\zdroj{caster}{BKG. \emph{BKG Professional NtripCaster}. Funkce a omezení casteru}{https://igs.bkg.bund.de/ntrip/bkgcaster}
+\zdroj{czepos-services}{ZEMĚMĚŘICKÝ ÚŘAD. \emph{CZEPOS: Informace o službách a produktech}}{https://czepos.cuzk.cz/_servicesProducts.aspx}
+\zdroj{czepos-network}{ZEMĚMĚŘICKÝ ÚŘAD. \emph{CZEPOS: Popis sítě}. Informace o správě sítě a změnách souřadnic}{https://czepos.cuzk.cz/_index.aspx}
+\zdroj{czepos-status}{ZEMĚMĚŘICKÝ ÚŘAD. \emph{CZEPOS: Monitoring provozu služeb}}{https://czepos.cuzk.cz/_serviceStatus.aspx}
+\zdroj{czepos-quality}{ZEMĚMĚŘICKÝ ÚŘAD. \emph{CZEPOS: Kontrola přesnosti síťového řešení}}{https://czepos.cuzk.cz/_kontrolaPresnosti.aspx}
+\zdroj{mosaic}{SEPTENTRIO. \emph{mosaic-X5 Reference Guide}. Firmware 4.14.10, 23. 9. 2024. Oddíly 1.8--1.10, s. 27--30. Originál výrobce distribuovaný ArduSimple}{https://www.ardusimple.com/wp-content/uploads/2024/10/mosaic-X5-Firmware-v4.14.10-Reference-Guide.pdf}
+\zdroj{http}{FIELDING, R.; NOTTINGHAM, M.; RESCHKE, J. \emph{HTTP/1.1}. RFC 9112, 2022. Zejména Message Body a Chunked Transfer Coding}{https://www.rfc-editor.org/rfc/rfc9112.html}
+\zdroj{basic}{RESCHKE, J. \emph{The 'Basic' HTTP Authentication Scheme}. RFC 7617, 2015, oddíl 4}{https://www.rfc-editor.org/rfc/rfc7617}
+\end{thebibliography}
+\end{document}

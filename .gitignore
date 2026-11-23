@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+*.key
+*.sqlite*
+*.sbf
+*.fimu
+*.img
+*.deb
+local_wifi.h

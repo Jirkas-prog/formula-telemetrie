@@ -1,0 +1,10 @@
+.tools/
+.cache/
+.build/
+.pio/
+include/web_assets.h
+backups/*.bin
+tests/screenshots/
+__pycache__/
+
+include/local_wifi.h

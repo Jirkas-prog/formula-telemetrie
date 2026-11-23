@@ -1,0 +1,587 @@
+\chapter{Využití práce a integrace měřicího systému do vozidla}
+\label{chap:integrace}
+
+\section{Vazba na celkovou senzoriku formule}
+
+Navrhovaný RTK GNSS/IMU systém tvoří část mého širšího úkolu zajistit
+senzoriku studentské formule a připravit data pro následnou analýzu.
+Semestrální práce vytváří podklad pro bakalářskou práci: od výběru
+komponent přecházím k návrhu společného sběru dat, časového přiřazení
+a instalace do skutečného automobilu. Tato kapitola zachycuje
+\textbf{stav návrhu k 13.~říjnu~2026}, nikoli hotovou kabeláž,
+funkční akviziční program nebo provedené jízdní zkoušky.
+
+Trajektorii chci spojit s otáčkami jednotlivých kol, pohybem mechanismů
+roll/heave, teplotami brzdových třmenů a povrchu pneumatik. Získám tak
+možnost hledat souvislosti mezi místem na trati a chováním vozidla:
+například porovnat průjezdy zatáčkou, odpružení při brzdění nebo zahřívání
+pneumatik. Poloha sama tyto jevy nevysvětluje; prostorově přiřazuje další měření.
+
+Po posouzení ceny a předpokládané délky přívodů přibližně \SI{1.5}{m}
+měním původní návrh dvou nápravových uzlů na \textbf{centrální sběr u
+Raspberry Pi}. Analogové signály povedu jednotlivě do společného ADC
+a vstupních obvodů v krytu loggeru. Senzorové CAN 3 a CAN 4 ani jejich
+mikrokontroléry nyní nezařazuji do výchozí sestavy. Dva CANy zachovávám
+pouze pro příjem dat auta a předávání vybraných údajů ADU. Distribuovaný
+sběr zůstává zálohou, pokud centrální varianta nevyhoví při měření.
+
+Základním požadavkem je uchovat v Raspberry Pi co nejúplnější původní
+záznam. ADU nemusí přijímat všechny hodnoty ani jejich plnou frekvenci.
+Odděluji proto \emph{měření a archivaci} od \emph{informování řidiče}.
+Logger v první etapě neřídí brzdy, pohon ani jiné bezpečnostně významné
+funkce. Jeho porucha nesmí být podmínkou funkce vozidla; případné využití
+dat pro řízení by vyžadovalo samostatný návrh a validaci.
+
+\section{Měřené veličiny a pracovní předpoklady}
+
+Původní označení snímačů jako měření odklonu kola nebylo přesné.
+\textbf{Odklon kola v tomto návrhu neměřím.} Sleduji pohyb mechanismů
+roll/heave. Úhel hřídele snímače není automaticky úhlem karoserie ani
+zdvihem kola; převod odvodím z kinematiky a kalibrace skutečného mechanismu.
+Pro dimenzování zatím předpokládám dva polohové kanály vpředu a dva vzadu.
+Počet i uchycení potvrdím nad modelem vozidla.
+
+U brzd volím pro první verzi kontaktní měření \textbf{třmenu}, nikoli
+bezkontaktní měření kotouče. Výsledek tedy není okamžitou teplotou třecí
+plochy ani brzdové kapaliny. Teploty a polohy mají rozdílnou požadovanou
+šířku pásma; všem čidlům automaticky nepřiřazuji \SI{500}{Hz}.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Pracovní rozsah centrálního DAQ nad rámec GNSS/IMU. Frekvence jsou cíle návrhu.}
+\label{tab:vozidlo-senzory}
+\begin{tabularx}{\textwidth}{@{}L{29mm}L{16mm}L{32mm}Y@{}}
+\toprule
+Veličina & Počet & Záznam & Cesta k Raspberry Pi \\
+\midrule
+Poloha roll/heave & 4 kanály & oživení 200 Hz; cíl 500 Hz/kanál & analogový přívod, ochrany, filtr, ADC \\
+Otáčky kol & 4 snímače & každá platná hrana & úprava úrovně, chráněné GPIO \\
+Teplota třmenů & 4 snímače & 4 Hz/kanál & termočlánek, speciální převodník u loggeru \\
+Teplota pneumatik & 4 snímače & cíl 10 Hz/kanál & ověřit analogový výstup nebo převod PWM \\
+Data auta & CAN 1 & původní zprávy & externí CAN řadič, listen-only \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Polohové snímače a kandidát centrálního ADC}
+
+Pro náhradu opotřebitelného potenciometru zvažuji magnetický AS5600
+s analogovým výstupem. Jeho 12bitový rozsah odpovídá kroku
+$360^{\circ}/4096\approx0{,}088^{\circ}$, nikoli přesnosti mechanismu.
+Potřebuje správně ustavený magnet, držák a ochranu proti vodě. Levný
+modul není přímou mechanickou náhradou utěsněného potenciometru.
+Ověřím také napěťový rozsah, filtraci a odezvu \cite{as5600-integrace}.
+Pro tuto architekturu upřednostním analogový výstup před vzdáleným
+I\textsuperscript{2}C; stejné adresy čidel pak nejsou problémem.
+Kalibraci může usnadnit nastavení elektrického rozsahu na skutečně
+využitý úhel. Dva 12bitové převody za sebou nezaručují 12bitovou přesnost.
+
+Raspberry Pi 5 nemá na 40pinovém konektoru analogové měřicí vstupy.
+Přívod k Raspberry proto znamená přívod k \emph{centrálnímu převodníku},
+nikoli připojení proměnného napětí přímo na GPIO \cite{rpi-gpio-adc}.
+Jako levného kandidáta pro první zkoušku volím \textbf{MCP3208}:
+osm multiplexovaných vstupů, 12bitový SAR převod a SPI. Výrobce uvádí
+nejvýše 100~tisíc převodů/s při \SI{5}{V} a 50~tisíc při
+\SI{2.7}{V}; jde o celkový výkon převodníku, ne každého vstupu
+\cite{mcp3208-adc}. Prototyp předpokládá logiku \SI{3.3}{V}
+a SPI \SI{1}{MHz}. Napájení, referenci a mezní parametry ještě ověřím
+pro skutečné zapojení. Při provozu ADC na \SI{5}{V} by bylo třeba
+přizpůsobit také logické úrovně SPI, nikoli jen analogové vstupy.
+
+První čtyři kanály vyhradím poloze, další čtyři zůstanou pro teploty
+pneumatik, pokud uspěje níže uvedený převod na napětí. Při jiném řešení
+IR čidel tvoří rezervu. Rozlišení 12~bitů nepovažuji za definitivně
+dostatečnou přesnost: nejprve stanovím požadovanou chybu polohy podle
+převodového poměru mechanismu. Pokud nevyhoví rozlišení, šum nebo
+časový souběh, porovnám přesnější či simultánně vzorkující ADC.
+
+\subsection{Teploty a otáčky nejsou univerzální analogové vstupy}
+
+Čtyři termočlánky typu K povedu odpovídajícím termočlánkovým či
+kompenzačním vedením ke čtyřem převodníkům MAX6675 u loggeru.
+Jejich SPI zůstane krátké. Maximální převod \SI{220}{ms} vede k cíli
+\SI{4}{Hz}; rozlišení \SI{0.25}{\degreeCelsius} není přesností měření
+\cite{max6675-integrace}. Ověřím teplotní rozsah sondy, kompenzaci
+studeného konce i elektrické spojení s třmenem. Přechod na měděné vodiče
+a vstupní svorky musí být tepelně posouzeny; převodníky nesmějí trpět
+teplotním gradientem od Pi nebo měniče. Montáž nezasáhne do hydrauliky
+ani bezpečnostně významného spojení brzdy. Termočlánek nepřipojím jako
+běžné napěťové čidlo přímo k MCP3208.
+
+Pro pneumatiky zůstává kandidátem MLX90614, například BAA. Široké zorné
+pole varianty xAA je nominálně $90^{\circ}$, proto ověřím výhled při
+propružení a řízení. Čidlo nabízí SMBus a programovatelný PWM výstup,
+nikoli hotový analogový výstup \cite{mlx90614-integrace}. Pro centrální
+variantu chci na stole vyzkoušet \textbf{PWM přívod a centrální filtr
+s převodem střídy na napětí}. Jde o můj návrh dalšího obvodu, nikoli
+ověřenou vlastnost zakoupeného modulu. Je nutné kalibrovat úrovně,
+rozsah, zbytkové zvlnění a zpoždění, rozpoznat přerušení vodiče a
+neplatný výstup. Samotný ADC kód nebude vydáván za původní digitální
+teplotu čidla. Pokud cesta nevyhoví, porovnám vhodné analogové IR čidlo
+nebo upravené digitální rozhraní; tuto část nákupu zatím neuzavírám.
+
+Cíl čtení IR kanálu je \SI{10}{Hz}; skutečná čerstvost údajů závisí
+na čidle a filtrech. Jeden snímač na kolo neměří profil celého běhounu.
+Ověřím emisivitu, znečištění a propustnost případného okénka.
+Bez ověření kapacity vedení a časování nevolím běžný SMBus/I\textsuperscript{2}C
+po celé délce kabelu. Přípustnost takového spoje nelze určit pouze
+z délky \SI{1.5}{m} \cite{nxp-i2c-adc}.
+
+Otáčky kol chci snímat digitálním bezkontaktním čidlem. Konkrétní typ
+ještě neuzavírám: Hallovo čidlo s magnetem a indukční čidlo s kovovým
+cílem mají jiné požadavky na terč. Každý přívod zakončím u loggeru
+ochranou a úpravou úrovně, podle signálu také hysterezním vstupem.
+Výstup \SI{5}{V} nebo \SI{12}{V} nesmí přímo na GPIO. Časované
+události hran v Linuxu mají být výchozím řešením, nikoli smyčka
+opakovaně dotazující úroveň pinu. Prokáže-li test ztráty nebo
+nepřijatelnou časovou chybu, doplním \emph{centrální} hardwarový čítač
+či zachytávání hran; není nutné kvůli tomu ihned vracet uzly ke kolům.
+
+\section{Centrální zapojení, kabeláž a rozhraní}
+
+\subsection{Proč nyní dávám přednost centrálnímu sběru}
+
+Původně jsem uvažoval dva místní mikrokontroléry a dvě senzorové CAN
+větve. Při omezeném rozpočtu a přívodech přibližně \SI{1.5}{m} chci
+nejprve ověřit jednodušší instalaci s jednou vstupní deskou u loggeru.
+Odpadnou dva programované uzly, jejich zdroje, kryty a samostatná
+synchronizace hodin. Neodpadnou ochrany ani převody potřebné pro
+jednotlivé typy čidel. Cenová úspora proti distribuované variantě musí
+zahrnovat také větší kabelový svazek a případné přesnější analogové vstupy.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Rozhraní výchozí centralizované sestavy; nikoli finální pinová mapa.}
+\label{tab:centralni-rozhrani}
+\begin{tabularx}{\textwidth}{@{}L{34mm}L{43mm}Y@{}}
+\toprule
+Zdroj & Dlouhý úsek k loggeru & U Raspberry Pi \\
+\midrule
+Poloha roll/heave & analogový signál s měřicí zemí & ochrana, filtr, ADC a krátké SPI \\
+Otáčky kol & impulzy s definovanou referencí & úprava úrovně a GPIO události \\
+Termočlánky třmenů & termočlánkové vedení & 4 speciální převodníky, krátké SPI \\
+IR teplota & pracovní varianta PWM & ověřit převod na napětí a ADC \\
+GNSS a IMU & podle navigační části & USB, SPI/INT a GNSS PPS \\
+Palubní elektronika & CAN 1 a CAN 2 & dva externí CAN kanály \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Centrální desku umístím na odpruženou část společně s loggerem. Přívody
+rozdělím konektorově na přední a zadní svazek, ale nepřejmenuji tyto
+analogové kabely na CAN 3 a CAN 4. Skutečné délky, pohyblivé úseky,
+ohyby a servisní přístup ověřím v CAD. Délka \SI{1.5}{m} je zatím
+pracovní předpoklad, ne doložená délka všech vodičů.
+
+\subsection{Analogová kvalita a ochrana vstupů}
+
+Signál snímače povedu společně s jeho měřicí referencí a oddělím jej
+od vysokoproudových a spínaných vedení. Senzorová zem nesmí být
+náhodným bodem karoserie, přes který teče výkonový proud. Zapojení
+stínění určím podle skutečné zemní topologie a výsledků měření.
+U každého vstupu navrhnu omezení poruchového proudu, přepěťovou ochranu
+a analogový filtr. Ten musí potlačit i složky, které by při vzorkování
+způsobily aliasing; digitální filtr již vzniklý aliasing neodstraní.
+
+Výstup například \SIrange{0.5}{4.5}{V} je nutné přizpůsobit zvolenému
+rozsahu ADC. Dělič, tolerance reference, teplotní drift a pokles
+napájení snímače vstupují do nejistoty celé sestavy. Poměrové měření
+má smysl jen při skutečně známé vazbě napájení snímače a reference ADC.
+Příliš vysoká výstupní impedance nebo nevhodný RC filtr mohou zhoršit
+ustálení multiplexovaného převodu; případný buffer navrhnu podle
+vzorkovacího vstupu ADC, nikoli jen podle statického napětí.
+
+Rozdíl zemních potenciálů může v jednovodičovém napěťovém měření
+vypadat jako změna polohy. Pokud tato chyba nebude přijatelná,
+porovnám diferenciální vstupní zesilovač nebo vhodnější ADC
+\cite{adi-vstupy-adc}. Pseudodiferenciální režim MCP3208 není
+libovolně plovoucí měření: záporný vstup smí být podle datasheetu jen
+v blízkosti země, přibližně \(\pm\SI{100}{mV}\)
+\cite{mcp3208-adc}. Neřeší automaticky všechny zemní rozdíly v autě.
+
+Před návrhem celé desky připojím jeden skutečný snímač přes skutečný
+kabel. Porovnám šum a posun nuly s krátkým přívodem, při vypnutém
+a zapnutém pohonu, ventilátorech a ostatních spotřebičích. Podmínky
+testu včetně reference, napájení a filtru uložím. Za dostatečnou
+nepovažuji pouze vizuálně hladkou křivku po silném vyhlazení.
+
+\subsection{CAN 1 a CAN 2 zůstávají rozhraním auta}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Platné označení CAN rozhraní po přechodu na centrální ADC.}
+\label{tab:can-role}
+\begin{tabularx}{\textwidth}{@{}L{17mm}L{32mm}L{25mm}Y@{}}
+\toprule
+Název & Hlavní tok dat & Rychlost & Účel \\
+\midrule
+CAN 1 & auto $\rightarrow$ RPi & 1 Mbit/s & potvrzená rychlost; listen-only \\
+CAN 2 & RPi $\rightarrow$ auto & asi 500 kbit/s & ověřit; vybrané údaje pro ADU \\
+CAN 3/4 & nyní neosazeny & neurčena & pouze označení dřívější záložní varianty \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Šipky vyjadřují hlavní aplikační tok, ne elektrickou jednosměrnost CAN.
+Na CAN 1 chci pouze pasivní příjem bez vysílání a potvrzování.
+Na CAN 2 připustím jen dohodnuté identifikátory a frekvence, nikoli
+automatické přeposílání celého provozu. U zpráv určím měřítko, jednotky,
+pořadí bajtů, znaménko, neplatné hodnoty a čas platnosti. Poznámku
+o 16bitových kanálech ADU ověřím podle jeho přesného modelu; není
+to omezení samotné CAN sběrnice.
+
+Pi 5 potřebuje externí CAN řadiče. Pro dvě rozhraní nyní stačí
+uvažovat \emph{jeden} Waveshare 2-CH CAN HAT+ s podporou Pi 5
+\cite{waveshare-can-integrace}. Alternativou jsou samostatné řadiče
+nebo vhodný USB--CAN. MCP2515 má jen dvě přijímací vyrovnávací paměti
+\cite{mcp2515-integrace}; úplnost příjmu CAN 1 musím ověřit i při
+souběžném ADC, GNSS, IMU a zápisu SSD. Nízké vytížení CPU samo
+neprokazuje bezeztrátový záznam. Rozhraní zpřístupním přes SocketCAN
+\cite{socketcan-integrace} a stabilně přiřadím význam CAN 1/2.
+
+Zakončení existujících větví nejprve zjistím. Správný nový CAN má dvě
+zakončení na fyzických koncích, nikoli odpor u každého zařízení;
+připojení loggeru proto neznamená přidání dalšího odporu
+\cite{ti-can-integrace}. Zachovám potřebné galvanické oddělení.
+Před objednávkou sestavím společnou pinovou mapu ADC, CAN, IMU SPI/INT,
+PPS, čtyř vstupů otáček a teplotních převodníků. Nestačí mechanická
+kompatibilita HATů; nesmějí kolidovat volby čipů, přerušení ani
+napájení. Prověřím také M.2 HAT+, chladič a přístup ke konektorům.
+
+\section{Výpočet vzorkování, přenosu a objemu dat}
+\label{sec:can-vypocet}
+
+\subsection{Propustnost ADC a místního SPI}
+
+Uvažované polohové kanály sdílejí převodník, proto požaduji
+\begin{equation}
+ f_{\mathrm{ADC,celkem}}=\sum_i f_i.
+\end{equation}
+Čtyři kanály při \SI{500}{Hz} znamenají 2~000 jednotlivých převodů/s.
+Pro osm stejně rychlých kanálů je to 4~000 převodů/s. Jde o výkon
+čipu; neprokazuje pravidelnost akvizičního programu pod Linuxem.
+Oblíbený ADS1115 má nejvýše 860 převodů/s celkem \cite{ads1115-adc};
+jeden kus tedy čtyři kanály po \SI{500}{Hz} nezvládne. Ani teoretických
+$860/4=215$ vzorků/s na kanál nemá pro \SI{200}{Hz} rozumnou časovou rezervu.
+
+Pro odhad SPI počítám se třemi přenesenými bajty na jeden převod,
+tedy 24 hodinovými impulzy a taktem \SI{1}{MHz}. Je to model
+konkrétního způsobu čtení, nikoli univerzální režie všech ADC.
+Pro podíl obsazení hodin SPI pak platí
+\begin{equation}
+ U_{\mathrm{SPI}}=\frac{24\,f_{\mathrm{ADC,celkem}}}{10^6}.
+\end{equation}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Výpočtová zátěž centrálního ADC. Režie OS a ostatních zařízení není zahrnuta.}
+\label{tab:adc-vypocet}
+\begin{tabularx}{\textwidth}{@{}YR{26mm}R{28mm}R{20mm}@{}}
+\toprule
+Režim & Převody/s & Hodinové bity/s & SPI 1 MHz \\
+\midrule
+4 polohy po 200 Hz & 800 & 19 200 & 1,92 \% \\
+4 polohy po 500 Hz & 2 000 & 48 000 & 4,80 \% \\
+4 polohy po 500 Hz + 4 IR po 10 Hz & 2 040 & 48 960 & 4,90 \% \\
+8 kanálů po 500 Hz, rezervní model & 4 000 & 96 000 & 9,60 \% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Jedna taková transakce trvá na vodičích přibližně \SI{24}{\micro\second}.
+Čtyři po sobě čtené polohy tedy obsadí asi \SI{96}{\micro\second};
+nejde o simultánní měření. Do periody \SI{2}{ms} při \SI{500}{Hz}
+se musí vejít i přepínání CS, systémová volání, další zařízení a čekání.
+Je-li stejný řadič sdílen s IMU a CAN, zahrnu i jejich přenosy a
+priority. Nesmím zaměnit maximální takt SPI zařízení s jeho
+vzorkovací frekvencí. Zlepšení rozlišení či menší šum získaný filtrací
+musím posoudit společně s přidaným zpožděním.
+
+\subsection{Frekvence impulzů kol a záznam na SSD}
+
+Pro rychlost $v=100/3{,}6\ \mathrm{m/s}$, pracovní průměr kola
+$D=\SI{0.46}{m}$ a $N=12$ cílů s jednou zaznamenanou hranou na cíl platí
+\begin{equation}
+ f_{\mathrm{hrany}}=\frac{vN}{\pi D}\approx\SI{230.66}{Hz}
+ \quad\text{na jedno kolo}.
+\end{equation}
+Pro čtyři kola jde přibližně o 922,64 události/s. Rozměr kola,
+počet cílů i rychlost jsou \textbf{výpočtové předpoklady}, nikoli
+potvrzené parametry auta. Prokluz a vyšší rychlost počet zvýší;
+záznam obou hran místo jedné jej zdvojnásobí. Události již neposílám
+senzorovým CANem, ale přijímám je na chráněných vstupech loggeru.
+
+Pro hrubý odhad úložiště si stanovuji vlastní binární záznam
+\SI{16}{\byte} na hodnotu či hranu: 64bitový čas, 32bitová hodnota,
+16bitový kanál a 16bitový stav. Hlavička bloku má navíc pořadí,
+verzi formátu a kontrolu integrity. Pole hodnoty pojme původní ADC
+kód; fyzikální jednotku určuje uložená konfigurace. Následující
+výpočet ještě nezahrnuje blokové hlavičky, CAN ani GNSS/IMU.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Model velikosti nových senzorových záznamů při 16 B na položku.}
+\label{tab:adc-uloziste}
+\begin{tabularx}{\textwidth}{@{}YR{26mm}R{31mm}@{}}
+\toprule
+Zdroj a pracovní režim & Položky/s & MB/h, desetinně \\
+\midrule
+4 polohy po 500 Hz & 2 000 & 115,20 \\
+4 kola, uvedený příklad & 922,64 & 53,14 \\
+4 třmeny po 4 Hz & 16 & 0,92 \\
+4 pneumatiky po 10 Hz & 40 & 2,30 \\
+\midrule
+Celkem, rychlý režim & 2 978,64 & 171,57 \\
+Celkem při poloze 200 Hz & 1 778,64 & 102,45 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Součty zaokrouhluji až po výpočtu. Změna balení více kanálů do bloku
+může režii snížit; komprese nesmí maskovat ztracené vzorky. Datový
+objem není hlavní obtíží, důležitější je pravidelnost čtení,
+neblokující ukládání a dohledatelnost výpadků.
+
+\subsection{Zatížení palubních CAN sběrnic}
+
+Původní výpočty zatížení dvou senzorových CAN větví nejsou po změně
+architektury rozpočtem instalovaného systému. CAN 1 závisí na skutečném
+provozu auta; nejprve pořídím pasivní záznam a zjistím četnosti,
+délky rámců, špičky i ztráty v přijímači.
+
+Pro CAN 2 uvažuji čtyři osmibajtové zprávy po \SI{10}{Hz}. U klasického
+CAN s 11bitovým identifikátorem používám konzervativní délku
+135 bitových časů včetně bit stuffingu a mezisnímkového intervalu
+\cite{bosch-can-integrace}. Nezahrnuje chyby ani opakování přenosu.
+Při předběžné rychlosti \SI{500}{kbit\per\second} vychází
+\begin{equation}
+ \Delta U_{\mathrm{CAN\,2}}=
+ \frac{4\cdot10\cdot135}{500\,000}=1{,}08\,\%.
+\end{equation}
+Jde pouze o přírůstek, nikoli celkové vytížení CAN 2. Obsahem mohou
+být stav loggeru, platnost navigace a vybrané teploty. Vysokofrekvenční
+polohy a původní hrany kol ukládám místně; jejich plný tok ADU nepotřebuje.
+
+\section{Časová osa, kalibrace a struktura záznamu}
+
+Centralizace odstraní potřebu synchronizovat dva vzdálené MCU,
+neodstraní však nejistotu okamžiku měření. MCP3208 převádí během
+transakce SPI a nemá vlastní volně běžící vzorkovací plán s FIFO.
+Čas návratu funkce v uživatelském programu není přesný čas vzorku.
+V první implementaci zaznamenám monotónní časy ohraničující přenos,
+pořadí kanálů a naměřenou nejistotu. Skutečný okamžik vzorkování
+ověřím na CS/SCLK logickým analyzátorem. Pravidelná smyčka se zpožděním
+\SI{2}{ms} sama nezaručuje rovnoměrných \SI{500}{Hz}.
+
+Pro otáčky použiji GPIO character-device API a události z jádra
+namísto časování až při probuzení uživatelského programu. Linux
+poskytuje pořadová čísla událostí, podle nichž lze odhalit přetečení
+fronty \cite{linux-gpio-adc}. To ale nezaručuje zachycení každého
+fyzického impulzu: nesmí být kratší než možnosti vstupu a jeho
+obsluhy. Hardware generující známý počet impulzů proto použiji jako
+nezávislou kontrolu. Neprohlašuji předem, že Pi 5 poskytne pro každý
+takový vstup přesný hardwarový timestamp hrany.
+
+U rychlých kanálů si stanovuji pracovní cíl časového přiřazení do
+\SI{1}{ms}. Ověřím jitter, maximální mezeru mezi vzorky i časový rozdíl
+kanálů při zatížení všemi periferiemi. Pro roll/heave může být
+mezikanálový posun významný i při správné průměrné frekvenci.
+Nesplnění cíle může vést nejprve k ADC se spouštěním či FIFO nebo
+k centrálnímu zachytávání hran, teprve potom k distribuované variantě.
+
+Vazbu monotónního času loggeru na GNSS poskytne PPS a časové zprávy
+popsané v kapitole~\ref{chap:vyber}. Transformaci na GNSS čas uložím
+odděleně, aby změna systémových hodin nepřepsala historii. Při
+\SI{100}{km\per\hour} odpovídá časová chyba \SI{1}{ms} posunu
+\SI{2.78}{cm}; nejde o úplnou chybu polohy ani o již dosaženou přesnost.
+Teplotní převody a filtry mají vlastní odezvu, kterou musím popsat
+vedle časového razítka čtení.
+
+Původní tři datové proudy GNSS, IMU a online navigace zůstávají.
+Přidám \texttt{analog.bin} s ADC kódy, \texttt{wheel\_edges.bin}
+s hranami, \texttt{temperature.bin} s odečty teplotních převodníků
+a interpretací IR kanálů a oddělené záznamy CAN 1/2. Kalibrované
+hodnoty nesmějí přepsat původní odečty. Manifest jízdy uchová
+reference, převodní rozsahy, filtry, kalibrace, mapu konektorů,
+verze programu a DBC. U IR převodu přes filtr je původním záznamem
+pro logger ADC kód, nikoli neuchované digitální slovo uvnitř čidla.
+
+Záznam rozdělím do kratších uzavíraných bloků s kontrolou integrity.
+Při odpojení čidla nebo vynechání převodu uložím stav a mezeru,
+nikoli opakovanou starou hodnotu označenou jako nový vzorek.
+
+\section{Napájení z palubní sítě 8\textendash16~V}
+\label{sec:napajeni-vozidlo}
+
+\subsection{Výkonový návrh a kandidát měniče}
+
+Vozidlo má elektronické jištění přes palubní PMU. Napájení DAQ
+navrhuji z vyhrazeného jištěného výstupu. Měnič musí pracovat při
+\SIrange{8}{16}{V}, jmenovitě \SI{12}{V}; PMU jej nenahrazuje.
+Pro větev \SI{5}{V} nejprve rezervuji \SI{25}{W} a zdroj posuzuji
+i při \SI{30}{W}. Nejde o změřenou spotřebu. Do bilance nově patří
+Pi, SSD, GNSS, jeden dvoukanálový CAN HAT, ventilátor, centrální ADC,
+vstupní obvody a napájené snímače. Samostatné nápravové MCU nyní
+neuvažuji. Odběr, rozběh a rezervu změřím v celé sestavě; snížení
+počtu CAN HATů neznamená automaticky známý pokles spotřeby.
+
+Dosavadním referenčním kandidátem je Pololu D42V55F5, číslo 5571:
+výstup \SI{5}{V} s tolerancí \(\pm3\,\%\), vstup až \SI{60}{V}
+a typický proud \SI{6}{A} při podmínkách výrobce
+\cite{pololu-d42-integrace}. Minimální vstup závisí na úbytku,
+trvalý proud na napětí a chlazení. Kvůli ceně ponechávám výběr
+konkrétního měniče otevřený; přechod na centrální ADC není schválením
+nákupu Pololu ani jiné náhrady. Levnější modul musí projít stejným
+zátěžovým testem, nejen mít příznivý údaj na štítku.
+
+Při pracovním předpokladu $\eta=0{,}90$ platí
+\begin{equation}
+ I_{\mathrm{in}}=\frac{P_{\mathrm{out}}}{\eta U_{\mathrm{in}}}.
+\end{equation}
+Pro \SI{30}{W} je to \SI{4.17}{A} při \SI{8}{V}, \SI{2.78}{A}
+při \SI{12}{V} a \SI{2.08}{A} při \SI{16}{V}; ztráta by byla
+\SI{3.33}{W}. Účinnost je předpoklad, nikoli změřený parametr.
+Je nutné ověřit i teplotu měniče v uzavřeném krytu.
+
+Předchozí cenový podklad pro Pololu byl 870~Kč s DPH k
+12.~říjnu~2026 \cite{botland-pololu-integrace}. Dřívější plánovací
+částka přibližně 1~200~Kč s DPH na zdroj a základní připojení
+není závaznou cenou ani schváleným výběrem. Neobsahuje zálohování.
+Původní rozpočet přibližně 24~290~Kč bez DPH nadále popisuje
+\textbf{GNSS/IMU elektroniku, nikoli kompletní DAQ vozidla}.
+
+\subsection{Ochrany, přívod a vypínání}
+
+Rozsah \SIrange{8}{16}{V} neznamená odolnost proti všem přechodovým
+jevům. Ani vysoké maximální napětí samo neprokazuje automobilovou
+kvalifikaci; na omezení testování upozorňuje i Pololu
+\cite{pololu-auto-integrace}. Navrhnu vstupní filtr a přepěťovou
+ochranu podle skutečné palubní sítě. TVS, energie impulzu a svorkové
+napětí zatím nejsou uzavřeným schématem. Spínaný zdroj zároveň
+oddělím a odfiltruji od citlivé ADC reference a měřicích zemí.
+
+Samostatnou tavnou pojistku nepřidávám automaticky, protože jištění
+má zajistit PMU. Její nastavení však musí chránit i nejslabší vodič
+a konektor. Slabší senzorové odbočky vyžadují samostatné posouzení.
+Proud \SI{4.17}{A} na vstupu při \SI{8}{V} nelze zaměnit s proudem
+na \SI{5}{V} výstupu. Podle měření určím běžný limit, rozběhový proud,
+jeho dobu a reakci na poruchu. Dokumentace Ecumaster tyto veličiny
+rozlišuje \cite{ecumaster-pmu-integrace}; model, firmware a kanál
+PMU ve vozidle ještě doplním. Po dobu záznamu požaduji spojité
+napájení, nikoli PWM napájení měniče. PMU není zárukou čistého
+výstupu \SI{5}{V}, stabilní analogové reference ani funkcí UPS.
+
+Měnič umístím blízko Pi; po autě povedu \SI{12}{V}, ne dlouhý
+vysokoproudový přívod \SI{5}{V}. Úbytky změřím přímo na Pi i čidlech.
+Při napájení přes GPIO použiji dimenzované pevné propojení s oběma
+\SI{5}{V} piny a odpovídajícími zemními kontakty. Laboratorní
+propojky nejsou finální kabeláž. Zdroje na USB-C, GPIO nebo HATu
+nesmějí být neřízeně spojeny paralelně.
+
+Bez USB Power Delivery může být nutné nastavení
+\texttt{PSU\_MAX\_CURRENT=5000}. Nezlepší měnič ani vodiče;
+použiji ji až po ověření celé cesty \cite{rpi-power-integrace}.
+Pokles pod \SI{8}{V} současný požadavek nepokrývá. Snižující měnič
+není UPS a náhlé vypnutí může ztratit data ve frontě. Ověřím obnovu
+uzavřených bloků a s týmem vyřeším řádné vypnutí nebo samostatně
+navržený doběh. Neobejdu přitom bezpečnostní vypínání vozidla.
+
+\section{Instalace, nákupní rozsah a využití dat}
+
+Centrální logger se vstupní deskou umístím na odpruženou část do
+servisně přístupného krytu chráněného proti vodě a nečistotám.
+V CAD prověřím obálku Pi, SSD, HATu, převodníků a konektorů,
+ohybové poloměry i chlazení. Pohyblivé svazky odlehčím v tahu
+a ověřím celý zdvih i řízení. Nesmějí zasáhnout do kola nebo brzdy.
+3D tištěný kryt sám neprokazuje tepelnou ani vibrační odolnost.
+
+IMU bude tuze a opakovatelně ustavena, GNSS anténa bude mít výhled
+a vhodnou montáž. Zaměřím jejich vzájemný vektor a polohu vůči
+referenčnímu bodu auta. Měnič, výkonové vodiče a magnety polohových
+snímačů rozmístím s ohledem na magnetometr. Kalibraci provedu až
+v sestavě a zkontroluji při zapnutých spotřebičích.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Změna nákupního rozsahu proti distribuovanému návrhu. Položky DAQ ještě nejsou úplně oceněny.}
+\label{tab:adc-nakup}
+\begin{tabularx}{\textwidth}{@{}L{38mm}L{26mm}Y@{}}
+\toprule
+Celek & Pracovní počet & Stav po změně \\
+\midrule
+Centrální ADC & 1 & kandidát MCP3208, doplnit referenci a vstupní obvody \\
+Polohové vstupy & 4 & ochrany, přizpůsobení, filtrace a případné buffery \\
+Vstupy otáček & 4 & ochrany a úprava úrovně pro GPIO \\
+Termočlánkové převodníky & 4 & centrální umístění, kandidát MAX6675 \\
+IR vstupní cesta & 4 & ověřit PWM převod; není hotový nákup \\
+CAN rozhraní u Pi & 2 kanály & kandidát jeden 2-CH CAN HAT+ \\
+Nápravové MCU a CAN 3/4 & 0 & pouze záložní alternativa, nyní neobjednávat \\
+Kabeláž a napájení & podle CAD & senzory, konektory, kryt a zdroj ocenit samostatně \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Původní BOM a krátký nákupní seznam GNSS/IMU tímto neměním na údajný
+úplný rozpočet auta. Centrální deska ještě vyžaduje schéma, skutečný
+seznam součástek a cenové porovnání. Vynechané uzly tedy nepřevádím
+na smyšlenou přesnou úsporu. Upřednostním české či evropské dodavatele
+na fakturu a sloučení objednávek; možnost sponzorského dodání je
+alternativou, nikoli jistým nulovým nákladem.
+
+Pro roll/heave vytvořím kalibrační převod podle geometrie, ne pouze
+přejmenování kanálů. Rychlost kol odvodím z časů hran a valivého obvodu.
+Porovnání s GNSS rychlostí může ukázat prokluz, ale musí zohlednit
+zatáčení, rozdílné rychlosti kol a polohu antény. Při malé rychlosti
+je poměrné vyjádření prokluzu špatně podmíněné. Odvozené veličiny
+nesmějí nahradit původní záznam.
+
+Teploty přiřadím místu na trati s vědomím tepelné setrvačnosti čidel
+a třmenu. Mezi jízdami zachovám souřadnou soustavu a ustavení základny.
+Uložím nastavení podvozku, pneumatik a kalibrací, aby změna sestavy
+nebyla zaměněna za chybu měření.
+
+\section{Postup ověření a návrat k distribuované variantě}
+
+\begin{enumerate}
+ \item \textbf{Inventura.} Potvrdím počet a rozsah snímačů, výstupní
+       napětí, model ADU, rychlost CAN 2, zakončení a PMU. V CAD určím
+       délky a konektory; připravím společnou pinovou a napájecí mapu.
+ \item \textbf{Jeden analogový kanál.} Se skutečným kabelem změřím
+       chybu proti referenci, šum, ustálení, dynamickou odezvu a odpojení.
+       Ověřím rozsah a ochrany nejprve na stole, nikoli poruchou v autě.
+ \item \textbf{Celý centrální vstup.} Zprovozním čtyři polohy nejprve
+       na 200 a potom na 500 Hz/kanál. Přidám generátor impulzů kol,
+       termočlánky a ověřovací IR cestu. Změřím jitter a posun kanálů;
+       u teplot rozliším četnost čtení a čerstvost měření.
+ \item \textbf{Souběh loggeru.} Test poběží s GNSS, IMU, CAN 1/2 a SSD.
+       Známým počtem impulzů a rámců ověřím ztráty, fronty a reakci na
+       odpojení. PPS a testovací signál ověří společnou časovou osu.
+ \item \textbf{Napájení a vozidlo.} Provedu starty a zátěžové testy
+       při 8, 12 a 16 V, měření úbytků, teplot a rozběhu přes PMU.
+       V autě bez jízdy ověřím rušení, pohyb svazků a CAN režimy.
+       Krátká jízda následuje až po kontrole týmem.
+\end{enumerate}
+
+Za minimální podmínky první verze považuji alespoň třicetiminutový
+souvislý záznam, dohledatelné výpadky, nulový rozdíl mezi vyslanými
+a přijatými testovacími událostmi a žádné vysílání na CAN 1.
+U rychlých kanálů ověřím cíl časové vazby do \SI{1}{ms} a samostatně
+uvedu největší mezeru i mezikanálový posun. Přijatelnou chybu polohy
+stanovím až podle mechaniky v odpovídajících jednotkách. Prázdný
+chybový log sám není důkazem, že nedošlo ke ztrátě. Po restartu musí
+být čitelné uzavřené bloky a označitelná chybějící koncová část.
+
+Pokud nevyhoví analogový přenos, nejprve ověřím kabeláž, reference,
+vstupní filtr a případný diferenciální přijímač. Pokud nevyhoví
+časování, posoudím centrální hardwarové vzorkování a čítače.
+Teprve při prokázaném přínosu vrátím místní měřicí desky s USB,
+RS-485 nebo CAN. Při návratu ke CAN mohou oba uzly sdílet jedinou
+senzorovou větev; původní rozdělení na CAN 3 a CAN 4 není podmínkou
+funkce. Taková změna bude vyžadovat nový výpočet přenosu a synchronizace.
+
+Výsledkem této etapy má být doložený centrální DAQ propojující
+bakalářskou práci se senzorikou formule: původní data, společná časová
+osa, reprodukovatelné převody a popsaná omezení. ADC, vstupní schéma,
+IR cesta, ochrany, mechanika a úplný rozpočet zůstávají podmíněny
+ověřením. Návrh centrálního sběru není tvrzením, že už byly tyto
+zkoušky úspěšně provedeny.

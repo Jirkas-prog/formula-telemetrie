@@ -1,0 +1,56 @@
+\begin{abstractCZ}
+Práce navrhuje systém pro záznam trojrozměrné trajektorie vozidla Formula
+Student vůči místní základně. Uchovává surové observace GNSS, měření IMU
+a navigační řešení v reálném čase pro následné PPK zpracování a vyhlazení.
+Pro rover je zvolen Septentrio mosaic-X5 na simpleRTK3B Pro, pro přenosnou
+základnu u-blox ZED-F9P na simpleRTK2B Budget. Adafruit ICM-20948 nahrazuje
+původně uvažovanou ISM330DHCX kvůli magnetometru a dostupnosti. Text
+zohledňuje vyšší šum, magnetické rušení a ukončovanou životnost čipu.
+
+Raspberry Pi 5 se 2~GB RAM, chlazením, M.2 HAT+ a vlastním SSD bude
+s Raspberry Pi OS číst IMU přímo přes SPI a přerušení. Pro akcelerometr
+a gyroskop je navrženo \SI{562.5}{Hz}, pro magnetometr nejvýše
+\SI{100}{Hz}. Časovou vazbu GNSS PPS a GPIO je nutné ověřit.
+Korekce RTCM má přenášet spoj LoRa v pásmu 868~MHz: dvě ze čtyř sad
+XIAO ESP32S3 + Wio-SX1262, další dvě slouží pro vývoj a rezervu.
+Základna má mít vlastní raw logger a webovou správu. Firmware a přenos
+vyžadují ověření. Dvě antény ANN-MB2 jsou určeny pro vlastní montáž.
+Oceněná elektronika stojí přibližně 24~290~Kč bez DPH, dopravy a instalace.
+Navazující kapitola rozšiřuje návrh o celovozidlový DAQ: pohyb roll/heave,
+otáčky kol, teploty třmenů a pneumatik. Volí centrální ADC u Raspberry,
+dva CANy pro auto a posuzuje časování i napájení z 8 až 16 V. Tyto doplňky
+nejsou součástí původního rozpočtu. Text je návrh, nikoli výsledek měření.
+\end{abstractCZ}
+
+\begin{keywordsCZ}
+RTK GNSS, IMU, senzorová fúze, Formula Student, LoRa, PPK, Raspberry Pi, CAN, sběr dat
+\end{keywordsCZ}
+
+\begin{abstractEN}
+This work proposes a system for recording a Formula Student car's
+three-dimensional trajectory relative to a local base. Raw GNSS observations,
+IMU measurements and a real-time navigation solution are retained for PPK
+processing and smoothing. The rover uses a Septentrio mosaic-X5 on a
+simpleRTK3B Pro board; the portable base uses a u-blox ZED-F9P on a
+simpleRTK2B Budget board. Adafruit ICM-20948 replaces the initially
+considered ISM330DHCX for its magnetometer and availability. The design
+addresses higher noise, magnetic interference and the chip's end-of-life status.
+
+A 2~GB Raspberry Pi 5 with cooling, M.2 HAT+ and an author-supplied SSD
+will run Raspberry Pi OS and read the IMU through SPI and an interrupt.
+The proposed accelerometer and gyroscope rate is \SI{562.5}{Hz}; the
+magnetometer operates at up to \SI{100}{Hz}. GNSS PPS and GPIO timing
+require validation. Two of four XIAO ESP32S3 + Wio-SX1262 kits will form
+an 868~MHz RTCM link; two are development/spare units. The base is to
+include raw logging and web management. Firmware and transmission require
+testing. Two ANN-MB2 antennas need custom mounting. The selected electronics
+total about CZK~24,290 excluding VAT, shipping and installation.
+A further chapter extends the design to vehicle-wide acquisition of roll/heave,
+wheel speed, caliper and tyre temperatures. It adopts a central ADC,
+two vehicle CAN interfaces, timing checks and an 8--16 V input. These are outside
+the original budget. This is a design proposal, not a report of experiments.
+\end{abstractEN}
+
+\begin{keywordsEN}
+RTK GNSS, IMU, sensor fusion, Formula Student, LoRa, PPK, Raspberry Pi, CAN, data acquisition
+\end{keywordsEN}

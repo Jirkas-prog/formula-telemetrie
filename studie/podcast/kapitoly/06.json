@@ -1,0 +1,13 @@
+{
+  "number": 6,
+  "title": "Kdy jsou data opravdu na disku",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "beebb1863e062ede7ebca6c55bbd7ae9ddae60fd18276fa4b545f294ec9405d6",
+  "sha256_audio": "a5e5a3998ea7f94f47a737c89c4bb44ee75bc2997feedf23fe3d06afbafae168",
+  "duration_seconds": 158.472,
+  "word_count": 371,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

@@ -1,0 +1,710 @@
+<!doctype html><html lang="cs"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Formula / IMU Lab</title>
+<style>
+:root{color-scheme:light;--ink:#162d3e;--muted:#637482;--line:#dce3e6;--paper:#f4f6f6;--blue:#266da1;--red:#c8524a;--green:#25816d}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 system-ui,Segoe UI,sans-serif}button,select,input{font:inherit}button,.file{cursor:pointer;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink);padding:9px 13px;min-height:40px}button:hover,.file:hover{border-color:#8babbc}button:disabled{opacity:.45;cursor:default}.primary{background:var(--ink);color:white;border-color:var(--ink)}header{background:white;border-bottom:1px solid var(--line);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:15px}h1{font-size:22px;letter-spacing:-.6px;margin:0}h1 span{font-weight:400;color:var(--muted)}.eyebrow{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--green);font-weight:700}p{margin:5px 0}.muted{color:var(--muted)}main{max-width:1600px;padding:22px 28px 40px;margin:auto}.welcome{padding:50px 20px;text-align:center;max-width:700px;margin:50px auto}.welcome h2{font-size:32px;line-height:1.2}.welcome p{margin:16px 0 24px}.badge{display:inline-block;padding:3px 8px;border-radius:5px;background:#e7f0ed;color:#216b58;font-size:12px}.warning{padding:13px 16px;background:#fff4e1;border:1px solid #ead6b4;border-radius:9px;color:#715222;margin:14px 0}.error{background:#fce9e7;color:#9d302a}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}.controls label{color:var(--muted);font-size:12px}.controls select{display:block;max-width:100%;border:1px solid var(--line);padding:9px;border-radius:8px;background:white;min-height:40px;color:var(--ink)}#run{max-width:440px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.card{background:white;border:1px solid var(--line);padding:13px 16px;border-radius:10px;min-width:0}.card small{display:block;color:var(--muted)}.card strong{font-size:22px;display:block;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:16px;align-items:start}.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;overflow:hidden}.panel h2{font-size:16px;margin:0 0 8px}.panel p{font-size:12px}.map{width:100%;height:440px;display:block;touch-action:pan-y}.graph{width:100%;height:170px;display:block;touch-action:none}.charthead{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:10px 0 0}.legend{font-size:11px;white-space:nowrap}.legend b{margin-left:8px}.x{color:#c8524a}.y{color:#25816d}.z{color:#266da1}#timeline{width:100%;accent-color:var(--blue);display:block;margin:12px 0}.player{background:white;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:14px 0;position:sticky;top:0;z-index:2}.playerbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.playerbar output{font-variant-numeric:tabular-nums;min-width:86px;font-weight:700}.playerbar input[type=number]{width:92px;border:1px solid var(--line);border-radius:6px;padding:7px}.playerbar select{border:1px solid var(--line);border-radius:6px;padding:8px}.spacer{flex:1}.values{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:12px;font-variant-numeric:tabular-nums;margin-top:6px}.values span{min-width:0;overflow-wrap:anywhere}.tablewrap{overflow:auto;margin-top:10px}table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}th,td{padding:8px;text-align:left;border-bottom:1px solid var(--line)}th{color:var(--muted)}details{margin-top:16px}summary{cursor:pointer;font-weight:600}#status{font-size:12px;color:var(--muted);margin-top:8px;overflow-wrap:anywhere}.nowrap{white-space:nowrap}.hidden{display:none!important}footer{font-size:12px;color:var(--muted);margin-top:25px}.check{display:flex;align-items:center;gap:6px;font-size:12px}.loading{opacity:.5;pointer-events:none}@media(max-width:800px){header{padding:14px 16px}main{padding:14px 12px}.layout{grid-template-columns:1fr}.map{height:350px}.cards{grid-template-columns:repeat(2,1fr)}.card strong{font-size:19px}.controls>label{width:100%}#run{width:100%;max-width:none}.panel{padding:12px}.player{padding:10px;top:0}.playerbar{gap:5px}.playerbar input[type=number]{width:75px}.welcome{margin:20px auto}.welcome h2{font-size:26px}.player p{display:none}}@media(max-width:400px){h1{font-size:18px}header{gap:8px}.file{padding:8px;font-size:12px}.playerbar button{padding:8px}.map{height:300px}.legend{font-size:10px}.values{font-size:11px}}
+
+.flagpanel{margin:14px 0}.flagpanel summary{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.flagpanel summary::before{content:'⚑';color:#7951a3}.flagpanel summary .muted{font-size:12px;font-weight:400}.flagtools,.flagexport,.flagedit{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:12px 0}.flagtools button,.flagtools .file{font-size:12px}.flagpanel label{font-size:12px;color:var(--muted);min-width:0}.flagpanel input,.flagpanel select{display:block;max-width:100%;width:100%;min-height:40px;border:1px solid var(--line);border-radius:7px;padding:8px;background:white;color:var(--ink)}.flagedit{padding:12px;background:var(--paper);border-radius:8px}.flagedit label{flex:1 1 110px}.flagedit label:nth-child(3){flex:3 1 180px}.flagexport label{flex:1 1 140px}.flagtable{white-space:normal;table-layout:fixed}.flagtable th:nth-child(1){width:65px}.flagtable th:nth-child(2){width:100px}.flagtable th:nth-child(4){width:150px}.flagtable td{overflow-wrap:anywhere;vertical-align:top}.flagtable button{padding:5px 8px;min-height:36px;font-size:12px;margin:2px}.flagtable .flagjump{color:#7951a3;font-weight:700}.flagpanel .tablewrap{max-height:300px}.flagmarks{height:28px;position:relative;margin:0 13px;overflow:hidden}.flagmarks:empty{display:none}.flagmark{position:absolute;transform:translateX(-50%);border:0;background:transparent;padding:0 2px;min-height:26px;font-size:11px;color:#7951a3;font-weight:700;max-width:70px;overflow:hidden}.flagprogress{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.flagprogress p{flex:1 1 200px}#flagMessage{font-size:12px;overflow-wrap:anywhere}#flagExport{background:#7951a3;color:white;border-color:#7951a3}#addFlag{color:#7951a3;border-color:#cbb8dd}.flagempty{padding:10px 0;color:var(--muted)}@media(max-width:600px){.flagtable th:nth-child(1){width:55px}.flagtable th:nth-child(2){width:85px}.flagtable th:nth-child(4){width:70px}.flagtable th,.flagtable td{padding:6px 3px}.flagtable td:last-child button{display:block}.flagtools{gap:6px}.flagexport label{flex:1 1 110px}.flagexport button{width:100%}.flagedit label:nth-child(3){flex-basis:100%}}
+[hidden]{display:none!important}
+@media(max-width:600px){.flagtable thead{display:none}.flagtable,.flagtable tbody{display:block;width:100%}.flagtable tr{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:4px 8px;padding:10px 0;border-bottom:1px solid var(--line)}.flagtable td{border:0;padding:0;align-self:center}.flagtable td:first-child{grid-column:1;grid-row:1}.flagtable td:nth-child(2){grid-column:2;grid-row:1}.flagtable td:nth-child(2)::after{content:' s'}.flagtable td:nth-child(3){grid-column:1/3;grid-row:2}.flagtable td:nth-child(4){grid-column:3;grid-row:1/3}.flagtable button{min-height:40px}}
+
+.analysisPanel{margin:14px 0}.analysisTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.analysisTitle h2{margin:0}.analysisPanel summary{font-size:14px}.analysisPanel input,.analysisPanel select{min-height:40px;border:1px solid var(--line);border-radius:7px;padding:7px;background:white;color:var(--ink);max-width:100%;width:100%}.analysisControls{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin:12px 0}.analysisControls label{font-size:12px;color:var(--muted);flex:1 1 140px;min-width:0}.analysisControls button{flex:0 1 auto}.peakActions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.peakActions button{padding:5px 9px;font-size:12px;min-height:38px}.brakeEvents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:520px;overflow:auto;margin-top:12px}.brakeEvent{padding:12px;border:1px solid var(--line);border-left:3px solid var(--red);border-radius:8px;min-width:0;background:#fff}.brakeEvent p{margin:7px 0;overflow-wrap:anywhere}.eventHeading{display:flex;justify-content:space-between;gap:8px}.eventHeading strong{font-size:17px}.eventHeading span{font-variant-numeric:tabular-nums;color:var(--muted)}.eventActions{display:flex;gap:6px;flex-wrap:wrap}.eventActions button{font-size:12px;padding:7px 9px;min-height:40px}.statsTable small{display:block;font-size:11px;color:var(--muted)}.statsTable button{padding:5px 8px;min-height:36px;margin:2px}.statsTable td:first-child{font-weight:600}.statsTable{white-space:normal}#analysisScope,#analysisMessage,#auditScope{overflow-wrap:anywhere}#analysisMessage{color:var(--green);min-height:20px}.auditTable{white-space:normal}.auditTable td{overflow-wrap:anywhere}.auditTable button{font-size:12px;white-space:nowrap}.analysisPanel .tablewrap{max-height:480px}@media(max-width:800px){.brakeEvents{grid-template-columns:1fr}}@media(max-width:600px){.analysisControls button{width:100%}.statsTable thead{display:none}.statsTable,.statsTable tbody{display:block}.statsTable tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}.statsTable td{border:0;padding:0;overflow-wrap:anywhere}.statsTable td:first-child{grid-column:1/-1}.statsTable td:not(:first-child)::before{content:attr(data-label);display:block;font-size:11px;color:var(--muted)}.statsTable button{min-height:40px}.auditTable th,.auditTable td{padding:6px 3px;font-size:11px}.auditTable button{padding:6px 4px;min-height:40px}}
+.csv-layout{grid-template-columns:1fr}.importProgress{display:flex;align-items:center;gap:10px;margin:8px 0}.importProgress progress{width:min(360px,70%);accent-color:var(--green)}
+</style>
+<header><div><div class="eyebrow">Měřeno / odvozeno / ověřeno</div><h1>Formula <span>/ IMU Lab</span></h1></div><label class="file primary">Otevřít data<input id="file" type="file" accept=".csv,.fimu,.zip" hidden></label></header>
+<main><div id="welcome" class="welcome"><span class="badge">Offline analýza · CSV i FIMU</span><h2>Projděte jízdu<br>vzorek po vzorku.</h2><p class="muted">Otevřete <b>CSV záznam</b> nebo balíček <b>Formule_IMU.fimu</b>. Grafy, statistiky a vlaječky fungují lokálně. FIMU navíc obsahuje kontrolu kvality a podmíněný odhad trasy.</p><label class="file">Vybrat CSV nebo FIMU<input id="file2" type="file" accept=".csv,.fimu,.zip" hidden></label></div>
+<div id="status" role="status" aria-live="polite"></div><div class="importProgress"><progress id="loadProgress" max="1" value="0" hidden aria-label="Průběh načítání"></progress><button id="cancelImport" hidden>Zrušit načítání</button></div><div id="work" class="hidden">
+<div class="controls"><label>ZÁZNAM<select id="run"></select></label><label>ZOBRAZIT ÚSEK<select id="preset"><option value="all">Celý soubor</option><option value="drive">Jízda 181 · 650–1007 s</option><option value="laps">Kandidáti kol · 781–986 s</option><option value="failure">Počátek poruchy · 995–1020 s</option></select></label><span class="spacer"></span><button id="raw">Export původního CSV</button><button id="export">Export zobrazeného úseku</button></div>
+<div id="notice" class="warning"></div><div class="cards"><div class="card"><small>Obsah souboru</small><strong id="category">—</strong></div><div class="card"><small>Doba záznamu</small><strong id="duration">—</strong></div><div class="card"><small>Neplatné digitální řádky</small><strong id="bad">—</strong></div><div class="card"><small>Aktuální rychlost · model</small><strong id="speed">—</strong></div></div>
+<div class="player"><div class="playerbar"><button id="play" aria-label="Přehrát">▶ Přehrát</button><select id="rate" aria-label="Rychlost přehrávání"><option>1×</option><option>5×</option><option>20×</option></select><output id="clock">0,00 s</output><span class="spacer"></span><label>Od <input id="from" type="number" step=".1" aria-label="Začátek časového okna"></label><label>do <input id="to" type="number" step=".1" aria-label="Konec časového okna"></label><button id="zoomIn" aria-label="Přiblížit čas">＋</button><button id="zoomOut" aria-label="Oddálit čas">−</button><button id="reset">Celé</button><button id="addFlag" title="Označit aktuální čas">⚑ Vlaječka</button></div><input id="timeline" type="range" min="0" max="1" step=".01" value="0" aria-label="Časový kurzor"><div id="flagMarks" class="flagmarks" aria-label="Vlaječky v časovém okně"></div><p class="muted">Klepnutím na graf nastavíte čas. Kolečko přibližuje čas kolem kurzoru; dotykem lze vybrat hodnotu.</p></div>
+<details class="panel flagpanel" id="flagPanel" open><summary>Vlaječky <span id="flagCount" class="muted"></span></summary>
+<p class="muted">Vyberte čas v grafu a stiskněte ⚑ Vlaječka. Klepnutím na číslo se vrátíte k označenému bodu. Číslo, čas i popis lze upravit.</p>
+<div class="flagtools"><button id="saveFlags">Uložit vlaječky do souboru</button><label class="file">Načíst vlaječky<input id="importFlags" type="file" accept=".json" hidden></label><span id="flagStorage" class="muted"></span></div>
+<div id="flagEmpty" class="flagempty">Zatím žádná vlaječka. První přidáte tlačítkem u přehrávání.</div>
+<div class="tablewrap" id="flagTableWrap" hidden><table class="flagtable"><thead><tr><th>Vlaječka</th><th>Čas [s]</th><th>Popis</th><th>Úpravy</th></tr></thead><tbody id="flagRows"></tbody></table></div>
+<form id="flagEdit" class="flagedit hidden"><label>Číslo<input id="flagNumber" type="number" min="1" max="999999" step="1" required></label><label>Čas [s]<input id="flagTime" type="number" min="0" step=".001" required></label><label>Popis (nepovinný)<input id="flagLabel" maxlength="160" placeholder="Např. začátek zatáčky"></label><button type="submit">Uložit bod</button><button id="flagEditCancel" type="button">Zrušit</button></form>
+<div class="flagexport"><label>Od vlaječky<select id="flagFrom"></select></label><label>Do vlaječky<select id="flagTo"></select></label><label>Data pro export<select id="flagFormat"><option value="raw">Původní · všechny řádky</option><option value="overview">Přehled · 100 Hz + filtr</option></select></label><button id="flagShow">Zobrazit úsek</button><button id="flagExport">Export mezi vlaječkami</button></div>
+<p id="flagRange" class="muted"></p><p class="muted">CSV obsahuje samostatné sloupce flag_number a flag_label; u neoznačených řádků jsou prázdné. Zahrnuty jsou oba krajní body i všechny vlaječky mezi nimi. Plný export přiřadí značku nejbližšímu původnímu řádku.</p>
+<div class="flagprogress"><p id="flagMessage" role="status" aria-live="polite"></p><button id="cancelExport" class="hidden">Zrušit export</button></div>
+</details>
+<section class="panel analysisPanel" id="analysisPanel">
+<div class="analysisTitle"><h2>Statistiky a brzdné události</h2><button id="refreshAnalysis">Přepočítat okno</button></div>
+<p id="analysisScope" class="muted"></p><div id="analysisCards" class="cards"></div>
+<p id="analysisNote" class="muted"></p><p id="analysisExposure"></p><p id="analysisMessage" role="status" aria-live="polite"></p>
+<details id="axesPanel"><summary>Statistiky všech os · minima, maxima a průměry</summary><p id="axesMode" class="muted"></p><p class="muted">Klepnutí na extrém přesune kurzor. Tlačítko ⚑ uloží bod. σ je populační směrodatná odchylka; magnetometr počítá jen dostupné 100Hz intervaly.</p><div class="tablewrap"><table class="statsTable"><thead><tr><th>Signál</th><th>Minimum / čas</th><th>Maximum / čas</th><th>Průměr / σ</th><th>Platné vzorky</th></tr></thead><tbody id="axisStats"></tbody></table></div></details>
+<details id="brakePanel" open><summary>Kandidáti brzdění <span id="eventCount" class="muted"></span></summary>
+<div class="analysisControls"><label>Práh zpomalení [g]<input id="brakeThreshold" type="number" min=".05" max="2" step=".05" value=".30"></label><label>Minimální délka [s]<input id="brakeDuration" type="number" min=".05" max="30" step=".05" value=".30"></label><label>Řazení<select id="brakeSort"><option value="peak">Nejsilnější nejdříve</option><option value="time">Podle času</option></select></label><button id="exportEvents">Export událostí CSV</button></div>
+<p id="eventRule" class="muted"></p><div id="eventList" class="brakeEvents"></div></details>
+<details><summary>Porovnání extrémů všech záznamů · audit původních CSV</summary><p id="auditScope" class="muted"></p><div class="tablewrap"><table class="auditTable"><thead><tr><th>Záznam</th><th>Obsah</th><th>Zpomalení 2 Hz</th><th>Syrová špička</th></tr></thead><tbody id="auditRows"></tbody></table></div></details>
+</section>
+<div class="layout"><section class="panel" id="trajectoryPanel"><h2>Trasa a poloha</h2><div class="controls"><select id="mapmode" aria-label="Metoda rekonstrukce"><option value="model">Vozidlový model</option><option value="closed">Kandidáti kol · vynucené uzavření</option><option value="naive">Prostá integrace · ukázka driftu</option></select></div><canvas class="map" id="map" aria-label="Podmíněná trasa vozidla"></canvas><p id="mapnote" class="muted"></p><div class="values" id="position"></div><details open><summary>Kandidáti kol</summary><div class="tablewrap"><table><thead><tr><th>Kolo</th><th>Od [s]</th><th>Čas [s]</th><th>Neuzavření [m]</th></tr></thead><tbody id="lapTable"></tbody></table></div><p class="muted">Hranice podle podobných zatáček. Nejde o ověřené průjezdy časomírou.</p></details></section>
+<section class="panel"><div class="controls"><label class="check"><input id="filtered" type="checkbox" checked><span id="filterLabel">Filtr 2 Hz</span></label><label class="check"><input id="showbad" type="checkbox">Zobrazit i neplatná data</label></div><p id="qualityMode" class="muted" aria-live="polite"></p>
+<div id="accChart"><div class="charthead"><h2>Akcelerometr <span class="muted">[g]</span></h2><span class="legend"><b class="x">X</b><b class="y">Y</b><b class="z">Z</b></span></div><canvas id="acc" class="graph"></canvas><div class="values" id="accValues"></div></div>
+<div id="gyrChart"><div class="charthead"><h2>Gyroskop <span class="muted">[°/s]</span></h2><span class="legend"><b class="x">X</b><b class="y">Y</b><b class="z">Z</b></span></div><canvas id="gyr" class="graph"></canvas><div class="values" id="gyrValues"></div></div>
+<div id="magChart"><div class="charthead"><h2>Magnetometr <span class="muted">[µT]</span></h2><span class="legend"><b class="x">X</b><b class="y">Y</b><b class="z">Z</b></span></div><canvas id="mag" class="graph"></canvas><div class="values" id="magValues"></div></div>
+<div id="bodyChart"><div class="charthead"><h2>Zrychlení vozidla <span class="muted">[m/s²]</span></h2><span class="legend"><b class="x">Podélné</b><b class="y">Boční</b></span></div><canvas id="body" class="graph"></canvas><div class="values" id="bodyValues"></div></div></section></div>
+<details class="panel"><summary>Co data znamenají a jak s nimi pracovat</summary><p>Samostatné CSV: podporované jsou původní logy ESP32, časové výřezy a vozidlová časová řada z reportu drivetrainu. Čas je ve sloupci time_us, t_s nebo time_s. Oddělovačem může být čárka nebo středník; soubor má kódování UTF-8. CSV se dále nefiltruje a nevytváří se z něj odhad trasy. Vozidlové statistiky vyžadují výslovné sloupce ax_m_s2 a ay_m_s2. Limit je 2 miliony 100Hz bodů a relativní čas do 20 000 s. CRC se při importu nekontroluje.</p><p>Grafy os X/Y/Z jsou v soustavě senzoru. Čísla jsou průměry nových vzorků v 10 ms intervalech (100 Hz), nikoli plné původní 500 Hz měření. Export původního CSV zachová všechny řádky. Filtrovaná data z balíčku FIMU používají obousměrný filtr Butterworth 2 Hz; není to kauzální online filtr.</p><p>Vlaječky jsou uživatelské značky na 100Hz časové ose, nezávislé na automaticky nalezených kolech. Automatické uložení platí pro tento prohlížeč a tuto adresu aplikace; přenos mezi počítači nebo lokálním HTML a webem zajišťuje soubor Formule_vlajecky.json. Původní FIMU se nepřepisuje. V CSV s vlaječkami se původní kontrolní součet nazývá source_crc32 a vztahuje se pouze k původním polím, ne k novým značkám.</p><p>Červené pozadí značí neplatný digitální vzor, šedá mezera nedostupné měření. Chybné úseky se nepřeklenují. „Klid“ sám o sobě nerozlišuje stojící auto od rovnoměrného přímého pohybu.</p><p>Trasa existuje pouze pro soubor 181, úsek 650–1007 s. Osa dopředu je odhadnuta přibližně jako +X senzoru s natočením −9,5°. Model předpokládá pohyb v rovině bez výrazného smyku; rychlost, vzdálenost a poloha nejsou přímo měřené. Lokální počátek a sever jsou libovolné. Poloha nemá ověřenou absolutní přesnost.</p><p>Uzavřená kola používají lineární rozložení chyby koncového bodu do celého kola. Tím se návrat do počátku vynutí; nulové neuzavření není důkazem správné trasy. Rozměr 82 × 130 m slouží pouze jako kontrola věrohodnosti.</p><p>Magnetometr v souboru 181 přestal dodávat nové hodnoty v 534,295 s, tedy před jízdou. Rekonstrukce proto nepoužívá magnetický sever. Souhrnný report vysvětluje poruchy, test driftu a nejistoty.</p></details>
+<footer>Formula IMU Lab · analýza 26. 10. 2026 · nezávislé lokální zpracování · původní soubory zůstávají beze změny</footer></div></main>
+<script id="flag-core">
+'use strict';
+// Flags use the existing 10 ms overview grid. Raw exports snap to the nearest original row.
+const FlagData = {
+  timeUs: f => f.index * 10000 + 5000,
+  index: (seconds, rows) => Math.max(0, Math.min(rows - 1, Math.round((seconds - .005) * 100))),
+  sorted: flags => [...flags].sort((a,b) => a.index - b.index),
+  validate(flags, rows) {
+    if (!Array.isArray(flags) || flags.length > 5000) throw Error('Neplatný seznam vlaječek (nejvýše 5000 na záznam).');
+    const numbers = new Set(), indices = new Set();
+    return this.sorted(flags.map(f => {
+      if (!f || !Number.isInteger(f.number) || f.number < 1 || f.number > 999999 || numbers.has(f.number)) throw Error('Každá vlaječka musí mít jedinečné celé číslo 1–999999.');
+      if (!Number.isInteger(f.index) || f.index < 0 || f.index >= rows || indices.has(f.index)) throw Error('V jednom časovém bodě může být jen jedna vlaječka.');
+      if (typeof f.label !== 'string' || f.label.length > 160) throw Error('Popis vlaječky smí mít nejvýše 160 znaků.');
+      numbers.add(f.number); indices.add(f.index);
+      return {number:f.number,index:f.index,label:f.label};
+    }));
+  },
+  cell(value) {
+    let s = String(value ?? '');
+    // Labels are text, even when Excel would otherwise interpret a formula.
+    if (/^[\s]*[=+@-]/.test(s)) s = "'" + s;
+    return /[",\r\n]/.test(s) ? '"' + s.replaceAll('"','""') + '"' : s;
+  },
+  fields(flags) { return [flags.map(f=>f.number).join('|'), this.cell(flags.map(f=>f.label).join(' | '))].join(','); },
+  async *lines(stream, signal) {
+    const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
+    let pending = '';
+    const cancel = () => { reader.cancel().catch(()=>{}); };
+    signal?.addEventListener('abort', cancel, {once:true});
+    try {
+      for (;;) {
+        signal?.throwIfAborted();
+        const {value,done} = await reader.read();
+        signal?.throwIfAborted();
+        if (done) break;
+        pending += value;
+        let offset=0, end;
+        while ((end=pending.indexOf('\n',offset))>=0) {
+          yield pending.slice(offset,end).replace(/\r$/,''); offset=end+1;
+        }
+        pending=pending.slice(offset);
+        if (pending.length>1048576) throw Error('Neplatný nebo příliš dlouhý řádek CSV.');
+      }
+      if (pending) yield pending.replace(/\r$/,'');
+    } finally {
+      signal?.removeEventListener('abort',cancel);
+      await reader.cancel().catch(()=>{}); reader.releaseLock();
+    }
+  },
+  async *rawChunks(stream, flags, first, last, signal, progress=()=>{}) {
+    const ordered=this.sorted(flags), limits=[first,last].sort((a,b)=>a.index-b.index);
+    let previous=null, pointer=0, active=false, finished=false, header=true, scanned=0, emitted=0, block='';
+    const accept=(row,midpoint)=>{
+      const marks=[];
+      while(pointer<ordered.length && this.timeUs(ordered[pointer])<=midpoint) marks.push(ordered[pointer++]);
+      if(marks.some(f=>f.number===limits[0].number)) active=true;
+      if(active){block+=row.text+','+this.fields(marks)+'\r\n';emitted++;}
+      if(marks.some(f=>f.number===limits[1].number)) finished=true;
+    };
+    for await (const line of this.lines(stream,signal)) {
+      if(header){
+        const cols=line.replace(/^\uFEFF/,'').split(',');
+        if(cols[0]!=='time_us'||!cols.includes('seq')||cols.includes('flag_number')) throw Error('Neočekávaná hlavička původního CSV.');
+        yield cols.map(c=>c==='crc32'?'source_crc32':c).join(',')+',flag_number,flag_label\r\n';
+        header=false;continue;
+      }
+      if(!line)continue;
+      const t=Number(line.slice(0,line.indexOf(',')));
+      if(!Number.isSafeInteger(t)||t<0||(previous&&t<previous.t)) throw Error('Neplatná časová osa CSV. Export byl zastaven.');
+      if(previous)accept(previous,(previous.t+t)/2);
+      previous={t,text:line};scanned++;
+      if(scanned%10000===0||finished){
+        if(block){yield block;block='';}
+        progress({scanned,emitted,time:t/1e6});
+        await new Promise(resolve=>setTimeout(resolve,0));
+        signal?.throwIfAborted();
+      }
+      if(finished)break;
+    }
+    if(!finished&&previous)accept(previous,Infinity);
+    if(header||!finished||!emitted)throw Error('Krajní vlaječky nelze přiřadit k řádkům tohoto CSV.');
+    if(block)yield block;
+    progress({scanned,emitted,time:previous.t/1e6});
+  },
+  async *overviewChunks(values,stride,columns,flags,lo,hi,signal,progress=()=>{},extra=null) {
+    const marks=new Map(flags.map(f=>[f.index,f]));
+    yield columns.join(',')+',flag_number,flag_label\r\n';
+    for(let first=lo;first<=hi;first+=2000){
+      signal?.throwIfAborted();let block='';
+      for(let i=first;i<=Math.min(hi,first+1999);i++){
+        const row=[...values.subarray(i*stride,(i+1)*stride),...(extra?extra(i):[])].map(v=>Number.isFinite(v)?v:'');
+        block+=row.join(',')+','+this.fields(marks.has(i)?[marks.get(i)]:[])+'\r\n';
+      }
+      yield block;progress({emitted:Math.min(hi,first+1999)-lo+1});
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+  }
+};
+</script>
+<script id="csv-import">
+'use strict';
+// Shared by the background importer and streaming range export. No network dependencies.
+function createCsvData(){
+  const columns=['t_s','ax_g','ay_g','az_g','gx_dps','gy_dps','gz_dps','mx_uT','my_uT','mz_uT','temp_C','bad_fraction','fax_g','fay_g','faz_g','fgx_dps','fgy_dps','fgz_dps'];
+  const limit=2000000,chunkBytes=4*1024*1024;
+  function fields(text,delimiter){
+    if(!text.includes('"'))return text.split(delimiter);
+    const out=[];let cell='',quoted=false,closed=false;
+    for(let i=0;i<text.length;i++){
+      const c=text[i];
+      if(quoted){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++}else{quoted=false;closed=true}}else cell+=c}
+      else if(c===delimiter){out.push(cell);cell='';closed=false}
+      else if(c==='"'&&!cell&&!closed)quoted=true;
+      else if(closed){if(!/\s/.test(c))throw Error('Neplatné uvozovky v CSV.')}
+      else if(c==='"')throw Error('Neplatné uvozovky v CSV.');else cell+=c;
+    }
+    if(quoted)throw Error('Neuzavřené uvozovky v CSV.');out.push(cell);return out;
+  }
+  async function* records(file,{signal,chunk=()=>{}}={}){
+    const decoder=new TextDecoder('utf-8',{fatal:true});let pending='',record='',quoted=false,lineNumber=0;
+    for(let offset=0;offset<file.size;offset+=chunkBytes){
+      signal?.throwIfAborted();const bytes=await file.slice(offset,offset+chunkBytes).arrayBuffer();
+      pending+=decoder.decode(bytes,{stream:offset+bytes.byteLength<file.size});let at=0,end;
+      while((end=pending.indexOf('\n',at))>=0){
+        const line=pending.slice(at,end).replace(/\r$/,'');at=end+1;lineNumber++;
+        record+=(record?'\n':'')+line;
+        if(line.includes('"'))for(const c of line)if(c==='"')quoted=!quoted;
+        if(record.length>1048576)throw Error('Řádek CSV je delší než 1 MB.');
+        if(!quoted){if(record.trim())yield {text:record,line:lineNumber};record=''}
+      }
+      pending=pending.slice(at);if(pending.length>1048576)throw Error('Řádek CSV je delší než 1 MB.');
+      await chunk(bytes,Math.min(file.size,offset+bytes.byteLength));signal?.throwIfAborted();
+    }
+    if(pending){record+=(record?'\n':'')+pending.replace(/\r$/,'');if(pending.includes('"'))for(const c of pending)if(c==='"')quoted=!quoted}
+    if(quoted)throw Error('CSV končí uvnitř neuzavřené buňky.');
+    if(record.trim())yield {text:record,line:lineNumber+1};
+  }
+  function schema(text,delimiter){
+    text=text.replace(/^\uFEFF/,'');delimiter=delimiter||(text.includes(';')?';':',');
+    const header=fields(text,delimiter).map(s=>s.trim().toLowerCase());
+    if(new Set(header).size!==header.length)throw Error('CSV má duplicitní názvy sloupců.');
+    const index=Object.fromEntries(header.map((name,i)=>[name,i]));
+    const times=['time_us','t_s','time_s'].filter(k=>k in index);
+    if(times.length!==1)throw Error('CSV musí mít jeden časový sloupec time_us, t_s nebo time_s.');
+    const sensor=columns.slice(1,10).some(c=>c.toLowerCase() in index);
+    const body=['ax_m_s2','ay_m_s2'].every(c=>c in index);
+    if(!sensor&&!body)throw Error('CSV neobsahuje měřené osy. Očekávám ax_g…gz_dps / mx_uT…mz_uT nebo ax_m_s2 a ay_m_s2. Souhrnné tabulky událostí nejsou časový záznam.');
+    return {header,index,delimiter,time:times[0],scale:times[0]==='time_us'?1e-6:1,sensor,body,
+      quality:'bad_fraction' in index||['ax_g','ay_g','az_g','gx_dps','gy_dps','gz_dps','accel_range_g','gyro_range_dps'].every(k=>k in index),
+      filtered:columns.slice(12,18).some(c=>c in index),groups:[['ax_g','ay_g','az_g'],['gx_dps','gy_dps','gz_dps'],['mx_ut','my_ut','mz_ut']].map(g=>g.some(c=>c in index))};
+  }
+  function number(value,delimiter){
+    let s=(value??'').trim();if(!s||/^(nan|[-+]?inf(?:inity)?)$/i.test(s))return NaN;
+    if(delimiter===';')s=s.replace(',','.');
+    if(!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(s))throw Error('Neplatné číslo: '+s.slice(0,30));
+    return Number(s);
+  }
+  function row(record,s){
+    const cells=fields(record.text,s.delimiter);if(cells.length!==s.header.length)throw Error('Řádek '+record.line+': jiný počet sloupců než v hlavičce.');
+    const get=name=>number(cells[s.index[name]],s.delimiter);
+    const time=get(s.time)*s.scale;
+    if(!Number.isFinite(time)||time<0)throw Error('Řádek '+record.line+': neplatný čas.');
+    return {cells,get,time};
+  }
+  const hex=bytes=>Array.from(new Uint8Array(bytes),n=>n.toString(16).padStart(2,'0')).join('');
+  async function read(file,{signal,progress=()=>{}}={}){
+    let s,delimiter,rows=0,first=NaN,last=-Infinity,badRows=0,invalidRows=0,active=-1,flags=[];
+    let sums=new Float64Array(21),counts=new Uint32Array(21),binRows=0,binBad=0;
+    const chunks=[],bodyChunks=[],blockRows=32768,hashes=[],usedNumbers=new Set(),usedBins=new Set();
+    let length=0,seenFiltered=false;const seenGroups=[false,false,false];
+    function push(values,body){
+      if(length>=limit)throw Error('CSV přesahuje čas 20 000 s nebo limit 2 milionů 100Hz bodů. Vyberte kratší záznam s relativním časem.');
+      const b=Math.floor(length/blockRows),p=length%blockRows;
+      if(!chunks[b]){chunks[b]=new Float32Array(blockRows*18);chunks[b].fill(NaN);if(s.body){bodyChunks[b]=new Float64Array(blockRows*5);bodyChunks[b].fill(NaN)}}
+      chunks[b].set(values,p*18);if(s.body)bodyChunks[b].set(body,p*5);length++;
+    }
+    function flush(){
+      if(active<0)return;
+      if(active>=limit)throw Error('CSV má příliš velké časové značky. Podporován je relativní čas do 20 000 s.');
+      while(length<active)push([length*.01+.005,...Array(17).fill(NaN)],[length*.01+.005,NaN,NaN,NaN,NaN]);
+      const vals=Array.from(sums,(sum,i)=>counts[i]?sum/counts[i]:NaN),time=active*.01+.005;
+      const out=[time,...vals.slice(0,10),binRows?binBad/binRows:NaN,...vals.slice(10,16)];
+      const body=[time,...vals.slice(16,20)];if(binBad>0)body.fill(NaN,1);
+      push(out,body);sums.fill(0);counts.fill(0);binRows=binBad=0;
+    }
+    const chunk=async(bytes,loaded)=>{hashes.push(hex(await crypto.subtle.digest('SHA-256',bytes)));progress({loaded,total:file.size,rows});await new Promise(r=>setTimeout(r,0))};
+    for await(const record of records(file,{signal,chunk})){
+      if(!s){const sep=record.text.replace(/^\uFEFF/,'').match(/^sep=([;,])$/i);if(sep){delimiter=sep[1];continue}s=schema(record.text,delimiter);continue}
+      const r=row(record,s),{get,cells,time}=r;
+      if(time<last)throw Error('Řádek '+record.line+': čas se vrací zpět. Záznamy s restartem nejprve rozdělte.');
+      if(!rows)first=time;last=time;rows++;
+      const bin=Math.floor(time*100+1e-5);if(bin!==active){flush();active=bin}
+      let bad=0;
+      if('bad_fraction' in s.index){const b=get('bad_fraction');if(Number.isFinite(b))bad=Math.max(0,Math.min(1,b))}
+      else if(['ax_g','ay_g','az_g','gx_dps','gy_dps','gz_dps','accel_range_g','gyro_range_dps'].every(k=>k in s.index)){
+        const av=get('accel_range_g'),gv=get('gyro_range_dps');
+        if(av>0&&gv>0){const words=columns.slice(1,7).map((k,i)=>Math.round(get(k)*32768/(i<3?av:gv)));if(words.every(Number.isFinite)&&words.every(v=>v===words[0]))bad=1}
+      }
+      binRows++;binBad+=bad;if(bad>0)badRows++;
+      const vals=columns.slice(1,11).map(k=>get(k.toLowerCase())).concat(columns.slice(12,18).map(get));
+      if(s.body)vals.push(get('ax_m_s2'),get('ay_m_s2'),get('yaw_deg_s'),get('az_dynamic_m_s2'));
+      const fresh=[!('accel_new' in s.index)||get('accel_new')===1,!('gyro_new' in s.index)||get('gyro_new')===1,
+        (!('mag_new' in s.index)||get('mag_new')===1)&&(!('mag_valid' in s.index)||get('mag_valid')===1)&&(!('mag_overflow' in s.index)||get('mag_overflow')!==1)];
+      if(!vals.some(Number.isFinite))invalidRows++;
+      vals.forEach((v,i)=>{const eligible=i<9?fresh[Math.floor(i/3)]:true;if(Number.isFinite(v)&&eligible){sums[i]+=v;counts[i]++;if(i<9)seenGroups[Math.floor(i/3)]=true;if(i>=10&&i<16)seenFiltered=true}});
+      const marker=cells[s.index.flag_number]?.trim();
+      if(marker){
+        if(!/^\d+$/.test(marker)||+marker<1||+marker>999999)throw Error('Řádek '+record.line+': vlaječka musí mít jedno číslo 1–999999.');
+        if(usedNumbers.has(+marker)||usedBins.has(bin))throw Error('Řádek '+record.line+': duplicitní vlaječka nebo více bodů ve stejném 10ms intervalu.');
+        const label=cells[s.index.flag_label]||'';if(label.length>160)throw Error('Popis vlaječky je delší než 160 znaků.');
+        flags.push({number:+marker,index:bin,label});usedNumbers.add(+marker);usedBins.add(bin);
+      }
+    }
+    if(!s||!rows)throw Error('CSV neobsahuje žádné vzorky.');
+    if(invalidRows===rows)throw Error('CSV neobsahuje žádnou konečnou měřenou hodnotu.');
+    flush();s.groups=seenGroups;s.filtered=seenFiltered;progress({loaded:file.size,total:file.size,rows});
+    const data=new Float32Array(length*18),body=s.body?new Float64Array(length*5):new Float64Array();
+    chunks.forEach((v,i)=>data.set(v.subarray(0,Math.min(blockRows,length-i*blockRows)*18),i*blockRows*18));
+    bodyChunks.forEach((v,i)=>body.set(v.subarray(0,Math.min(blockRows,length-i*blockRows)*5),i*blockRows*5));
+    // Namespaced block digest: stable bounded-memory identity, deliberately not a raw-file SHA-256.
+    const identity='csv-block-sha256-v1:'+hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(hashes.join(''))));
+    return {data,body,flags,columns,schema:s,rows,first_s:Math.floor(first*100+1e-5)*.01,
+      end_s:Math.max(last,(length-.5)*.01),duration_s:last-first,bad_fraction:s.quality?badRows/rows:null,identity,invalidRows};
+  }
+  function cell(value,delimiter){const s=String(value??'');return s.includes(delimiter)||/["\r\n]/.test(s)?'"'+s.replaceAll('"','""')+'"':s}
+  async function* rawChunks(file,flags,first,last,signal,progress=()=>{}){
+    const ordered=[...flags].sort((a,b)=>a.index-b.index),limits=[first,last].sort((a,b)=>a.index-b.index);
+    let s,delimiter,previous,pointer=0,active=false,finished=false,scanned=0,emitted=0,block='';
+    const markTime=f=>f.index*.01+.005;
+    function accept(previous,midpoint){
+      const marks=[];while(pointer<ordered.length&&markTime(ordered[pointer])<=midpoint)marks.push(ordered[pointer++]);
+      if(marks.some(f=>f.number===limits[0].number))active=true;
+      if(active){const values=previous.cells.filter((_,i)=>!['flag_number','flag_label'].includes(s.header[i]));
+        const label=marks.map(f=>f.label).join(' | ');values.push(marks.map(f=>f.number).join('|'),/^[\s]*[=+@-]/.test(label)?"'"+label:label);
+        block+=values.map(v=>cell(v,s.delimiter)).join(s.delimiter)+'\r\n';emitted++}
+      if(marks.some(f=>f.number===limits[1].number))finished=true;
+    }
+    for await(const record of records(file,{signal})){
+      if(!s){const sep=record.text.replace(/^\uFEFF/,'').match(/^sep=([;,])$/i);if(sep){delimiter=sep[1];continue}s=schema(record.text,delimiter);
+        yield s.header.filter(k=>!['flag_number','flag_label'].includes(k)).map(k=>k==='crc32'?'source_crc32':k).concat(['flag_number','flag_label']).join(s.delimiter)+'\r\n';continue}
+      const current=row(record,s);if(previous&&current.time<previous.time)throw Error('Neplatná časová osa CSV.');
+      if(previous)accept(previous,(previous.time+current.time)/2);previous=current;scanned++;
+      if(scanned%5000===0||finished){if(block){yield block;block=''}progress({scanned,emitted,time:current.time});await new Promise(r=>setTimeout(r,0));signal?.throwIfAborted()}
+      if(finished)break;
+    }
+    if(!finished&&previous)accept(previous,Infinity);
+    if(!finished||!emitted)throw Error('Ve zvoleném úseku nejsou řádky CSV.');if(block)yield block;
+  }
+  return {read,records,fields,schema,rawChunks};
+}
+const CsvData=createCsvData();
+function loadCsvWorker(file,signal,progress){
+  return new Promise((resolve,reject)=>{
+    const code='const csv=('+createCsvData.toString()+')();onmessage=async e=>{try{const r=await csv.read(e.data,{progress:p=>postMessage({progress:p})});postMessage({result:r},[r.data.buffer,r.body.buffer])}catch(e){postMessage({error:e.message})}}';
+    const url=URL.createObjectURL(new Blob([code],{type:'text/javascript'})),worker=new Worker(url);
+    const stop=()=>{worker.terminate();URL.revokeObjectURL(url);signal.removeEventListener('abort',cancel)};
+    const cancel=()=>{stop();reject(new DOMException('Načítání bylo zrušeno.','AbortError'))};
+    signal.addEventListener('abort',cancel,{once:true});
+    worker.onmessage=e=>{if(e.data.progress)progress(e.data.progress);else{stop();e.data.error?reject(Error(e.data.error)):resolve(e.data.result)}};
+    worker.onerror=e=>{stop();reject(Error(e.message||'CSV se nepodařilo načíst.'))};
+    if(signal.aborted)cancel();else worker.postMessage(file);
+  });
+}
+</script>
+<script id="analysis-core">
+'use strict';
+// Shared by the offline viewer and the reproducible driving report.
+const DriveAnalysis = {
+  g:9.80665, stride:5, interval:[677,1007],
+  bounds(array,stride,start,end){
+    const search=value=>{let lo=0,hi=array.length/stride;while(lo<hi){const mid=(lo+hi)>>>1;if(array[mid*stride]<value)lo=mid+1;else hi=mid}return lo};
+    const lo=search(start-0.0001);return [lo,end<start?lo:search(end+0.0001)];
+  },
+  body(data,mount){
+    if(!mount||!Array.isArray(mount.rotation)||mount.rotation.length!==3)return new Float64Array();
+    const [lo,hi]=this.bounds(data,18,650,1007),out=new Float64Array((hi-lo)*5);
+    const theta=mount.theta_deg*Math.PI/180,co=Math.cos(theta),si=Math.sin(theta),r=mount.rotation;
+    for(let i=lo;i<hi;i++){
+      const p=i*18,q=(i-lo)*5;out[q]=(i+.5)/100;
+      if(data[p+11]!==0||![12,13,14,15,16,17].every(c=>Number.isFinite(data[p+c]))){out.fill(NaN,q+1,q+5);continue}
+      const a=[0,1,2].map(k=>data[p+12+k]-mount.zero[k]);
+      const rotated=r.map(row=>row.reduce((sum,v,k)=>sum+v*a[k],0));
+      out[q+1]=(co*rotated[0]+si*rotated[1])*this.g;
+      out[q+2]=(-si*rotated[0]+co*rotated[1])*this.g;
+      out[q+3]=r[2].reduce((sum,v,k)=>sum+v*(data[p+15+k]-mount.zero[k+3]),0);
+      out[q+4]=rotated[2]*this.g;
+    }
+    return out;
+  },
+  stats(array,stride,col,start,end,badCol=null,scale=1){
+    const [lo,hi]=this.bounds(array,stride,start,end);let n=0,mean=0,m2=0,sumSq=0,min=Infinity,max=-Infinity,minTime=null,maxTime=null;
+    for(let i=lo;i<hi;i++){
+      const p=i*stride,v=array[p+col]*scale;
+      if((badCol!==null&&array[p+badCol]!==0)||!Number.isFinite(v))continue;
+      n++;const delta=v-mean;mean+=delta/n;m2+=delta*(v-mean);sumSq+=v*v;
+      if(v<min){min=v;minTime=array[p]}if(v>max){max=v;maxTime=array[p]}
+    }
+    return {n,total:hi-lo,mean:n?mean:null,std:n?Math.sqrt(Math.max(0,m2/n)):null,rms:n?Math.sqrt(sumSq/n):null,min:n?min:null,max:n?max:null,minTime,maxTime};
+  },
+  events(body,{threshold=.3,minDuration=.3,release=threshold/2,interval=this.interval}={}){
+    if(!Number.isFinite(threshold)||threshold<.05||threshold>2||!Number.isFinite(minDuration)||minDuration<.05||minDuration>30||!(release>=0&&release<threshold))throw Error('Práh musí být 0,05–2 g a minimální délka 0,05–30 s.');
+    const [lo,hi]=this.bounds(body,5,...interval),events=[];let active=null,previousValid=false;
+    const finish=reason=>{
+      if(!active)return;
+      const duration=active.count*.01;
+      if(duration+1e-8>=minDuration)events.push({...active,id:'B'+String(events.length+1).padStart(2,'0'),duration_s:duration,mean_g:active.sum/active.count,integral_ms:active.sum*.01*this.g,end_reason:reason,partial:active.partial||reason!=='release'});
+      active=null;
+    };
+    for(let i=lo;i<hi;i++){
+      const p=i*5,t=body[p],decel=-body[p+1]/this.g,lat=body[p+2]/this.g;
+      const valid=Number.isFinite(decel)&&Number.isFinite(lat);
+      if(!valid){finish('gap');previousValid=false;continue}
+      if(previousValid&&i>lo&&t-body[(i-1)*5]>.015){finish('gap');previousValid=false}
+      if(active&&decel<release)finish('release');
+      if(!active&&decel>=threshold)active={start_s:t,end_s:t,peak_g:-Infinity,peak_time_s:t,peak_lat_g:lat,max_abs_lat_g:0,sum:0,count:0,partial:!previousValid};
+      if(active){active.count++;active.sum+=decel;active.end_s=t;active.max_abs_lat_g=Math.max(active.max_abs_lat_g,Math.abs(lat));if(decel>active.peak_g){active.peak_g=decel;active.peak_time_s=t;active.peak_lat_g=lat}}
+      previousValid=true;
+    }
+    finish('end');return events;
+  },
+  summarize(body,start,end,events=[],interval=this.interval){
+    const a=Math.max(start,interval[0]),b=Math.min(end,interval[1]);
+    const long=this.stats(body,5,1,a,b,null,1/this.g),lat=this.stats(body,5,2,a,b,null,1/this.g);
+    const [lo,hi]=this.bounds(body,5,a,b);let valid=0,brake=0,power=0,combined=0;const lateral=[];
+    for(let i=lo;i<hi;i++){
+      const x=body[i*5+1]/this.g,y=body[i*5+2]/this.g;if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+      valid++;lateral.push(Math.abs(y));if(x<=-.3){brake++;if(Math.abs(y)>=.3)combined++}if(x>=.3)power++;
+    }
+    lateral.sort((x,y)=>x-y);
+    return {start_s:a,end_s:b,valid_s:valid*.01,long,lat,braking_s:brake*.01,acceleration_s:power*.01,combined_braking_s:combined*.01,braking_fraction:valid?brake/valid:null,combined_fraction_of_braking:brake?combined/brake:null,lat_abs_p95_g:valid?lateral[Math.ceil(valid*.95)-1]:null,events_with_peak:events.filter(e=>e.peak_time_s>=a&&e.peak_time_s<=b).length};
+  }
+};
+</script>
+<script id="deceleration-audit" type="application/json">[]</script>
+<script>
+'use strict';const $=id=>document.getElementById(id),C=18,TC=13,colors=['#c8524a','#25816d','#266da1'];let archive,manifest,data,trajectory,run,meta,start=0,end=1,cursor=0,playing=false,lastFrame=0,loadToken=0,viewCache=new Map();
+const fmt=(v,n=2)=>Number.isFinite(v)?v.toLocaleString('cs-CZ',{maximumFractionDigits:n,minimumFractionDigits:n}):'—';
+function status(s,error=false){$('status').textContent=s;$('status').className=error?'warning error':''}
+class ZipReader{constructor(file){this.file=file;this.entries=new Map()}async init(){let tail=new DataView(await this.file.slice(Math.max(0,this.file.size-65557)).arrayBuffer());let p=tail.byteLength-22;for(;p>=0;p--)if(tail.getUint32(p,true)===0x06054b50)break;if(p<0)throw Error('Soubor není platný ZIP/FIMU.');let size=tail.getUint32(p+12,true),offset=tail.getUint32(p+16,true);if(size>2e7||offset+size>this.file.size)throw Error('Neplatný adresář archivu.');let buf=await this.file.slice(offset,offset+size).arrayBuffer(),dv=new DataView(buf),u=new Uint8Array(buf),dec=new TextDecoder();for(let q=0;q+46<=size;){if(dv.getUint32(q,true)!==0x02014b50)throw Error('Poškozený adresář.');let nl=dv.getUint16(q+28,true),el=dv.getUint16(q+30,true),cl=dv.getUint16(q+32,true),name=dec.decode(u.slice(q+46,q+46+nl));this.entries.set(name,{method:dv.getUint16(q+10,true),compressed:dv.getUint32(q+20,true),size:dv.getUint32(q+24,true),offset:dv.getUint32(q+42,true)});q+=46+nl+el+cl}return this}async stream(name){let e=this.entries.get(name);if(!e)throw Error('V balíčku chybí '+name);let h=new DataView(await this.file.slice(e.offset,e.offset+30).arrayBuffer());if(h.getUint32(0,true)!==0x04034b50)throw Error('Neplatná hlavička souboru.');let off=e.offset+30+h.getUint16(26,true)+h.getUint16(28,true);let blob=this.file.slice(off,off+e.compressed);if(e.method===0)return blob.stream();if(e.method!==8)throw Error('Nepodporovaná komprese.');return blob.stream().pipeThrough(new DecompressionStream('deflate-raw'))}async member(name){let result=await new Response(await this.stream(name)).blob();if(result.size!==this.entries.get(name).size)throw Error('Nesouhlasí velikost rozbalených dat.');return result}}
+// CSV-UI-BEGIN
+let csvImportController=null;
+async function openFile(f){
+  if(!f||csvImportController||exportController)return;
+  csvImportController=new AbortController();const signal=csvImportController.signal;
+  ++loadToken;pause();clearTimeout(analysisTimer);
+  $('file').disabled=$('file2').disabled=true;$('cancelImport').hidden=false;
+  $('work').classList.add('loading');$('loadProgress').hidden=false;$('loadProgress').value=0;
+  try{
+    let nextArchive,nextManifest,nextTrajectory;
+    if(/\.csv$/i.test(f.name)){
+      status('Čtu CSV po blocích…');
+      const imported=await loadCsvWorker(f,signal,p=>{
+        $('loadProgress').value=p.total?p.loaded/p.total:0;
+        status('CSV: '+fmt(p.loaded/p.total*100,0)+' % · '+p.rows.toLocaleString('cs-CZ')+' řádků · '+f.name);
+      });
+      const id='csv_'+f.name.replace(/\.csv$/i,''),source='csv-source';
+      nextArchive={csvFile:f,csvData:imported.data,entries:new Map([[source,{size:f.size}]]),
+        stream:async()=>f.stream(),member:async name=>name===source?f:new Blob([imported.data])};
+      const item={id,file:f.name,sha256:imported.identity,derived_rows:imported.data.length/C,
+        derived_member:'csv-derived',raw_member:source,start_s:imported.first_s,end_s:imported.end_s,
+        duration_s:imported.duration_s,rows:imported.rows,bad_crc:null};
+      const type=imported.schema.body?'CSV · vozidlové složky':'CSV · osy senzoru';
+      const evidence='Samostatné CSV. Přehled po 10 ms; prázdné buňky zůstávají mezerami. '+
+        (imported.schema.body?'Podélné a boční složky jsou převzaté z CSV. ':'Montáž vůči autu není známá. ')+
+        (imported.schema.filtered?'Filtrované sloupce jsou převzaté ze souboru. ':'Další filtrace se neprovádí. ')+
+        'CRC ani celková fyzikální správnost nebyly při importu ověřeny.';
+      nextManifest={version:1,columns:imported.columns,runs:[item],csv:imported,
+        results:{files:[{id,category:type,use_for_trajectory:false,digital_fault_fraction:imported.bad_fraction,evidence}],laps:[]}};
+      nextTrajectory=new Float32Array();
+    }else{
+      status('Načítám adresář datového balíčku…');
+      nextArchive=await new ZipReader(f).init();
+      nextManifest=JSON.parse(await (await nextArchive.member('manifest.json')).text());
+      if(nextManifest.version!==1||nextManifest.columns?.length!==C||!nextManifest.runs?.length||!nextManifest.results?.files)throw Error('Nepodporovaná nebo neúplná struktura FIMU.');
+      nextTrajectory=new Float32Array(await (await nextArchive.member('derived/trajectory181.f32')).arrayBuffer());
+    }
+    signal.throwIfAborted();archive=nextArchive;manifest=nextManifest;trajectory=nextTrajectory;
+    $('showbad').checked=false;
+    $('filtered').disabled=!!manifest.csv&&!manifest.csv.schema.filtered;
+    $('filtered').checked=!manifest.csv||manifest.csv.schema.filtered;
+    $('filterLabel').textContent=manifest.csv?(manifest.csv.schema.filtered?'Filtrované sloupce CSV':'CSV bez dodatečné filtrace'):'Filtr 2 Hz';
+    $('flagFormat').querySelector('option[value="overview"]').textContent=manifest.csv?'Přehled · 100 Hz':'Přehled · 100 Hz + filtr';
+    $('speed').parentElement.hidden=!!manifest.csv;
+    init();
+    if(manifest.csv?.flags.length){const r=manifest.runs[0];if(!flagSets.get(r.sha256)?.length)flagSets.set(r.sha256,FlagData.validate(manifest.csv.flags,r.derived_rows))}
+    await selectRun(manifest.csv?manifest.runs[0].id:manifest.runs.some(r=>r.id==='boot_000181_run_001')?'boot_000181_run_001':manifest.runs[0].id);
+  }catch(e){status(e.name==='AbortError'?'Načítání bylo zrušeno. Předchozí data zůstávají otevřená.':e.message,e.name!=='AbortError')}
+  finally{
+    csvImportController=null;$('file').disabled=$('file2').disabled=false;
+    $('file').value=$('file2').value='';$('cancelImport').hidden=true;$('loadProgress').hidden=true;
+    $('work').classList.remove('loading');$('preset').disabled=!!manifest?.csv;
+  }
+}
+
+// CSV-UI-END
+function init(){loadFlags();renderAudit();$('preset').querySelector('option[value="failure"]').hidden=!!manifest.subset;$('preset').querySelector('option[value="drive"]').textContent=manifest.subset?'Jízda 181 · 677–1007 s':'Jízda 181 · 650–1007 s';const sel=$('run');sel.replaceChildren();for(const r of manifest.runs){let o=document.createElement('option');o.value=r.id;const cls=manifest.results.files.find(f=>f.id===r.id);o.textContent=r.id.replace('boot_','').replace('_run_',' / ')+' · '+cls.category;sel.append(o)}$('welcome').classList.add('hidden');$('work').classList.remove('hidden');$('lapTable').replaceChildren();for(const lap of manifest.results.laps){let row=document.createElement('tr');for(const val of [lap.lap,fmt(lap.start_s,1),fmt(lap.duration_s,1),fmt(lap.closure_error_m,1)]){let td=document.createElement('td');td.textContent=val;row.append(td)}row.style.cursor='pointer';row.title='Zobrazit tento úsek';row.onclick=async()=>{if(run.id!=='boot_000181_run_001')await selectRun('boot_000181_run_001');setWindow(lap.start_s,lap.end_s);cursor=lap.start_s;draw()};$('lapTable').append(row)}}
+function runStart(){return manifest.csv?run.start_s:(run.window_start_s??0)}
+async function selectRun(id){const token=++loadToken;pause();$('work').classList.add('loading');try{status('Načítám vybraný záznam…');let selected=manifest.runs.find(r=>r.id===id),bytes=archive.csvData?null:await (await archive.member(selected.derived_member)).arrayBuffer();if(token!==loadToken)return;data=archive.csvData||new Float32Array(bytes);if(data.length!==selected.derived_rows*C)throw Error('Neplatný počet vzorků.');run=selected;renderFlags();meta=manifest.results.files.find(f=>f.id===id);prepareAnalysis();$('run').value=id;$('category').textContent=meta.use_for_trajectory?'Jízda / kandidáti kol':meta.category;$('duration').textContent=fmt(run.duration_s/60,1)+' min';$('bad').textContent=meta.digital_fault_fraction===null?'Nehodnoceno':fmt(meta.digital_fault_fraction*100,2)+' %';$('notice').textContent=meta.evidence+(meta.use_for_trajectory?' Poloha a rychlost jsou podmíněné odhady bez GPS.':'');$('preset').value=meta.use_for_trajectory?'drive':'all';cursor=meta.use_for_trajectory?Math.max(677,runStart()):runStart();$('flagTime').min=runStart();setWindow(meta.use_for_trajectory?Math.max(650,runStart()):runStart(),meta.use_for_trajectory?1007:run.end_s);status('Načteno · '+run.rows.toLocaleString('cs-CZ')+' řádků · '+(run.bad_crc===null?'CRC při importu neověřeno':'CRC chyb: '+run.bad_crc)+' · data zůstávají lokálně.')}catch(e){status(e.message,true)}finally{if(token===loadToken)$('work').classList.remove('loading')}}
+function setWindow(a,b){start=Math.max(runStart(),a);end=Math.min(run.end_s,b);if(end-start<.1)end=Math.min(run.end_s,start+.1);if(end<=start){start=runStart();end=run.end_s}cursor=Math.max(start,Math.min(end,cursor));$('from').value=start.toFixed(1);$('to').value=end.toFixed(1);$('timeline').min=start;$('timeline').max=end;viewCache.clear();renderFlagMarks();draw();scheduleAnalysis()}
+function canvas(id){let cv=$(id),dpr=devicePixelRatio||1,w=Math.round(cv.clientWidth),h=Math.round(cv.clientHeight);if(cv.width!==w*dpr||cv.height!==h*dpr){cv.width=w*dpr;cv.height=h*dpr}let ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);ctx.font='11px system-ui';return {ctx,w,h}}
+function drawChart(id,cols,derived=false){if($(id).parentElement.hidden)return;let {ctx,w,h}=canvas(id),l=52,rr=w-12,top=13,bottom=h-27,ar=derived?bodyData:data,stride=derived?5:C,n=ar.length/stride;let lo=derived?Math.max(0,Math.floor((start-(ar[0]||650.005))*100)):Math.max(0,Math.floor(start*100)),hi=derived?Math.min(n-1,Math.ceil((end-(ar[0]||650.005))*100)):Math.min(n-1,Math.ceil(end*100));const valid=i=>i>=0&&i<n&&(derived?bodyData.length>0:($('showbad').checked||!(ar[i*stride+11]>0)));let key=id+':'+w;let cache=viewCache.get(key);if(!cache){let min=Infinity,max=-Infinity,step=Math.max(1,Math.floor((hi-lo)/(w*3)));for(let i=lo;i<=hi;i++)if(valid(i))for(const col of cols){let v=ar[i*stride+col];if(Number.isFinite(v)){min=Math.min(min,v);max=Math.max(max,v)}}if(!Number.isFinite(min)){min=-1;max=1}let pad=Math.max((max-min)*.08,.01);min-=pad;max+=pad;cache={min,max,step};viewCache.set(key,cache)}let {min,max}=cache;const xx=t=>l+(t-start)/(end-start)*(rr-l),yy=v=>bottom-(v-min)/(max-min)*(bottom-top);ctx.fillStyle='#637482';ctx.strokeStyle='#e5e9eb';ctx.lineWidth=1;for(let j=0;j<4;j++){let y=top+(bottom-top)*j/3,v=max-(max-min)*j/3;ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(rr,y);ctx.stroke();ctx.textAlign='right';ctx.fillText(fmt(v,Math.abs(max-min)<1?2:1),l-6,y+4)}const ticks=w<400?2:4;for(let j=0;j<=ticks;j++){let tt=start+(end-start)*j/ticks;ctx.textAlign=j===0?'left':j===ticks?'right':'center';ctx.fillText(fmt(tt,1),xx(tt),h-7)}ctx.save();ctx.beginPath();ctx.rect(l,top,rr-l,bottom-top);ctx.clip();if(!derived){let bin=Math.max(1,Math.ceil((hi-lo)/(rr-l)));ctx.fillStyle='#f4c0ba66';for(let i=lo;i<=hi;i+=bin){let bad=false;for(let j=i;j<Math.min(i+bin,hi+1);j++)if(ar[j*stride+11]>0){bad=true;break}if(bad)ctx.fillRect(xx(ar[i*stride]),top,Math.max(1,(bin/100)/(end-start)*(rr-l)),bottom-top)}}for(let k=0;k<cols.length;k++){ctx.strokeStyle=colors[k];ctx.lineWidth=1;ctx.beginPath();let bin=Math.max(1,Math.ceil((hi-lo)/(rr-l))),connected=false;for(let i=lo;i<=hi;i+=bin){let low=Infinity,high=-Infinity,first=NaN,last=NaN,ok=true;for(let j=i;j<Math.min(i+bin,hi+1);j++){let val=ar[j*stride+cols[k]];if(!valid(j)||!Number.isFinite(val)){ok=false;continue}if(!Number.isFinite(first))first=val;last=val;low=Math.min(low,val);high=Math.max(high,val)}if(!Number.isFinite(low)){connected=false;continue}let x=xx(ar[i*stride]);if(!connected||!ok)ctx.moveTo(x,yy(first));else ctx.lineTo(x,yy(first));ctx.lineTo(x,yy(low));ctx.lineTo(x,yy(high));ctx.lineTo(x,yy(last));connected=ok}ctx.stroke()}ctx.strokeStyle='#213f55';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(xx(cursor),top);ctx.lineTo(xx(cursor),bottom);ctx.stroke();ctx.restore();drawFlagLines(ctx,xx,top,bottom,l,rr);return {min,max}}
+function map(){if($('trajectoryPanel').hidden)return;let {ctx,w,h}=canvas('map'),mode=$('mapmode').value,cols=mode==='closed'?[3,4]:mode==='naive'?[10,11]:[1,2];let arr=trajectory,points=[];for(let i=0;i<arr.length/TC;i++){let tt=arr[i*TC];if(tt>=start&&tt<=end&&Number.isFinite(arr[i*TC+cols[0]]))points.push(i)}$('mapnote').textContent=mode==='closed'?'Každé kolo má vlastní počátek. Návrat do začátku je vynucený předpoklad.':mode==='naive'?'Prostá integrace podélného zrychlení od nulové rychlosti; zobrazuje neopravený drift.':'Podmíněný rovinný model bez GPS. Osa severu a počátek jsou libovolné; absolutní přesnost není ověřena.';if(run.id!=='boot_000181_run_001'||points.length<2){ctx.fillStyle='#637482';ctx.textAlign='center';ctx.fillText('Pro tento úsek není spolehlivý odhad polohy.',w/2,h/2);$('position').textContent='';return}let xs=points.map(i=>arr[i*TC+cols[0]]),ys=points.map(i=>arr[i*TC+cols[1]]),xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);let scale=Math.min((w-75)/Math.max(xmax-xmin,1),(h-55)/Math.max(ymax-ymin,1)),cx=(xmin+xmax)/2,cy=(ymin+ymax)/2;const px=x=>w/2+(x-cx)*scale,py=y=>h/2-(y-cy)*scale;ctx.strokeStyle='#e3e8eb';ctx.fillStyle='#637482';ctx.textAlign='right';let grid=10**Math.floor(Math.log10(Math.max(xmax-xmin,ymax-ymin)/5));for(let x=Math.ceil(xmin/grid)*grid;x<=xmax;x+=grid){ctx.beginPath();ctx.moveTo(px(x),15);ctx.lineTo(px(x),h-25);ctx.stroke();ctx.fillText(fmt(x,0),px(x),h-9)}for(let y=Math.ceil(ymin/grid)*grid;y<=ymax;y+=grid){ctx.beginPath();ctx.moveTo(40,py(y));ctx.lineTo(w-10,py(y));ctx.stroke();ctx.fillText(fmt(y,0),35,py(y)+4)}ctx.lineWidth=1.7;ctx.strokeStyle='#3f7d91';ctx.beginPath();let prev=-2;for(const i of points){let a=i*TC;if(i!==prev+1||(mode==='closed'&&arr[a+5]!==arr[prev*TC+5]))ctx.moveTo(px(arr[a+cols[0]]),py(arr[a+cols[1]]));else ctx.lineTo(px(arr[a+cols[0]]),py(arr[a+cols[1]]));prev=i}ctx.stroke();let k=Math.round((cursor-arr[0])*10),p=k*TC;if(k>=0&&k<arr.length/TC&&Number.isFinite(arr[p+cols[0]])){ctx.beginPath();ctx.fillStyle='#d04f43';ctx.arc(px(arr[p+cols[0]]),py(arr[p+cols[1]]),5,0,Math.PI*2);ctx.fill();$('position').innerHTML='<span>x '+fmt(arr[p+cols[0]],1)+' m</span><span>y '+fmt(arr[p+cols[1]],1)+' m</span><span>směr '+fmt(arr[p+7]*180/Math.PI,1)+'°</span>'}else $('position').textContent='Poloha v tomto čase není dostupná.';ctx.fillStyle='#637482';ctx.textAlign='left';ctx.fillText('Lokální souřadnice [m]',8,12);for(const flag of currentFlags()){let t=FlagData.timeUs(flag)/1e6;if(t<start||t>end)continue;let i=Math.round((t-arr[0])*10)*TC;if(i>=0&&i<arr.length&&Number.isFinite(arr[i+cols[0]]))paintFlag(ctx,px(arr[i+cols[0]]),py(arr[i+cols[1]]),flag.number,w)}}
+function values(id,cols,derived=false){let ar=derived?bodyData:data,stride=derived?5:C,i=derived?Math.round((cursor-ar[0])*100):Math.round((cursor-.005)*100);let valid=i>=0&&i<ar.length/stride&&(derived?bodyData.length>0:($('showbad').checked||!(ar[i*stride+11]>0)));$(id).replaceChildren();cols.forEach((col,k)=>{let s=document.createElement('span');s.className=['x','y','z'][k];s.textContent=(derived?['Podélné','Boční'][k]:'XYZ'[k])+': '+fmt(valid?ar[i*stride+col]:NaN,3);$(id).append(s)})}
+function draw(){if(!data)return;$('clock').textContent=fmt(cursor,2)+' s';$('timeline').value=cursor;let f=$('filtered').checked;drawChart('acc',f?[12,13,14]:[1,2,3]);drawChart('gyr',f?[15,16,17]:[4,5,6]);drawChart('mag',[7,8,9]);drawChart('body',[1,2],true);values('accValues',f?[12,13,14]:[1,2,3]);values('gyrValues',f?[15,16,17]:[4,5,6]);values('magValues',[7,8,9]);values('bodyValues',[1,2],true);let i=Math.round((cursor-trajectory[0])*10);$('speed').textContent=run.id==='boot_000181_run_001'&&i>=0&&i<trajectory.length/TC?fmt(trajectory[i*TC+6]*3.6,1)+' km/h':'—';map()}
+function pause(){playing=false;$('play').textContent='▶ Přehrát';$('play').setAttribute('aria-label','Přehrát')}
+function tick(now){if(!playing)return;cursor+=Math.min((now-lastFrame)/1000,.2)*parseInt($('rate').value);lastFrame=now;if(cursor>=end){cursor=end;pause()}draw();if(playing)requestAnimationFrame(tick)}
+function download(blob,name){let a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000)}
+$('cancelImport').onclick=()=>csvImportController?.abort();$('file').onchange=e=>openFile(e.target.files[0]);$('file2').onchange=e=>openFile(e.target.files[0]);$('run').onchange=e=>selectRun(e.target.value);$('timeline').oninput=e=>{cursor=+e.target.value;draw()};$('play').onclick=()=>{if(playing)return pause();if(cursor>=end)cursor=start;playing=true;$('play').textContent='Ⅱ Pozastavit';$('play').setAttribute('aria-label','Pozastavit');lastFrame=performance.now();requestAnimationFrame(tick)};$('from').onchange=$('to').onchange=()=>setWindow(+$('from').value,+$('to').value);$('reset').onclick=()=>setWindow(0,run.end_s);function zoom(f){let width=(end-start)*f;setWindow(cursor-width/2,cursor+width/2)}$('zoomIn').onclick=()=>zoom(.5);$('zoomOut').onclick=()=>zoom(2);$('showbad').onchange=toggleDiagnosticView;for(const id of ['filtered','mapmode'])$(id).onchange=()=>{viewCache.clear();draw();if(id==='filtered')scheduleAnalysis()};$('preset').onchange=async e=>{let preset=e.target.value;if(manifest.csv)return setWindow(run.start_s,run.end_s);if(preset!=='all'&&run.id!=='boot_000181_run_001')await selectRun('boot_000181_run_001');let range={all:[0,run.end_s],drive:[650,1007],laps:[781.305,985.605],failure:[995,1020]}[preset];cursor=range[0];setWindow(...range);$('preset').value=preset};
+for(const id of ['acc','gyr','mag','body']){const cv=$(id);let down=false;function point(e){let box=cv.getBoundingClientRect(),ratio=(e.clientX-box.left-52)/(box.width-64);cursor=start+Math.max(0,Math.min(1,ratio))*(end-start);draw()}cv.onpointerdown=e=>{down=true;cv.setPointerCapture(e.pointerId);pause();point(e)};cv.onpointermove=e=>{if(down)point(e)};cv.onpointerup=()=>down=false;cv.onpointercancel=()=>down=false;cv.addEventListener('wheel',e=>{e.preventDefault();point(e);zoom(e.deltaY<0?.75:1.33)},{passive:false})}
+$('raw').onclick=async()=>{const b=$('raw');if(b.disabled)return;b.disabled=true;pause();try{status('Rozbaluji původní CSV. U velkého souboru to může trvat…');const selected=run,source=archive;let blob=await source.member(selected.raw_member);download(blob,selected.file);status('Původní CSV je připravené ke stažení. Pro velmi velké soubory lze balíček také otevřít v 7-Zip.')}catch(e){status(e.message,true)}finally{b.disabled=false}};
+$('export').onclick=()=>exportSelection(false);window.addEventListener('resize',()=>{viewCache.clear();draw()});
+// Per-source annotations are separate from immutable original samples.
+let flagSets=new Map(),editingFlag=null,exportController=null;
+function currentFlags(){return run?(flagSets.get(run.sha256)||[]):[]}
+function flagMessage(message,error=false){$('flagMessage').textContent=message;$('flagMessage').className=error?'warning error':''}
+function loadFlags(){
+  flagSets=new Map();let failed=false;
+  for(const r of manifest.runs){
+    try{const saved=localStorage.getItem('fimu.flags.v1.'+r.sha256);flagSets.set(r.sha256,saved?FlagData.validate(JSON.parse(saved),r.derived_rows):[])}
+    catch{flagSets.set(r.sha256,[]);failed=true;}
+  }
+  $('flagStorage').textContent=failed?'Místní úložiště není dostupné nebo obsahuje neplatné značky. Použijte soubor vlaječek.':'Ukládá se automaticky v tomto prohlížeči.';
+  flagMessage('Pro přenos nebo zálohu použijte „Uložit vlaječky do souboru“.');
+}
+function persistFlags(r,flags){
+  flagSets.set(r.sha256,flags);
+  try{localStorage.setItem('fimu.flags.v1.'+r.sha256,JSON.stringify(flags));$('flagStorage').textContent='Uloženo v tomto prohlížeči.'}
+  catch{$('flagStorage').textContent='Značky jsou jen v paměti. Uložte je do souboru před zavřením stránky.'}
+}
+function flagButton(text,action,label){const b=document.createElement('button');b.type='button';b.textContent=text;b.onclick=action;if(label)b.setAttribute('aria-label',label);return b}
+function jumpFlag(f){pause();cursor=FlagData.timeUs(f)/1e6;if(cursor<start||cursor>end){const width=end-start;setWindow(Math.max(0,cursor-width/2),Math.min(run.end_s,cursor+width/2))}draw()}
+function beginFlagEdit(f){editingFlag=f.number;$('flagNumber').value=f.number;$('flagTime').value=(FlagData.timeUs(f)/1e6).toFixed(3);$('flagTime').max=(run.derived_rows*.01-.005).toFixed(3);$('flagLabel').value=f.label;$('flagEdit').classList.remove('hidden');$('flagNumber').focus()}
+function renderFlags(){
+  editingFlag=null;$('flagEdit').classList.add('hidden');flagMessage('');
+  const flags=currentFlags(),count=flags.length;$('flagCount').textContent=count?'· '+count+' v tomto záznamu':'';
+  $('flagEmpty').hidden=!!count;$('flagTableWrap').hidden=!count;$('flagRows').replaceChildren();
+  for(const f of flags){
+    const row=document.createElement('tr');
+    for(let i=0;i<4;i++)row.append(document.createElement('td'));
+    const jump=flagButton('⚑ '+f.number,()=>jumpFlag(f),'Přejít na vlaječku '+f.number);jump.className='flagjump';row.children[0].append(jump);
+    row.children[1].textContent=fmt(FlagData.timeUs(f)/1e6,3);row.children[2].textContent=f.label;
+    row.children[3].append(flagButton('Upravit',()=>beginFlagEdit(f),'Upravit vlaječku '+f.number),flagButton('Smazat',()=>{
+      persistFlags(run,flags.filter(x=>x.number!==f.number));renderFlags();draw();flagMessage('Vlaječka '+f.number+' byla smazána.');
+    },'Smazat vlaječku '+f.number));$('flagRows').append(row);
+  }
+  for(const id of ['flagFrom','flagTo']){
+    const select=$(id),old=select.value;select.replaceChildren();
+    for(const f of flags){const o=document.createElement('option');o.value=f.number;o.textContent='⚑ '+f.number+' · '+fmt(FlagData.timeUs(f)/1e6,3)+' s'+(f.label?' · '+f.label:'');select.append(o)}
+    select.value=flags.some(f=>String(f.number)===old)?old:String(id==='flagFrom'?flags[0]?.number:flags.at(-1)?.number);
+    select.disabled=count<2;
+  }
+  if(count>1&&$('flagFrom').value===$('flagTo').value)$('flagTo').value=String(flags.findLast(f=>String(f.number)!==$('flagFrom').value).number);
+  updateFlagRange();renderFlagMarks();
+}
+function selectedFlagRange(){const flags=currentFlags(),a=flags.find(f=>f.number===+$('flagFrom').value),b=flags.find(f=>f.number===+$('flagTo').value);return a&&b&&a.number!==b.number?[a,b].sort((x,y)=>x.index-y.index):null}
+function updateFlagRange(){const range=selectedFlagRange();$('flagShow').disabled=$('flagExport').disabled=!range||!!exportController;$('flagRange').textContent=range?'Úsek '+fmt(FlagData.timeUs(range[0])/1e6,3)+'–'+fmt(FlagData.timeUs(range[1])/1e6,3)+' s · délka '+fmt((range[1].index-range[0].index)/100,2)+' s. Pořadí určují časy vlaječek.':'Pro export vyberte dvě různé vlaječky.'}
+function renderFlagMarks(){
+  const host=$('flagMarks');host.replaceChildren();if(!run)return;
+  for(const f of currentFlags()){const t=FlagData.timeUs(f)/1e6;if(t<start||t>end)continue;const b=flagButton('⚑'+f.number,()=>jumpFlag(f),'Vlaječka '+f.number+' v čase '+fmt(t,3)+' sekund');b.className='flagmark';b.style.left=Math.max(4,Math.min(96,(t-start)/(end-start)*100))+'%';b.title=fmt(t,3)+' s'+(f.label?' · '+f.label:'');host.append(b)}
+}
+function paintFlag(ctx,x,y,number,width){
+  ctx.save();ctx.setLineDash([]);ctx.font='bold 10px system-ui';const label='⚑ '+number,bw=ctx.measureText(label).width+8,left=Math.max(1,Math.min(width-bw-1,x));
+  ctx.fillStyle='#7951a3';ctx.fillRect(left,Math.max(1,y-16),bw,16);ctx.fillStyle='white';ctx.textAlign='left';ctx.fillText(label,left+4,Math.max(1,y-16)+12);ctx.restore();
+}
+function drawFlagLines(ctx,xx,top,bottom,l,rr){
+  ctx.save();ctx.beginPath();ctx.rect(l,0,rr-l,bottom);ctx.clip();
+  for(const f of currentFlags()){const t=FlagData.timeUs(f)/1e6;if(t<start||t>end)continue;const x=xx(t);ctx.strokeStyle='#7951a399';ctx.lineWidth=1;ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,bottom);ctx.stroke();paintFlag(ctx,x,top+4,f.number,rr)}
+  ctx.restore();
+}
+$('addFlag').onclick=()=>{
+  pause();const flags=currentFlags(),index=FlagData.index(cursor,run.derived_rows),existing=flags.find(f=>f.index===index);
+  if(existing){beginFlagEdit(existing);$('flagPanel').open=true;flagMessage('V tomto čase už je vlaječka '+existing.number+'. Můžete ji upravit.');return}
+  let number=1;while(flags.some(f=>f.number===number))number++;
+  try{persistFlags(run,FlagData.validate([...flags,{number,index,label:''}],run.derived_rows));renderFlags();cursor=FlagData.timeUs({index})/1e6;draw();$('flagPanel').open=true;flagMessage('Přidána vlaječka '+number+' v čase '+fmt(cursor,3)+' s.');}
+  catch(e){flagMessage(e.message,true)}
+};
+$('flagEdit').onsubmit=e=>{
+  e.preventDefault();const time=+$('flagTime').value;if(!Number.isFinite(time)||time<runStart()||time>run.derived_rows*.01-.005){flagMessage('Čas je mimo tento záznam.',true);return}
+  const f={number:+$('flagNumber').value,index:FlagData.index(time,run.derived_rows),label:$('flagLabel').value.trim()};
+  try{const flags=FlagData.validate([...currentFlags().filter(x=>x.number!==editingFlag),f],run.derived_rows);persistFlags(run,flags);renderFlags();draw();flagMessage('Vlaječka '+f.number+' byla uložena.');}
+  catch(err){flagMessage(err.message,true)}
+};
+$('flagEditCancel').onclick=()=>{$('flagEdit').classList.add('hidden');editingFlag=null;flagMessage('Úpravy bodu byly zrušeny.')};
+$('flagFrom').onchange=$('flagTo').onchange=updateFlagRange;
+$('flagShow').onclick=()=>{const range=selectedFlagRange();if(!range)return;pause();cursor=FlagData.timeUs(range[0])/1e6;setWindow(cursor,FlagData.timeUs(range[1])/1e6)};
+$('saveFlags').onclick=()=>{
+  const document={format:'fimu-flags',version:1,time_basis:'100 Hz overview bin centre: index * 0.01 + 0.005 s',runs:manifest.runs.filter(r=>(flagSets.get(r.sha256)||[]).length).map(r=>({id:r.id,sha256:r.sha256,flags:flagSets.get(r.sha256)}))};
+  download(new Blob([JSON.stringify(document,null,2)],{type:'application/json'}),'Formule_vlajecky.json');flagMessage('Soubor vlaječek je připraven ke stažení. Obsahuje značky ze všech záznamů.');
+};
+$('importFlags').onchange=async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    if(file.size>5*1024*1024)throw Error('Soubor vlaječek je příliš velký (limit 5 MB).');
+    const doc=JSON.parse(await file.text());if(doc.format!=='fimu-flags'||doc.version!==1||!Array.isArray(doc.runs)||doc.runs.length>manifest.runs.length)throw Error('Neplatný soubor vlaječek.');
+    const updates=[],seen=new Set();
+    for(const item of doc.runs){
+      const r=manifest.runs.find(r=>r.id===item.id&&r.sha256===item.sha256);if(!r||seen.has(r.id))throw Error('Značky patří k jiným datům nebo obsahují duplicitní záznam.');seen.add(r.id);
+      const incoming=FlagData.validate(item.flags,r.derived_rows),merged=[...(flagSets.get(r.sha256)||[])];
+      for(const f of incoming){const old=merged.find(x=>x.number===f.number||x.index===f.index);if(old){if(old.number!==f.number||old.index!==f.index||old.label!==f.label)throw Error('Konflikt vlaječky '+f.number+' v '+r.id+'. Upravte číslo nebo odstraňte místní bod před importem.');}else merged.push(f)}
+      updates.push([r,FlagData.validate(merged,r.derived_rows)]);
+    }
+    for(const [r,flags] of updates)persistFlags(r,flags);renderFlags();draw();flagMessage('Vlaječky byly načteny a sloučeny. Existující body zůstaly zachované.');
+  }catch(err){flagMessage(err.message,true)}finally{e.target.value=''}
+};
+async function exportSelection(between){
+  if(exportController)return;
+  const range=between?selectedFlagRange():null;if(between&&!range)return;
+  const selectedRun=run,selectedArchive=archive,values=data,flags=currentFlags().map(f=>({...f}));
+  const raw=between&&$('flagFormat').value==='raw';
+  const lo=range?range[0].index:Math.max(0,Math.ceil((start-.005)*100)),hi=range?range[1].index:Math.min(data.length/C-1,Math.floor((end-.005)*100));
+  if(lo>hi){flagMessage('V tomto okně nejsou žádné vzorky.',true);return}
+  const name=run.id+(range?'_vlajecky_'+range[0].number+'-'+range[1].number:'_vyrez')+(raw?'_puvodni':'_100Hz')+'.csv';
+  exportController=new AbortController();const signal=exportController.signal;pause();
+  const locked=[$('flagExport'),$('export'),$('raw'),$('file'),$('file2'),$('run'),$('preset')];locked.forEach(b=>b.disabled=true);$('cancelExport').classList.remove('hidden');
+  let writer=null,parts=[],bytes=0;
+  try{
+    // Stream directly to disk when available. The fallback is intentionally bounded.
+    if(window.showSaveFilePicker){const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:'CSV data',accept:{'text/csv':['.csv']}}]});signal.throwIfAborted();writer=await handle.createWritable()}
+    flagMessage(raw?'Čtu původní CSV po blocích…':'Připravuji přehledový export…');
+    const progress=p=>flagMessage('Export: '+p.emitted.toLocaleString('cs-CZ')+' řádků'+(raw?' · načten čas '+fmt(p.time,1)+' s':'')+'…');
+    const extra=manifest.csv?.schema.body?i=>Array.from(bodyData.subarray(i*5+1,i*5+5)):null;
+    const columns=extra?[...manifest.columns,'ax_m_s2','ay_m_s2','yaw_deg_s','az_dynamic_m_s2']:manifest.columns;
+    const chunks=raw?(selectedArchive.csvFile?CsvData.rawChunks(selectedArchive.csvFile,flags,range[0],range[1],signal,progress):FlagData.rawChunks(await selectedArchive.stream(selectedRun.raw_member),flags,range[0],range[1],signal,progress)):FlagData.overviewChunks(values,C,columns,flags,lo,hi,signal,progress,extra);
+    for await(const chunk of chunks){signal.throwIfAborted();if(writer)await writer.write(chunk);else{const blob=new Blob([chunk]);bytes+=blob.size;if(bytes>128*1024*1024)throw Error('Tento prohlížeč nepodporuje průběžné ukládání. Zvolte kratší úsek (do 128 MB) nebo otevřete HTML přímo v Edge/Chrome.');parts.push(blob)}}
+    signal.throwIfAborted();if(writer){await writer.close();writer=null}else download(new Blob(parts,{type:'text/csv;charset=utf-8'}),name);
+    flagMessage('Hotovo: '+name+'. Vlaječky jsou vyplněné pouze na označených řádcích.');
+  }catch(e){if(writer)await writer.abort().catch(()=>{});flagMessage(e.name==='AbortError'?'Export byl zrušen.':e.message,e.name!=='AbortError')}
+  finally{exportController=null;parts=[];locked.forEach(b=>b.disabled=false);$('cancelExport').classList.add('hidden');$('preset').disabled=!!manifest.csv;updateFlagRange()}
+}
+$('flagExport').onclick=()=>exportSelection(true);
+$('cancelExport').onclick=()=>exportController?.abort();
+// ANALYSIS-UI-BEGIN
+let bodyData=new Float64Array(),brakeEvents=[],analysisTimer=0,shownEvents=[],eventKey='',filterBeforeDiagnostics=true;
+function qualityNotice(){
+  $('qualityMode').textContent=$('showbad').checked?
+    'Diagnostický pohled: všechny zapsané 100Hz průměry bez filtru, včetně poruch. Červené úseky nejsou použitelným měřením pohybu; do statistik se nezahrnují.':
+    meta?.digital_fault_fraction>0?'Část zapsaných hodnot má opakovaný digitální vzor. Pro kontrolu jejich skutečného obsahu zapněte „Zobrazit i neplatná data“; tím se automaticky vypne filtr.':'';
+}
+function toggleDiagnosticView(){
+  const show=$('showbad').checked,available=!manifest?.csv||manifest.csv.schema.filtered;
+  if(show){filterBeforeDiagnostics=$('filtered').checked;$('filtered').checked=false}
+  else $('filtered').checked=filterBeforeDiagnostics&&available;
+  $('filtered').disabled=show||!available;
+  qualityNotice();viewCache.clear();draw();scheduleAnalysis();
+}
+function prepareAnalysis(){
+  bodyData=manifest.csv?manifest.csv.body:run.id==='boot_000181_run_001'&&meta.use_for_trajectory?DriveAnalysis.body(data,manifest.results.vehicle):new Float64Array();
+  $('analysisCards').hidden=!!manifest.csv&&!bodyData.length;
+  $('brakePanel').hidden=!!manifest.csv&&!bodyData.length;
+  $('axesPanel').open=!!manifest.csv;
+  $('trajectoryPanel').hidden=!!manifest.csv||!meta.use_for_trajectory;
+  document.querySelector('.layout').classList.toggle('csv-layout',$('trajectoryPanel').hidden);
+  for(const [i,id] of ['accChart','gyrChart','magChart'].entries())$(id).hidden=!!manifest.csv&&!manifest.csv.schema.groups[i];
+  $('bodyChart').hidden=!bodyData.length;
+  qualityNotice();
+  eventKey='';scheduleAnalysis();
+}
+function analysisInterval(){return manifest.csv?[run.start_s,run.end_s]:DriveAnalysis.interval}
+function scheduleAnalysis(){clearTimeout(analysisTimer);analysisTimer=setTimeout(renderAnalysis,120)}
+function jumpAnalysis(time,window=null){
+  pause();if(window)setWindow(...window);cursor=time;
+  if(cursor<start||cursor>end)setWindow(Math.max(0,cursor-5),Math.min(run.end_s,cursor+5));
+  draw();clearTimeout(analysisTimer);renderAnalysis();
+  const charts=document.querySelector('.layout');charts.style.scrollMarginTop=(document.querySelector('.player').offsetHeight+12)+'px';charts.scrollIntoView({block:'start',behavior:'smooth'});
+}
+function markAnalysis(points){
+  try{
+    const flags=currentFlags().map(f=>({...f})),selected=[];
+    for(const point of points){
+      const index=FlagData.index(point.time,run.derived_rows);let f=flags.find(f=>f.index===index);
+      if(!f){let number=1;while(flags.some(f=>f.number===number))number++;f={number,index,label:point.label.slice(0,160)};flags.push(f)}selected.push(f.number);
+    }
+    persistFlags(run,FlagData.validate(flags,run.derived_rows));renderFlags();draw();$('flagPanel').open=true;
+    if(selected.length===2){$('flagFrom').value=selected[0];$('flagTo').value=selected[1];updateFlagRange()}
+    flagMessage(selected.length===2?'Hranice události jsou označené. Můžete exportovat úsek mezi těmito vlaječkami.':'Maximum je označené vlaječkou.');
+    $('analysisMessage').textContent='Uloženo: ⚑ '+selected.join(' → ⚑ ')+'.';
+  }catch(e){$('analysisMessage').textContent=e.message}
+}
+function peakCard(title,value,time,label){
+  const card=document.createElement('div');card.className='card';
+  const small=document.createElement('small');small.textContent=title;const strong=document.createElement('strong');strong.textContent=value;card.append(small,strong);
+  if(time!==null&&Number.isFinite(time)){
+    const controls=document.createElement('div');controls.className='peakActions';
+    controls.append(flagButton(fmt(time,3)+' s',()=>jumpAnalysis(time,[Math.max(0,time-5),Math.min(run.end_s,time+5)]),'Zobrazit '+title),flagButton('⚑',()=>markAnalysis([{time,label}]),'Označit '+title+' vlaječkou'));card.append(controls);
+  }
+  return card;
+}
+function renderAnalysis(){
+  if(!data||!run)return false;
+  const threshold=+$('brakeThreshold').value,minDuration=+$('brakeDuration').value;
+  $('analysisScope').textContent=run.file+' · '+fmt(start,3)+'–'+fmt(end,3)+' s';
+  $('analysisMessage').textContent='';
+  try{
+    const key=run.sha256+':'+threshold+':'+minDuration;
+    if(key!==eventKey){brakeEvents=DriveAnalysis.events(bodyData,{threshold,minDuration,interval:analysisInterval()});eventKey=key}
+  }catch(e){shownEvents=[];$('eventList').replaceChildren();$('exportEvents').disabled=true;$('analysisMessage').textContent=e.message;return false}
+  const stats=DriveAnalysis.summarize(bodyData,start,end,brakeEvents,analysisInterval()),long=stats.long,lat=stats.lat,has=long.n>0;
+  const brake=has&&long.min<0?-long.min:null,accel=has&&long.max>0?long.max:null;
+  const side=has?Math.max(Math.abs(lat.min),Math.abs(lat.max)):null,sideTime=has?(Math.abs(lat.min)>Math.abs(lat.max)?lat.minTime:lat.maxTime):null;
+  $('analysisCards').replaceChildren(
+    peakCard('Max. brzdění · '+(manifest.csv?'CSV':'filtr 2 Hz'),brake===null?'—':fmt(brake,2)+' g',brake===null?null:long.minTime,'Max. brzdění '+fmt(brake,2)+' g'),
+    peakCard('Max. akcelerace · '+(manifest.csv?'CSV':'filtr 2 Hz'),accel===null?'—':fmt(accel,2)+' g',accel===null?null:long.maxTime,'Max. akcelerace '+fmt(accel,2)+' g'),
+    peakCard('Max. boční |a| · '+(manifest.csv?'CSV':'filtr 2 Hz'),side===null?'—':fmt(side,2)+' g',sideTime,'Max. boční zrychlení '+fmt(side,2)+' g'),
+    peakCard(manifest.csv?'Dostupné vozidlové vzorky v okně':'Použitelný jízdní úsek v okně',fmt(stats.valid_s,2)+' s',null,''));
+  $('analysisNote').textContent=has?'Vozidlové statistiky: 100 Hz, filtr 2 Hz, odhad montáže. Jízdní interval 677–1007 s. Jde o odhad z IMU; krátké rázy, brzdový pedál ani GPS rychlost zde neměříme.':'V tomto okně není použitelný jízdní úsek s odhadnutou orientací auta. Níže lze hodnotit osy senzoru; brzdění auta zde nevyvozujeme.';
+  if(manifest.csv)$('analysisNote').textContent=has?'Podélné a boční složky jsou převzaté ze sloupců CSV v m/s². Bez další filtrace, ověření montáže nebo rekonstrukce trasy. Kandidáti zpomalení nejsou měřením brzdového pedálu.':'Samostatné CSV: statistiky dostupných os senzoru. Orientace vůči autu není doložena, proto z těchto os automaticky nevyvozujeme brzdění ani polohu.';
+  $('analysisExposure').textContent=has?'Podélné a ≤ −0,30 g: '+fmt(stats.braking_s,2)+' s ('+fmt(stats.braking_fraction*100,1)+' %). Z toho současně |boční a| ≥ 0,30 g: '+fmt(stats.combined_braking_s,2)+' s.':'';
+  const filtered=$('filtered').checked,channels=[];
+  for(const [group,[name,unit,cols]] of [['Akcelerometr','g',filtered?[12,13,14]:[1,2,3]],['Gyroskop','°/s',filtered?[15,16,17]:[4,5,6]],['Magnetometr','µT',[7,8,9]]].entries())if(!manifest.csv||manifest.csv.schema.groups[group])for(let j=0;j<3;j++)channels.push({name:name+' '+'XYZ'[j],unit,stats:DriveAnalysis.stats(data,C,cols[j],start,end,11)});
+  if(manifest.csv&&bodyData.length)for(const [i,name,unit] of [[1,'Podélné a','m/s²'],[2,'Boční a','m/s²'],[3,'Yaw','°/s']])channels.push({name,unit,stats:DriveAnalysis.stats(bodyData,5,i,start,end)});
+  $('axesMode').textContent='Osy A/G: '+(filtered?'filtr 2 Hz':'průměry 100 Hz bez filtru')+'. Magnetometr bez filtru. Neplatné nebo chybějící hodnoty se vylučují i při zapnutém zobrazení chybných dat.';
+  if(manifest.csv)$('axesMode').textContent='CSV: 10ms přehled, časy původního souboru. '+(filtered?'Použity dodané filtrované sloupce.':'Bez dodatečné filtrace.')+' Prázdné hodnoty jsou mezery, nikoli nuly. Detekované neplatné hodnoty se do statistik nezahrnují.';
+  $('axisStats').replaceChildren();
+  for(const c of channels){
+    const tr=document.createElement('tr');const name=document.createElement('td');name.textContent=c.name+' ['+c.unit+']';tr.append(name);
+    for(const type of ['min','max']){
+      const td=document.createElement('td');td.dataset.label=type==='min'?'Minimum':'Maximum';
+      if(c.stats.n){const time=c.stats[type+'Time'];td.append(flagButton(fmt(c.stats[type],3),()=>jumpAnalysis(time),c.name+' '+td.dataset.label+' v '+fmt(time,3)+' s'),flagButton('⚑',()=>markAnalysis([{time,label:c.name+' '+td.dataset.label+' '+fmt(c.stats[type],3)+' '+c.unit}]),'Vlaječka: '+c.name+' '+td.dataset.label));const at=document.createElement('small');at.textContent=fmt(time,3)+' s';td.append(at)}else td.textContent='—';tr.append(td);
+    }
+    for(const [label,value] of [['Průměr / σ',c.stats.n?fmt(c.stats.mean,3)+' / '+fmt(c.stats.std,3):'—'],['Platné vzorky',c.stats.n.toLocaleString('cs-CZ')+' / '+c.stats.total.toLocaleString('cs-CZ')]]){const td=document.createElement('td');td.dataset.label=label;td.textContent=value;tr.append(td)}$('axisStats').append(tr);
+  }
+  shownEvents=brakeEvents.filter(e=>e.end_s>=start&&e.start_s<=end);
+  const sorted=[...shownEvents].sort($('brakeSort').value==='time'?(a,b)=>a.start_s-b.start_s:(a,b)=>b.peak_g-a.peak_g);
+  const countLabel=n=>n+' '+(n===1?'událost':n>=2&&n<=4?'události':'událostí');
+  $('eventCount').textContent=countLabel(sorted.length)+' v okně · '+brakeEvents.length+' v celé jízdě';
+  $('eventRule').textContent='Začátek při a ≤ −'+fmt(threshold,2)+' g, konec po poklesu zpomalení pod '+fmt(threshold/2,2)+' g; délka alespoň '+fmt(minDuration,2)+' s. Zobrazeny jsou události zasahující do okna, hodnoty vždy za celou událost. Délka zahrnuje 10ms intervaly vzorků. ID událostí se při změně prahů přepočítají.';
+  $('eventList').replaceChildren();$('exportEvents').disabled=!sorted.length;
+  if(!sorted.length){const p=document.createElement('p');p.className='muted';p.textContent=has?'Pro tyto prahy v okně nebyla nalezena brzdná událost.':'Brzdné události jsou dostupné pouze v použitelném jízdním úseku záznamu 181.';$('eventList').append(p)}
+  for(const e of sorted){
+    const card=document.createElement('article');card.className='brakeEvent';const header=document.createElement('div');header.className='eventHeading';
+    const strong=document.createElement('strong');strong.textContent=e.id+' · '+fmt(e.peak_g,2)+' g';const duration=document.createElement('span');duration.textContent=fmt(e.duration_s,2)+' s';header.append(strong,duration);card.append(header);
+    const p=document.createElement('p');p.textContent=fmt(e.start_s,3)+'–'+fmt(e.end_s,3)+' s · průměr '+fmt(e.mean_g,2)+' g · max. |boční a| '+fmt(e.max_abs_lat_g,2)+' g';card.append(p);
+    if(e.partial||e.start_s<start||e.end_s>end){const note=document.createElement('p');note.className='muted';note.textContent=e.partial?'Událost se dotýká hranice dostupných dat; její úplnost nelze potvrdit.':'Událost přesahuje zobrazené časové okno.';card.append(note)}
+    const actions=document.createElement('div');actions.className='eventActions';actions.append(
+      flagButton('Zobrazit',()=>jumpAnalysis(e.peak_time_s,[Math.max(0,e.start_s-1),Math.min(run.end_s,e.end_s+1)]),'Zobrazit událost '+e.id),
+      flagButton('⚑ Maximum',()=>markAnalysis([{time:e.peak_time_s,label:e.id+' · brzdění '+fmt(e.peak_g,2)+' g · práh '+fmt(threshold,2)+' g / '+fmt(minDuration,2)+' s'}]),'Označit maximum '+e.id),
+      flagButton('⚑ Hranice',()=>markAnalysis([{time:e.start_s,label:e.id+' · začátek · práh '+fmt(threshold,2)+' g / '+fmt(minDuration,2)+' s'},{time:e.end_s,label:e.id+' · konec · práh '+fmt(threshold,2)+' g / '+fmt(minDuration,2)+' s'}]),'Označit hranice '+e.id));card.append(actions);$('eventList').append(card);
+  }
+  return true;
+}
+for(const id of ['brakeThreshold','brakeDuration','brakeSort'])$(id).onchange=scheduleAnalysis;
+$('refreshAnalysis').onclick=renderAnalysis;
+$('exportEvents').onclick=()=>{
+  if(!renderAnalysis())return;
+  const columns=['event','start_s','end_s','duration_s','peak_time_s','peak_deceleration_g','mean_deceleration_g','max_abs_lateral_g','partial','threshold_g','release_g','minimum_duration_s'];
+  const rows=shownEvents.map(e=>[e.id,e.start_s,e.end_s,e.duration_s,e.peak_time_s,e.peak_g,e.mean_g,e.max_abs_lat_g,e.partial?1:0,+$('brakeThreshold').value,+$('brakeThreshold').value/2,+$('brakeDuration').value].join(','));
+  download(new Blob([columns.join(',')+'\r\n'+rows.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'}),run.id+'_brzdne_udalosti.csv');
+};
+function renderAudit(){
+  const audit=JSON.parse($('deceleration-audit').textContent);$('auditRows').replaceChildren();
+  const matched=audit.filter(a=>manifest.runs.some(r=>r.id===a.id&&r.sha256===a.sha256));
+  $('auditScope').closest('details').hidden=!matched.length;
+  $('auditScope').textContent='Audit '+matched.length+' původních CSV se shodným SHA-256. Maxima jsou z celých souvislých platných úseků. U testů je projekce do osy auta pouze srovnávací číslo, nikoli brzdění vozidla.';
+  for(const a of matched.sort((x,y)=>(y.filtered?.g??-Infinity)-(x.filtered?.g??-Infinity))){
+    const row=document.createElement('tr');
+    const name=document.createElement('td');name.textContent=a.id.replace('boot_','');const cls=document.createElement('td');cls.textContent=a.category;row.append(name,cls);
+    for(const kind of ['filtered','raw']){const td=document.createElement('td');if(a[kind])td.append(flagButton(fmt(a[kind].g,2)+' g',async()=>{await selectRun(a.id);jumpAnalysis(a[kind].time,[Math.max(0,a[kind].time-5),Math.min(run.end_s,a[kind].time+5)])},'Zobrazit '+a.id+' '+kind));else td.textContent='—';row.append(td)}$('auditRows').append(row);
+  }
+}
+
+// ANALYSIS-UI-END
+// Local QA/demo loads only derived files; normal offline usage always uses the file picker.
+if(new URLSearchParams(location.search).has('demo'))(async()=>{try{manifest=await (await fetch('manifest.json')).json();archive={stream:async name=>{let response=await fetch(name);if(!response.ok)throw Error('Soubor v ukázce není dostupný.');return response.body},member:async name=>{let response=await fetch(name);if(!response.ok)throw Error('Soubor v ukázce není dostupný.');return response.blob()}};trajectory=new Float32Array(await (await archive.member('derived/trajectory181.f32')).arrayBuffer());init();await selectRun('boot_000181_run_001')}catch(e){status(e.message,true)}})();
+</script></html>

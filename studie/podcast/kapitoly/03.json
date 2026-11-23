@@ -1,0 +1,13 @@
+{
+  "number": 3,
+  "title": "Co se děje při instalaci a startu z disku",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "ae37533ea20c01cbf3b9d4eab4f4197c5e6c328cca16c832141528aebe3f947e",
+  "sha256_audio": "9cabc81edb0eadc86a712fdc70898e8ac922cdbdfef5642618f76f4b53b088d0",
+  "duration_seconds": 147.72,
+  "word_count": 348,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

@@ -1,0 +1,19 @@
+# Lokální závislosti a výstupy
+node_modules/
+*.log
+*.zip
+
+# Uživatelská a běhová data O-Leafu
+/data/
+/config/
+/auth/
+/workspaces/
+/plugins/
+/account-recovery.json
+
+# Editor a operační systém
+.env
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

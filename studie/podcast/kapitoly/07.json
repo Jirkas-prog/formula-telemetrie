@@ -1,0 +1,13 @@
+{
+  "number": 7,
+  "title": "Stačí dva gigabajty paměti",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "2799f3092ea83b32f2d946807db1670f30b3d4e7aff55c87bb279ac3f2c9c352",
+  "sha256_audio": "40b5031045d65b95db313f4919c3e0f66d805effc47a7bb983d6e647cd1556c0",
+  "duration_seconds": 150.6,
+  "word_count": 368,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

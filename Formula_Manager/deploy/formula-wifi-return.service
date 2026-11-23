@@ -1,0 +1,8 @@
+[Unit]
+Description=Return an idle Formula hotspot to a known Wi-Fi network
+After=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/formula-wifi-return
+TimeoutStartSec=100

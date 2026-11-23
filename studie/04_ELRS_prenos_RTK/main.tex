@@ -1,0 +1,278 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+  \setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+  \setsansfont{lmsans10-regular.otf}
+  \setmonofont{lmmono10-regular.otf}
+\fi
+\usepackage[czech]{babel}
+\usepackage{microtype}
+\usepackage[left=30mm,right=20mm,top=24mm,bottom=25mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,tabularx,longtable}
+\usepackage{enumitem,xcolor,xurl}
+\usepackage{fancyhdr}
+\usepackage[unicode,colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!45!black]{hyperref}
+\setlength{\emergencystretch}{3em}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{1.2em}
+\setlist{itemsep=0.2em,topsep=0.4em,leftmargin=*}
+\setlist[description]{leftmargin=0pt,labelindent=0pt,labelwidth=0pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[L]{\small Rešeršní studie \textbullet{} 21.~10.~2026}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.3pt}
+\raggedbottom
+\newcommand{\studietitle}[3]{\noindent{\small\bfseries STUDIE #1 \hfill Verze 1.0 / 21. 10. 2026}\par\vspace{0.7em}
+{\LARGE\bfseries #2\par}\vspace{0.5em}\noindent{\large #3\par}\vspace{0.8em}}
+\newcommand{\zdroj}[3]{\bibitem{#1}#2. Dostupné z: \url{#3}. [cit.~2026-10-21].}
+\begin{document}
+
+\studietitle{04}{Přenos korekcí RTK přes ExpressLRS}{Proveditelnost, datová kapacita a porovnání s LoRa a NTRIP}
+
+\section{Zaměření a výchozí podmínky}
+Studie posuzuje, zda lze ExpressLRS (ELRS) použít pro přenos korekčních dat RTCM z pevné základny do závodního vozidla a zda představuje vhodnější volbu než původně navržený vlastní spoj LoRa nebo NTRIP přes internet. Navazuje na studie 01--03, ale obsahuje vlastní předpoklady, výpočty a bibliografii, takže je samostatně použitelná.
+
+Výchozí sestavu tvoří základna ArduSimple simpleRTK2B Budget s u-blox ZED-F9P, rover simpleRTK3B Pro se Septentrio mosaic-X5 a Raspberry Pi~5. Uvažovaná vzdálenost je přibližně 1~km na závodní trati. Původní rádiovou variantou je XIAO ESP32S3 s Wio-SX1262 a vlastním firmwarem pro bodový přenos. V projektu není doložen autopilot s MAVLink ani požadavek ovládat vozidlo pomocí ELRS.
+
+\textbf{Předběžný závěr: přenos je technicky možný.} Pro samostatné korekce je vhodným kandidátem AirPort v pásmu 2,4~GHz, zejména režim 333~Hz Full. Jeho výhoda proti vlastnímu pomalému LoRa spoji je konkrétní a výpočtově podložená; lepší spolehlivost než NTRIP ani dosah na skutečné trati zatím prokázány nejsou. Žádné hodnoty níže nejsou výsledkem měření této sestavy.
+
+Rešerše byla uzavřena 21.~10.~2026. Při kontrole odkazovalo poslední stabilní vydání ELRS na verzi 4.1.0 z 17.~7.~2026.\cite{release} Pro implementační tvrzení je použit tento tag; živá dokumentace byla zachycena na revizi \texttt{5ed656b6ebc7a38b6012297cf40fe5bc87232bed}. Dostupnost režimů je nutné ověřit pro konkrétní dvojici zařízení a regionální firmware.
+
+\section{Co ELRS přenáší a co samo neřeší}
+ELRS je rádiový systém; RTCM je formát dat a NTRIP protokol pro jejich distribuci po IP síti. Jde o různé vrstvy. ELRS nezlepšuje samotné družicové observace a nenahrazuje správné souřadnice základny, kvalitní antény ani vyřešení celočíselných ambiguit. Může zlepšit dostupnost čerstvých korekcí tam, kde selhává jiný přenos.
+
+\begin{description}
+\item[Běžný režim RC/CRSF.] Je určen pro řídicí kanály a definovanou telemetrii. Samotné zapojení výstupu RTCM do běžného přijímače nevytvoří transparentní modem. Sériový protokol se musí výslovně zvolit.\cite{serial}
+\item[AirPort.] Vytváří obousměrný transparentní sériový spoj. Nahrazuje RC funkci daného páru, neprovádí potvrzování ani opakování ztracených dat. Pro surový binární RTCM proto nevyžaduje obal MAVLink.\cite{airport}
+\item[Nativní MAVLink.] Umožňuje společný přenos řízení a MAVLink zpráv, případně samostatný datový provoz bez ovladače. Používá potvrzování a opakování rádiových fragmentů. RTCM však vyžaduje zabalení a na vozidle opět rozbalení.\cite{mavlink}
+\end{description}
+Poznámka dokumentace, že od ELRS~3.5 je pro telemetrii MAVLink vhodnější nativní režim, se vztahuje k MAVLink; sama o sobě neznamená zákaz či zrušení AirPortu pro surové RTCM.\cite{airport}
+
+\section{Kolik dat musí spoj skutečně přenést}
+Pro srovnání je použit profil ze studie 02: GPS 12, GLONASS 8, Galileo 10 a BeiDou 12 družic, dvě signálové složky na družici a obsazené všechny odpovídající buňky MSM. Pozorovací zprávy se odesílají jednou za sekundu; 1005 a 1230 jednou za 10~s. Podpora výstupů se opírá o dokumentaci ZED-F9P, konkrétní obsah však závisí na jeho firmwaru a nastavení.\cite{f9p}
+
+Pro počet družic $N_s$, signálů $N_g$ a obsazených buněk $N_c$ jsou délky kompletních rámců:
+\begin{align}
+L_4 &=6+\left\lceil(169+N_sN_g+18N_s+48N_c)/8\right\rceil,\\
+L_7 &=6+\left\lceil(169+N_sN_g+36N_s+80N_c)/8\right\rceil.
+\end{align}
+Výrazy jsou odvozeny z polí MSM4/MSM7 a šestibajtové režie RTCM~3; jejich otevřenou implementaci uvádí RTKLIB.\cite{rtcm}
+\par
+\begin{table}[htbp]\centering\small
+\caption{Model potřebného toku. B/s znamená bajty za sekundu, nikoliv bit/s.}
+\begin{tabularx}{\linewidth}{Yrr}
+\toprule Parametr & MSM4 & MSM7\\ \midrule
+GPS / GLONASS / Galileo / BeiDou [B] & 202/144/173/202 & 325/226/275/325\\
+Observační epocha $E$ [B] & 721 & 1151\\
+1005 a 1230: $(25+18)/10$ [B/s] & 4,3 & 4,3\\
+Celkem při 1~Hz [B/s] & 725,3 & 1155,3\\
+Celkem při 1~Hz [bit/s] & 5802,4 & 9242,4\\
+\bottomrule\end{tabularx}
+\end{table}
+\par
+Zpráva 1230 je započtena ve variantě 18~B. Model nezahrnuje další zapnuté výstupy, ephemeridy ani diagnostiku. Před nákupem rádia je proto potřeba zachytit skutečný proud a jeho maxima. Menší počet družic tok sníží, větší počet buněk jej zvýší. Z přítomnosti centimetrového řešení nevyplývá, že je nutné přenášet MSM7; volbu MSM4 je však třeba ověřit na kombinaci F9P--mosaic-X5.
+
+\section{Proveditelnost s AirPortem}
+\subsection{Kapacita rádiového režimu a sériového portu}
+Tabulka~\ref{tab:airport} přebírá vybrané rádiové kapacity a doporučené sériové rychlosti z dokumentace AirPort; poslední sloupec je vlastní výpočet.\cite{airport} Pro UART 8N1 vyžaduje jeden bajt deset bitů. Ideální propustnost celé cesty proto nemůže být větší než
+\begin{equation}
+ C_{\mathrm{cesta}} \leq \min(C_{\mathrm{OTA}},b_{\mathrm{UART}}/10).
+ \label{eq:capacity}
+\end{equation}
+Rovnice neobsahuje výpadky, potlačené vysílání při obsazeném kanálu ani další zdržení.
+
+\par
+\begin{table}[htbp]\centering\small
+\caption{AirPort: teoretický kapacitní strop bez ztrát. Zatížení platí pro MSM4 při 1~Hz.}
+\label{tab:airport}
+\begin{tabularx}{\linewidth}{Yrrrr}
+\toprule Režim & OTA [B/s] & UART [Bd] & Strop [B/s] & Zatížení\\ \midrule
+100~Hz Full & 500 & 4800 & 480 & 151,1\,\%\\
+200~Hz & 500 & 4800 & 480 & 151,1\,\%\\
+200~Hz Full & 1000 & 9600 & 960 & 75,6\,\%\\
+250~Hz & 625 & 4800 & 480 & 151,1\,\%\\
+333~Hz Full & 1665 & 9600 & 960 & 75,6\,\%\\
+333~Hz Full & 1665 & 14400 & 1440 & 50,4\,\%\\
+500~Hz & 1250 & 9600 & 960 & 75,6\,\%\\
+1000~Hz & 2500 & 19200 & 1920 & 37,8\,\%\\
+1000~Hz Full & 5000 & 38400 & 3840 & 18,9\,\%\\
+\bottomrule\end{tabularx}
+\end{table}
+\par
+Názvy nejsou zárukou dostupnosti na každém rádiu. Ve verzi 4.1.0 má starší SX127x v pásmu kolem 868~MHz nejvýše režimy 200~Hz a 100~Hz Full, které pro tento proud nestačí. Režimy 200~Hz Full a K1000 Full v tomto pásmu patří k LR1121. Na 2,4~GHz je 333~Hz Full založen na LoRa; F1000 na SX128x používá FLRC a K1000 na LR1121 používá FSK. ELRS tedy nelze ztotožnit s jedinou modulací LoRa.\cite{rates}
+
+\textbf{Doporučený první kandidát je 333~Hz Full na 2,4~GHz.} Pro MSM4 je matematicky použitelných i 9600~Bd, ale 14400~Bd poskytuje větší rezervu a kratší serializaci, pokud tuto rychlost podporují oba konce skutečné sériové cesty. Převodník může oddělit rychlost rádia od rychlosti GNSS portu. Pro MSM7 představuje 14400~Bd již 80,2\,\% kapacity; při požadavku na větší rezervu je třeba rychlejší režim, menší tok nebo jiný přenos. Na 9600~Bd se MSM7 do linky nevejde.
+
+U dávky 721~B vychází pouze sériová doba $721/960=0{,}751$~s, případně $721/1440=0{,}501$~s. Rádiový přenos s kapacitou 1665~B/s má ideální dolní mez 0,433~s. Tyto časy se při průběžném předávání mohou překrývat; nelze je bez znalosti implementace prostě sečíst ani vydávat za změřenou latenci.
+
+\subsection{Nárazový výstup a ztráta rámce}
+Průměrný tok není dostatečné kritérium. AirPort má v implementaci 4.1.0 aplikační FIFO 64~B.\cite{telemetry} Vysílač čte nejvýše tolik bajtů, kolik má volného místa; jeho UART obsluha tedy nevhání libovolně velký blok do plného FIFO. Obecná implementace FIFO při přetečení obsah zahodí. Omezení čtení ale samo nezaručuje, že nepřeteče předřazená sériová paměť.\cite{txcode,fifo}
+
+Ilustrativně: vstup na 115200~Bd může dodávat 11520~B/s. Proti rádiovým 1665~B/s roste idealizovaná fronta rychlostí 9855~B/s a 64~B vyčerpá za přibližně 6,5~ms. Tento výpočet \emph{není přesná předpověď okamžiku ztráty}, protože existují další buffery a plánování. Dokládá však, proč malý průměr RTCM neospravedlňuje neřízené rychlé dávky.
+
+Navržená pozemní brána proto nejprve ověří CRC a délku RTCM, uloží úplné rámce do vlastní omezené fronty a odesílá je rychlostí odpovídající zvolenému portu. Při návratu spojení nemá několik sekund dohánět zastaralé epochy. Observace mají pořadí a čas; při zahazování se zachovají celé rámce a konzistentní sady zpráv. Souřadnice základny 1005 a pomocné zprávy se posuzují odděleně od krátkodobých observací.
+
+Velikost 64~B současně \emph{není maximální délkou RTCM zprávy}. Rámec 202~B může projít postupně. V režimu Full nese rádiový datový fragment až 10 užitečných bajtů.\cite{telemetry,ota} Při ideálním rozdělení tak rámec potřebuje alespoň 21 fragmentů. Pro nezávislou ztrátovost fragmentu $p$ je modelová pravděpodobnost úplného přijetí
+\begin{equation}
+ P_{\text{rámec}}=(1-p)^n.
+\end{equation}
+Při $p=1\,\%$ a $n=21$ vychází pouze 81,0\,\%. Jde o názorný model, ne převod zobrazovaného ELRS LQ na spolehlivost RTCM. Skutečné ztráty bývají shlukové a částečně naplněné fragmenty počet $n$ zvětší. Měřit se musí úspěšné kompletní RTCM rámce, nikoliv jen to, zda rádio hlásí spojení.
+
+CRC-24Q umožní poškozený RTCM rámec odmítnout a parser se musí znovu synchronizovat. AirPort ztracený kus sám nedoplní. To může být přijatelné, pokud další epocha přijde včas, ale tuto toleranci musí potvrdit GNSS měření.
+
+\section{Alternativa: RTCM uvnitř nativního MAVLink}
+MAVLink definuje zprávu \texttt{GPS\_RTCM\_DATA} (233) s poli \texttt{flags}, \texttt{len} a nejvýše 180~B dat. Fragmentový identifikátor má dva bity, tedy nejvýše čtyři fragmenty v jedné sestavované skupině; další bity rozlišují sekvenci. Příjemce má před předáním do GNSS skupinu rekonstruovat.\cite{mavmessage} U zdejších jednotlivých rámců do 325~B stačí nejvýše dva fragmenty. Celou epochu 721~B nelze bezmyšlenkovitě považovat za jednu skupinu s limitem $4\cdot180=720$~B. Nejjednodušší návrh zpracuje každý RTCM rámec zvlášť. Obecný RTCM rámec nad 720~B by vyžadoval další ověřenou strategii dělení.
+
+Nepodepsaný MAVLink~2 přidává k datové části desetibajtovou hlavičku a dvoubajtové CRC; nulový konec datové části se zkracuje. Podpis přidává dalších 13~B na zprávu.\cite{mavserial} Při nulovém doplnění pole \texttt{data}, bez podpisu a bez náhodného zkrácení skutečného RTCM konce lze počítat 14~B režie na fragment. Z toho vychází:
+\begin{align}
+ R_{\mathrm{MAV,4}} &=721+6\cdot14+(25+14+18+14)/10
+                  =812{,}1~\mathrm{B/s},\\
+ R_{\mathrm{MAV,7}} &=1151+8\cdot14+(25+14+18+14)/10
+                  =1270{,}1~\mathrm{B/s}.
+\end{align}
+Model zahrnuje jen RTCM zprávy. Nezahrnuje heartbeat, řízení, ostatní telemetrii, opakování ani servisní komunikaci. Pro MSM4 s podpisy přibude průměrně $6{,}2\cdot13=80{,}6$~B/s. Při nezkrácených 182bajtových datových částech by bylo potřeba $6{,}2\cdot194=1202{,}8$~B/s. Skutečný serializovaný výstup brány se proto musí změřit.
+
+\par
+\begin{table}[htbp]\centering\small
+\caption{Odhad kapacity nativního MAVLink směrem základna TX $\rightarrow$ vozidlo RX podle dokumentace ELRS. Posouzení se týká modelu 812,1~B/s.\cite{mavlink}}
+\begin{tabularx}{\linewidth}{YrrY}
+\toprule Pásmo a režim & S RC [B/s] & Bez RC [B/s] & Posouzení MSM4\\ \midrule
+2,4~GHz, 250~Hz & 300 & 595 & Nedostačuje.\\
+2,4~GHz, 333~Hz Full & 735 & 1475 & S RC ne; bez RC kandidát.\\
+2,4~GHz, F1000 / K1000 & 1190 & 2385 & Kapacitně ano; ověřit dosah.\\
+868~MHz, 200~Hz (SX127x) & 240 & 475 & Nedostačuje.\\
+868~MHz, 200~Hz Full (LR1121) & 445 & 885 & Bez RC jen malá rezerva.\\
+868~MHz, K1000 Full (LR1121) & 2215 & 4430 & Kapacitně ano; ověřit RF podmínky.\\
+\bottomrule\end{tabularx}
+\end{table}
+\par
+Korekce putují \emph{uplinkem} TX$\rightarrow$RX. Čísla pro telemetrii opačným směrem nelze použít místo nich; ani zdvojení downlinku pomocí Gemini neznamená zdvojení uplinku.\cite{mavlink} Například 333~Hz Full s RC má proti modelu deficit $812{,}1-735=77{,}1$~B/s ještě před ostatním provozem. Fronta by soustavně rostla.
+
+Pro tuto sestavu je nativní MAVLink rozumnou druhou variantou, pokud test AirPortu ukáže příliš mnoho ztracených rámců. Bez RC má 333~Hz Full pro MSM4 přibližně 45\,\% nevyužité nominální kapacity. Potvrzování však při rušení přináší čekání: doručené, ale staré korekce nejsou úspěch. Navíc je nutná brána na základně a na Raspberry Pi, která odstraní MAVLink obal a předá RTCM do mosaic-X5. V současném projektu by šlo o novou integrační práci.
+
+\section{Hardware a navržené zapojení}
+\subsection{Lze využít původní moduly Wio-SX1262?}
+\textbf{Nelze předpokládat, že postačí jejich přeflashování.} Seeed uvádí SX1262 pro pásmo 862--930~MHz; Wi-Fi na ESP32S3 je jiné rádio.\cite{seeed} Ve standardním zdrojovém kódu ELRS~4.1.0 se vybírají ovladače SX127x, SX128x nebo LR1121, nikoliv SX1262.\cite{common} Shodný výrobce čipu, použití LoRa ani přítomnost ESP32 nezaručují kompatibilitu. Portování ovladače a desky by představovalo samostatný vývoj, který by oslabil hlavní výhodu hotového ELRS řešení.
+
+Pro první prototyp je vhodný podporovaný pár ESP vysílače a sériového přijímače na 2,4~GHz, s režimem 333~Hz Full, evropským firmwarem a dostupným datovým rozhraním. Přijímač má mít vyvedený UART; pouhá PWM varianta není automaticky vhodná. Před objednáním se ověří konkrétní firmware target, napájení, logické úrovně, antény a způsob nastavení bez trvalého RC ovladače. USB konektor musí být použitelný pro požadovaná data, nikoliv jen napájení či servis.
+
+\subsection{Doporučená architektura prototypu}
+\begin{center}
+\fbox{\begin{minipage}{0.91\linewidth}\small
+\textbf{Základna:} ZED-F9P $\rightarrow$ USB/UART $\rightarrow$ počítač nebo mikrokontrolér s kontrolou RTCM a řízením toku $\rightarrow$ ELRS TX (AirPort).\\[0.6em]
+\textbf{Rádiová trasa:} 2,4~GHz, 333~Hz Full, regionální konfigurace EU.\\[0.6em]
+\textbf{Vozidlo:} ELRS RX $\rightarrow$ UART $\rightarrow$ Raspberry Pi~5 (logování, CRC a stáří) $\rightarrow$ samostatný RTCM vstup mosaic-X5.
+\end{minipage}}
+\end{center}
+Jde o návrh, nikoliv hotové zapojení konkrétních pinů. Pi již patří do projektu, ale pro základnu se nesmí automaticky předpokládat další volný Pi. Pro laboratorní prototyp může bránu zajistit notebook. Přímé propojení GNSS--rádio lze posoudit později, pokud se prokáže kompatibilita rychlostí a bezpečné zvládání dávek.
+
+Na korekčním portu se vypnou nepotřebné NMEA a diagnostické zprávy. Napájení rádia se dimenzuje i na vysílací špičky. Anténa má být mimo stínění karbonem a kovem a vhodně vzdálena od GNSS antény, měničů a dalších vysílačů. Funkčnost se ověří při zapnutém trakčním systému, logování i ostatních bezdrátových zařízeních. Výběr portů a nastavení RTCM musí odpovídat dokumentaci GNSS přijímačů.\cite{f9p,mosaic}
+
+\section{Dosah na zemi, rušení a provoz v ČR}
+\subsection{Proč reklamní dosah nestačí}
+Pro volný prostor lze použít vztah ITU-R P.525:\cite{itu}
+\begin{equation}
+ L_{\mathrm{FS}}=32{,}45+20\log_{10}f_{\mathrm{MHz}}
+                         +20\log_{10}d_{\mathrm{km}}\quad[\mathrm{dB}].
+\end{equation}
+Na 1~km při 2,4~GHz vychází přibližně 100,1~dB. Při modelovém EIRP 20~dBm, přijímací anténě 0~dBi a nulových dalších ztrátách je příjem $-80{,}1$~dBm. Pro deklarovanou citlivost režimu 333~Hz Full kolem $-105$~dBm by zbývalo přibližně 25~dB.\cite{signal} To je pouze ideální bilanční příklad; není to důkaz kilometrového dosahu při zemi.
+
+Při stejných ostatních podmínkách má 2,4~GHz proti 868~MHz ve volném prostoru útlum vyšší asi o 8,8~dB. Na trati se přidá odraz od země, zastínění vozidlem, lidmi a bariérami, orientace antén i rušení. Výsledky letu ve výšce proto nelze přenést na závodní vozidlo. Pomalejší citlivější režim nemusí být řešením: pod 333~Hz Full může zmizet potřebná datová kapacita. Zkouška musí proběhnout v režimu a při výkonu, které se skutečně použijí.
+
+\subsection{Regionální firmware není neomezené oprávnění}
+Pro 2,4~GHz uvádí VO-R/12/11.2021-11 v článku~2, tabulce~b), řádku~a pásmo 2400--2483,5~MHz a nejvýše 100~mW EIRP; pro FHSS je uveden i limit spektrální hustoty a odkaz na EN~300~328. EIRP zahrnuje anténu, nejde jen o číslo výkonu v menu.\cite{ctu12} Jako výchozí se zvolí evropská doména \texttt{EU\_CE\_2400}; dokumentace ELRS uvádí LBT pro evropské domény.\cite{domains} Dostupná kapacita se při obsazení pásma může snížit.
+
+Pro sub-GHz zařízení se uplatní příslušné podmínky VO-R/10/05.2025-5. Jednotlivé úseky mají odlišné výkony, šířky pásma a podmínky přístupu.\cite{ctu10} ELRS doména EU868 ve verzi~4.1.0 přeskakuje mezi středními kmitočty 863,275 až 869,575~MHz.\cite{fhss} Nelze ji posuzovat jako jeden úzký kanál 869,525~MHz a automaticky jí přisoudit pravidla pouze tohoto úseku.
+
+Pro rozhodnutí z toho plyne: koupit konkrétní evropskou variantu s doloženými podmínkami provozu a kompatibilní anténou. Možnost nastavit 1~W, změnit region nebo zvolit K1000 není důkaz dovoleného použití. Tato studie neprovádí posouzení shody konkrétního výrobku ani měření jeho spektra.
+
+\section{Je ELRS lepší volba?}
+Srovnání musí zachovat stejný zdroj korekcí. Pro čistý test přenosu se použije stejný proud ze stejné základny, rozdělený do jednotlivých cest. Při porovnání s korekcemi cizí stanice by se současně měnila délka základny, souřadnicový rámec a případně síťový model.
+
+\par
+\begin{table}[htbp]\centering\small
+\caption{Hodnocení pro daný projekt; jde o technický úsudek, nikoliv změřené pořadí.}
+\begin{tabularx}{\linewidth}{L{27mm}YYY}
+\toprule Kritérium & ELRS AirPort 2,4~GHz & Vlastní Wio-SX1262 & NTRIP po IP\\ \midrule
+MSM4, 1~Hz & 333~Hz Full kapacitně vychází. & Závisí na modulaci a dovoleném provozu. & Přibližně 5,8~kbit/s plus režie; pro běžné IP spojení malý tok.\\
+Vývoj & Brána, konfigurace a diagnostika. & Navíc vlastní rádiový protokol, fragmentace a obsluha chyb. & Klient, připojení a případně caster.\\
+Infrastruktura & Lokální základna a přímé RF pokrytí. & Lokální základna a přímé RF pokrytí. & IP cesta; může být internet i vlastní LAN.\\
+Výpadky & Ztracené části se neopakují. & Podle vlastního návrhu. & TCP obnovuje data, ale může zvyšovat stáří ve frontě.\\
+Stávající rádia & Vyžaduje jiný podporovaný pár. & Využívá původní moduly. & Závisí na dostupném modemu nebo síti.\\
+Hlavní omezení & Ztráty rámců a zastínění při zemi. & Airtime, regionální podmínky a vývoj. & Dostupnost sítě a proměnlivé zpoždění.\\
+\bottomrule\end{tabularx}
+\end{table}
+\par
+NTRIP je transport nad internetovými protokoly, nikoliv podmínka použití komerční sítě stanic.\cite{ntrip} Může distribuovat i vlastní základnu přes místní IP síť. ELRS AirPort sám IP síť neposkytuje, a proto na něm NTRIP přímo neběží. Kombinace je možná pomocí brány: ta načte NTRIP a rádiem předá pouze RTCM. V takovém případě připojení k internetu nadále potřebuje alespoň tato brána.
+
+\textbf{Proti původně uvažované pomalé LoRa variantě je ELRS perspektivnější.} Ve studii~02 vyšel pro 721~B epochu, čtyři fragmenty, osmibajtovou vlastní hlavičku, explicitní LoRa hlavičku, CRC, SF7, BW125 a CR4/5 airtime přibližně 1,218~s. Již jedna epocha za sekundu přesahuje časovou kapacitu. Při BW500 je to asi 0,304~s, což stále nevyhoví režimu omezenému na 1\,\% či 10\,\% klíčovacího poměru. Jde o konkrétní model podle implementace výpočtu Semtech,\cite{semtech} nikoliv důkaz, že SX1262 ve všech rychlejších či jinak povolených konfiguracích selže. ELRS není výjimkou z fyziky ani z předpisů; používá jinou konfiguraci rádiové vrstvy.
+
+\textbf{Proti NTRIP není jednoznačný vítěz.} Při spolehlivém internetovém pokrytí má NTRIP vyšší kapacitní rezervu a umožní rychle vytvořit referenční měřicí cestu. Při požadavku na provoz bez mobilní sítě je lokální ELRS spoj přínosný. Nákladově nelze bez výběru zařízení rozhodnout: ELRS znamená nový pár a antény; NTRIP může vyžadovat modem, tarif a případně službu. Již vlastněné LoRa moduly nezaručují nejnižší celkové náklady, pokud přidají mnoho vývoje.
+
+\section{Ověřovací experiment a rozhodovací kritéria}
+Nejdříve se zaznamená skutečný výstup F9P: typy zpráv, počet buněk, délky rámců, objem epochy, maximum dávky a čas mezi epochami. Poté se stejný záznam přehraje přes AirPort 333~Hz Full na 9600 a podle podpory 14400~Bd; případně přes rychlejší režim a nativní MAVLink bez RC. Přenos binárních souborů se kontroluje parserem a CRC, nikoliv pouze vizuálním výpisem terminálu.
+
+Laboratorní test má alespoň 30~minut na konfiguraci a zahrnuje nárazové dávky, krátké přerušení spojení a návrat po odpojení napájení. Následuje opakovaný průjezd celé trati v obou směrech při skutečné montáži antén, legálním výkonu a souběžném provozu ostatní elektroniky. Samostatně se provede test omezeného rušení a zastínění za běžných podmínek závodu. Nejde o požadavek uměle rušit rádiové pásmo.
+
+Zaznamenávat se mají:
+\begin{itemize}
+\item počet validních a chybějících RTCM rámců podle typu, úplnost epoch a nejdelší souvislý výpadek;
+\item vstupní a výstupní bajty, maxima front, přetečení, RSSI/LQ a provozní režim rádia;
+\item latence od epochy observací, její medián, 95. a 99. percentil a maximum, se sjednoceným časem měření;
+\item RTK fixed/float, podíl času ve fixed, doba návratu do fixed a chyba proti nezávislé referenci.
+\end{itemize}
+
+Pro první iteraci se navrhuje \textbf{alespoň 30\,\% nominální kapacitní rezerva}, přes 99\,\% doručených úplných rámců v laboratorním testu a 99. percentil věku poslední použitelné observační epochy nejvýše 2~s na trati. Jsou to návrhové cíle pro výběr linky, nikoliv limity normy nebo garance přesnosti. Poslední metrika se vzorkuje průběžně, aby zahrnovala i mezery bez nových dat; samotná latence doručených paketů by výpadky skryla.
+
+Při periodě $T$ a přibližně stálém zpoždění $L$ roste věk před dalším přijetím bez výpadku k $T+L$, po $k$ ztracených epochách k $(k+1)T+L$. U 1~Hz a sériové doby přibližně 0,5~s je proto průběžný věk blízko 1,5~s možný i bez chyb. Nastavený timeout roveru není důkazem použitelnosti takto starých korekcí; dokumentace mosaic-X5 například rozlišuje RTKCorr a další limity stáří.\cite{mosaic}
+
+Pokud AirPort splní kapacitu, ale ztrácí rámce, následuje srovnávací pokus nativního MAVLink bez RC. Pokud nesplní cíle ani jeden režim při povoleném výkonu, vybere se NTRIP s ověřenou IP cestou nebo jiné datové rádio. Zpomalení korekcí pod 1~Hz se nemá používat jako první náhrada chybějící kapacity; jeho dopad na GNSS řešení by byl samostatný experiment.
+
+\clearpage
+\section{Závěr pro projekt}
+\begin{enumerate}
+\item \textbf{RTCM lze přes ELRS přenášet.} Pro současnou sestavu je první kandidát samostatný AirPort 2,4~GHz, 333~Hz Full a MSM4 při 1~Hz. Rychlost 14400~Bd poskytuje modelovou rezervu; na 9600~Bd proud vychází, ale nedosahuje navržené 30\% rezervy.
+\item \textbf{Běžný starší ELRS 868~MHz není pro celý profil vhodný.} To se nevztahuje automaticky na nové rychlé režimy LR1121, které vyžadují vlastní kapacitní, rádiové a regulatorní ověření.
+\item \textbf{MAVLink 333~Hz Full s RC pro tento profil nestačí.} Bez RC kapacitně vychází a nabízí opakování ztrát, za cenu obalu, bran a rizika růstu stáří. Výběr mezi ním a AirPortem má rozhodnout experiment.
+\item \textbf{ELRS je vhodnější kandidát než původní pomalá LoRa konfigurace}, pokud cílem je zprovoznění lokálního přenosu s menším vývojem rádia. Původní Wio-SX1262 nelze považovat za hotový ELRS hardware.
+\item \textbf{NTRIP zůstává vhodnou referenční a případně provozní cestou}. ELRS je silnější volba tam, kde je rozhodující nezávislost na internetu; samo o sobě nezaručuje vyšší přesnost nebo dostupnost.
+\end{enumerate}
+
+Do konečného návrhu se doporučuje zařadit \emph{ověřovací prototyp ELRS}, zatím nikoliv definitivní změnu celé architektury. Otevřenými body jsou skutečný tok F9P, výběr podporovaného páru, sériová kompatibilita, ztrátovost RTCM na trati a stáří korekcí při rušení. Bez těchto údajů lze doložit proveditelnost a důvody pro test, nikoliv vítězství ELRS v reálném provozu.
+
+\begin{thebibliography}{99}\small
+\zdroj{release}{EXPRESSLRS. \emph{Release 4.1.0}. Vydáno 17.~7.~2026}{https://github.com/ExpressLRS/ExpressLRS/releases/tag/4.1.0}
+\zdroj{serial}{EXPRESSLRS. \emph{Receiver Serial Protocols}. Volba výstupního protokolu}{https://www.expresslrs.org/software/serial-protocols/}
+\zdroj{airport}{EXPRESSLRS. \emph{AirPort}. Zejména Description a Data rate vs Baud rate; živá dokumentace, výše uvedená revize}{https://www.expresslrs.org/software/airport/}
+\zdroj{mavlink}{EXPRESSLRS. \emph{MAVLink}. Zejména Throughput per RF Mode a Standalone Telemetry Radio Mode; živá dokumentace, výše uvedená revize}{https://www.expresslrs.org/software/mavlink/}
+\zdroj{f9p}{U-BLOX. \emph{ZED-F9P Integration manual}, UBX-18010802, R16, 30.~10.~2024. Tabulka podporovaných RTCM výstupů}{https://content.u-blox.com/sites/default/files/ZED-F9P_IntegrationManual_UBX-18010802.pdf}
+\zdroj{rtcm}{TAKASU, Tomoji. \emph{RTKLIB: rtcm3e.c}. Otevřená implementace kódování MSM a RTCM rámců; doplňkově rtcm.c ve stejném adresáři}{https://raw.githubusercontent.com/tomojitakasu/RTKLIB/master/src/rtcm3e.c}
+\zdroj{rates}{EXPRESSLRS. \emph{common.cpp}, tag 4.1.0. Tabulky ExpressLRS\_AirRateConfig a ExpressLRS\_AirRateRFperf}{https://github.com/ExpressLRS/ExpressLRS/blob/4.1.0/src/src/common.cpp}
+\zdroj{telemetry}{EXPRESSLRS. \emph{telemetry\_protocol.h}, tag 4.1.0. Konstanty datových fragmentů a AP\_MAX\_BUF\_LEN}{https://github.com/ExpressLRS/ExpressLRS/blob/4.1.0/src/include/telemetry_protocol.h}
+\zdroj{txcode}{EXPRESSLRS. \emph{tx\_main.cpp}, tag 4.1.0. HandleUARTin a nastavení AirPort}{https://github.com/ExpressLRS/ExpressLRS/blob/4.1.0/src/src/tx_main.cpp}
+\zdroj{fifo}{EXPRESSLRS. \emph{FIFO.h}, tag 4.1.0. pushBytes a chování při přetečení}{https://github.com/ExpressLRS/ExpressLRS/blob/4.1.0/src/lib/FIFO/FIFO.h}
+\zdroj{ota}{EXPRESSLRS. \emph{OTA.cpp}, tag 4.1.0. OtaPackAirportData a OtaUnpackAirportData}{https://github.com/ExpressLRS/ExpressLRS/blob/4.1.0/src/lib/OTA/OTA.cpp}
+\zdroj{mavmessage}{MAVLINK. \emph{Common Message Set: GPS\_RTCM\_DATA (233)}. Pole a pravidla fragmentace}{https://mavlink.io/en/messages/common.html\#GPS_RTCM_DATA}
+\zdroj{mavserial}{MAVLINK. \emph{Packet Serialization}. MAVLink~2, zkracování nulového konce a podpis}{https://mavlink.io/en/guide/serialization.html}
+\zdroj{seeed}{SEEED STUDIO. \emph{XIAO ESP32S3 \& Wio-SX1262 Kit Introduction}. Použitý čip a pásmo}{https://wiki.seeedstudio.com/wio_sx1262_with_xiao_esp32s3_kit/}
+\zdroj{common}{EXPRESSLRS. \emph{common.h}, tag 4.1.0. Výběr podporovaných rádiových ovladačů}{https://github.com/ExpressLRS/ExpressLRS/blob/4.1.0/src/include/common.h}
+\zdroj{mosaic}{SEPTENTRIO. \emph{mosaic-X5 Reference Guide}, firmware 4.14.10, 23.~9.~2024. RTKCorrections a limity stáří; kopie distribuovaná ArduSimple}{https://www.ardusimple.com/wp-content/uploads/2024/10/mosaic-X5-Firmware-v4.14.10-Reference-Guide.pdf}
+\zdroj{itu}{ITU. \emph{Recommendation ITU-R P.525-5: Calculation of free-space attenuation}. Listopad 2024, příloha}{https://www.itu.int/rec/R-REC-P.525-5-202411-I/en}
+\zdroj{signal}{EXPRESSLRS. \emph{Signal Health}. Tabulka citlivostí režimů ExpressLRS~4.x}{https://www.expresslrs.org/info/signal-health/}
+\zdroj{ctu12}{ČESKÝ TELEKOMUNIKAČNÍ ÚŘAD. \emph{VO-R/12/11.2021-11}. Článek~2, pásmo a a podmínky výkonu}{https://www.ctu.cz/sites/default/files/obsah/vo-r_12-112021-11.pdf}
+\zdroj{domains}{EXPRESSLRS. \emph{Firmware Options: Regulatory Domains}}{https://www.expresslrs.org/quick-start/firmware-options/}
+\zdroj{ctu10}{ČESKÝ TELEKOMUNIKAČNÍ ÚŘAD. \emph{VO-R/10/05.2025-5}. Zejména článek~3; ověřeno proti seznamu všeobecných oprávnění}{https://ctu.gov.cz/sites/default/files/obsah/VO-R10-052025-5.pdf}
+\zdroj{fhss}{EXPRESSLRS. \emph{FHSS.cpp}, tag 4.1.0. Tabulky regionálních kmitočtů}{https://github.com/ExpressLRS/ExpressLRS/blob/4.1.0/src/lib/FHSS/FHSS.cpp}
+\zdroj{ntrip}{BUNDESAMT FÜR KARTOGRAPHIE UND GEODÄSIE. \emph{Ntrip: Networked Transport of RTCM via Internet Protocol}}{https://igs.bkg.bund.de/ntrip/about}
+\zdroj{semtech}{SEMTECH. \emph{LoRaMac-node: radio.c, SX126x}. RadioGetLoRaTimeOnAirNumerator; výpočet airtime použitý ve studii~02}{https://raw.githubusercontent.com/Lora-net/LoRaMac-node/master/src/radio/sx126x/radio.c}
+\end{thebibliography}
+\end{document}

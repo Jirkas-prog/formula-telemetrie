@@ -1,0 +1,13 @@
+{
+  "number": 4,
+  "title": "Wi-Fi, internet a vzdálená příkazová řádka",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "a32d31eef10e36631aaf8b6c4504b55563116b1c502657a66579baf5fcd26a88",
+  "sha256_audio": "4b6eb26b0f21e679891d1acd16df993f6986dc450e852cd6c1fd93d63ebb190b",
+  "duration_seconds": 143.736,
+  "word_count": 333,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

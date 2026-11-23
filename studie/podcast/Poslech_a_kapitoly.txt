@@ -1,0 +1,23 @@
+PODCAST: Raspberry Pi a GNSS logger pro formuli
+Délka: 29:34 | český syntetický hlas | 12 kapitol
+
+Přehrát celý soubor: Podcast_Raspberry_Pi_GNSS.mp3
+Jednotlivé kapitoly: složka kapitoly, soubory 01.mp3 až 12.mp3.
+Časové značky jsou vloženy také do MP3 (podpora závisí na přehrávači).
+
+00:00  01. Co vlastně stavíš
+02:09  02. Proč Linux a co znamená real-time
+04:31  03. Co se děje při instalaci a startu z disku
+06:59  04. Wi-Fi, internet a vzdálená příkazová řádka
+09:23  05. Co přesně ukládat z přijímače
+11:57  06. Kdy jsou data opravdu na disku
+14:37  07. Stačí dva gigabajty paměti
+17:08  08. Co přinese Docker a jak mu rozumět
+19:42  09. Databáze, Grafana a tvoje webová stránka
+22:20  10. Prostředí pro tvoje vlastní výpočty
+24:39  11. Automatický provoz a ověřování spolehlivosti
+27:11  12. V jakém pořadí to skutečně postavíš
+
+Přepis: scenar.txt
+Zdroje a výpočty: Zdroje_a_poznamky.txt
+Výklad navazuje na aktuální projekt; není potvrzením dosud neprovedených zkoušek.

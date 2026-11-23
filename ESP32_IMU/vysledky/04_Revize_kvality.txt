@@ -1,0 +1,59 @@
+﻿REVIZE 01 — CO JE SKUTEČNĚ ULOŽENÉ V DATECH
+
+První krok revize. Nezávisle znovu přečteno všech 38 původních CSV.
+Řádků celkem: 12,536,353; opakovaný bajt ve všech šesti osách: 9,784,717 (78.05075%).
+Všech 38 CSV v původním FIMU je podle SHA-256 shodných s originály.
+Kontrolní součet CRC prošel u každého řádku. To potvrzuje zápis, nikoli správnost měření.
+
+VELIKOST SOUBORU A DŮVOD VYŘAZENÍ
+boot_000178_run_001.csv: 499.25 MB / 3,437,932 řádků.
+  Shodný bajt ve všech 12 bajtech A/G: 3,335,207 (97.01201%).
+  Teplota odpovídá stejnému slovu (s tolerancí zaokrouhlení): 3,335,207 řádků.
+  První výskyt: 179.171705 s. Souvislé úseky bez vzoru >=1 s: [[0.0, 179.17]].
+  Čerstvé řádky bez přesné šestiosé shody po prvním výskytu: 0; jde o izolované výjimky, nikoli obnovenou souvislou jízdu.
+boot_000180_run_001.csv: 238.12 MB / 1,646,711 řádků.
+  Shodný bajt ve všech 12 bajtech A/G: 1,646,707 (99.99976%).
+  Teplota odpovídá stejnému slovu (s tolerancí zaokrouhlení): 1,646,706 řádků.
+  První výskyt: 0.000526 s. Souvislé úseky bez vzoru >=1 s: [].
+  Čerstvé řádky bez přesné šestiosé shody po prvním výskytu: 4; jde o izolované výjimky, nikoli obnovenou souvislou jízdu.
+boot_000181_run_001.csv: 779.67 MB / 5,358,256 řádků.
+  Shodný bajt ve všech 12 bajtech A/G: 4,802,803 (89.63370%).
+  Teplota odpovídá stejnému slovu (s tolerancí zaokrouhlení): 4,802,802 řádků.
+  První výskyt: 1008.247255 s. Souvislé úseky bez vzoru >=1 s: [[0.0, 1008.24]].
+  Čerstvé řádky bez přesné šestiosé shody po prvním výskytu: 10; jde o izolované výjimky, nikoli obnovenou souvislou jízdu.
+
+KONKRÉTNÍ PŘÍKLAD
+180, čas 0,000526 s: ax=ay=az=-0,00049 g; gx=gy=gz=-0,061 °/s.
+Při rozsazích ±16 g / ±2000 °/s převod dává šestkrát -1 = 0xFFFF.
+Teplota 21,00 °C po zpětném převodu s rozlišením CSV odpovídá témuž slovu.
+Nejde jen o stejná fyzikální čísla v různých jednotkách: shoduje se rekonstruovaný digitální obsah.
+Všech 9 784 717 původně označených řádků má i silnější znak: horní a dolní bajt slova jsou stejné.
+Pouhé přehození os nebo endianity tento obsah neopraví. Nezávislé původní hodnoty v těchto řádcích chybí.
+
+CO SE ZNOVU PROVĚŘILO
+Rozsahy se pro výpočet četly z každého původního řádku. Rozdíl proti původnímu pravidlu: 0 řádků.
+Čerstvost akcelerometru a gyroskopu se posuzovala samostatně; příznaky se v této sadě neliší.
+Za maskou poruch A/G se nenašel žádný čerstvý platný vzorek magnetometru.
+Ve 180 jsou po začátku poruchy 4 a ve 181 10 řádků bez přesné shody všech šesti slov.
+Tyto izolované výjimky leží mezi poruchami; část stále obsahuje opakované hodnoty, jiné skoky a saturaci.
+Nejde o novou souvislou trasu. Jsou zveřejněné v Izolovane_vyjimky.csv a audit.json.
+Na přechodu do poruchy ve 181 jsou navíc 3 neoznačené čerstvé vzorky ve smíšeném 10ms intervalu.
+Původní graf tento interval preventivně skryl celý. Takto krátký fragment neumožní doplnit trasu.
+
+PŘÍČINA A MÍRA JISTOTY
+Doloženo: opakovaný obsah už je v původním CSV; nejde o chybné sestavení FIMU ani pozdější změnu SD dat.
+Ve zdrojovém sampleTask se kontroluje návratový stav readFIFO, nikoli opakovaný obsah vzorků.
+Úspěch přenosové funkce se tak mohl zaměnit za správné měření. CRC vzniká až nad těmito čísly.
+Přesný spouštěč (FIFO, komunikace, stav senzoru, chyba obsluhy) nelze z uložených CSV určit.
+Nelze prokázat vadný hardware. Firmware má tento stav detekovat a hlásit místo tichého pokračování.
+Základ převodu jednotek odpovídá firmware a datasheetu ICM-20948:
+https://invensense.tdk.com/wp-content/uploads/2024/03/DS-000189-ICM-20948-v1.6.pdf
+
+CO JE V TÉTO SLOŽCE
+Tři původní PDF jsou doplněna touto revizí kvality. Jízdní čísla se nezměnila.
+Přiložená data obsahují pouze 677–1007 s záznamu 181; poruchové úseky nejsou přiložené.
+165 000 původních A/G řádků má platné CRC a neobsahuje zjištěný opakovaný digitální vzor.
+Grafy, filtrované hodnoty a podmíněný model trasy jsou převzaté z původní analýzy.
+Neproběhlo nové měření ani potvrzení absolutní přesnosti trasy. Kompas v jízdě není dostupný.
+Ostatní zde jmenované CSV a detailní důkazy jsou v pracovním archivu revize, nikoli v této složce.
+Čtěte přednostně 01_Drivetrain.pdf a 02_Analyza_jizdy.pdf. Dokument 03 je původní průzkum.

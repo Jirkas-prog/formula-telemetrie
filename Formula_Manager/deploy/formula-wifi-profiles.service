@@ -1,0 +1,16 @@
+[Unit]
+Description=Manage Formula wlan0 profiles through NetworkManager
+After=NetworkManager.service
+Requires=formula-wifi-profiles.socket
+
+[Service]
+ExecStart=/usr/bin/python3 -I /usr/local/libexec/formula-wifi-profiles.py
+NoNewPrivileges=yes
+ProtectSystem=strict
+StateDirectory=formula-wifi-profiles
+StateDirectoryMode=0700
+ProtectHome=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_UNIX
+Restart=on-failure
+

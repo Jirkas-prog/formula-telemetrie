@@ -1,0 +1,25 @@
+#EXTM3U
+#EXTINF:128,01. Co vlastně stavíš
+kapitoly/01.mp3
+#EXTINF:141,02. Proč Linux a co znamená real-time
+kapitoly/02.mp3
+#EXTINF:148,03. Co se děje při instalaci a startu z disku
+kapitoly/03.mp3
+#EXTINF:144,04. Wi-Fi, internet a vzdálená příkazová řádka
+kapitoly/04.mp3
+#EXTINF:153,05. Co přesně ukládat z přijímače
+kapitoly/05.mp3
+#EXTINF:158,06. Kdy jsou data opravdu na disku
+kapitoly/06.mp3
+#EXTINF:151,07. Stačí dva gigabajty paměti
+kapitoly/07.mp3
+#EXTINF:153,08. Co přinese Docker a jak mu rozumět
+kapitoly/08.mp3
+#EXTINF:157,09. Databáze, Grafana a tvoje webová stránka
+kapitoly/09.mp3
+#EXTINF:138,10. Prostředí pro tvoje vlastní výpočty
+kapitoly/10.mp3
+#EXTINF:151,11. Automatický provoz a ověřování spolehlivosti
+kapitoly/11.mp3
+#EXTINF:143,12. V jakém pořadí to skutečně postavíš
+kapitoly/12.mp3

@@ -1,0 +1,5 @@
+from(bucket: "lab")
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r._measurement == "demo")
+  |> filter(fn: (r) => r._field == "value")
+  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)

@@ -1,0 +1,18 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const root=new URL('./',import.meta.url),folder=new URL('../Formule_jizda_181/',root);
+const html=fs.readFileSync(new URL('app/viewer.html',root),'utf8');
+const main=[...html.matchAll(/<script(?:[^>]*)>([\s\S]*?)<\/script>/g)].map(m=>m[1]).find(s=>s.includes('class ZipReader'));
+const ZipReader=vm.runInNewContext(main.slice(main.indexOf('class ZipReader'),main.indexOf('async function openFile'))+';ZipReader',{DataView,Uint8Array,TextDecoder,Response,DecompressionStream});
+const analysis=vm.runInNewContext(fs.readFileSync(new URL('app/analysis_core.js',root),'utf8')+';DriveAnalysis');
+const zip=await new ZipReader(await fs.openAsBlob(new URL('03_Data/Jizda_181_677-1007s.fimu',folder))).init();
+const manifest=JSON.parse(await (await zip.member('manifest.json')).text());
+assert.equal(manifest.runs.length,1);assert.equal(manifest.results.files.length,1);
+const run=manifest.runs[0];assert.equal(run.rows,165000);assert.equal(run.window_start_s,677);assert.equal(run.end_s,1007);
+assert.equal([...zip.entries.keys()].filter(k=>k.startsWith('raw/')).length,1);
+const values=new Float32Array(await (await zip.member(run.derived_member)).arrayBuffer());
+for(let i=0;i<67700;i++)for(let j=1;j<18;j++)assert.ok(Number.isNaN(values[i*18+j]));
+const body=analysis.body(values,manifest.results.vehicle),events=analysis.events(body),stats=analysis.summarize(body,677,1007,events);
+assert.equal(events.length,102);assert.equal(stats.valid_s,330);assert.ok(Math.abs(stats.long.min+1.0669032469903552)<1e-6);
+assert.ok(Math.abs(stats.long.minTime-950.035)<1e-8);
+assert.equal(fs.readFileSync(new URL('02_Aplikace/Prohlizec_IMU.html',folder),'utf8'),html);
+console.log('PASS single drive: only one raw excerpt, 165000 original rows, no outside measurements, 330 usable seconds, 102 events and identical maximum.');

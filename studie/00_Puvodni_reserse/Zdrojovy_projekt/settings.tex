@@ -1,0 +1,48 @@
+\usepackage{polyglossia}
+\setdefaultlanguage{czech}
+\setotherlanguage{english}
+\usepackage{csquotes}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{siunitx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{xurl}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit}
+\usepackage[backend=biber,style=numeric,sorting=none,maxbibnames=20]{biblatex}
+\addbibresource{references.bib}
+\AtBeginBibliography{\small}
+
+% Okraje pro tisk a vazbu: vnitrni 30 mm, vnejsi 20 mm; sazba A4 siroka 160 mm.
+% V rezimu oneside je vazba vlevo na kazdem listu. Rezim twoside zrcadli
+% okraje sudych stran. Horni/dolni rozmery ponechavame podle TUL 2.3.
+% LaTeX meri bocni posun od 1in = 25,4 mm.
+\setlength{\oddsidemargin}{4.6mm}
+\makeatletter
+\if@twoside
+  \setlength{\evensidemargin}{-5.4mm}
+\else
+  \setlength{\evensidemargin}{4.6mm}
+\fi
+\makeatother
+\setlength{\textwidth}{160mm}
+\setlength{\emergencystretch}{2em}
+% Neprotahovat svisle mezery pri prepnuti reportu do oboustranne sazby.
+\raggedbottom
+
+% Uprednostni zalomeni dlouhych URL v bibliografii pred pretekanim do okraje.
+\setcounter{biburlnumpenalty}{9000}
+\setcounter{biburlucpenalty}{9000}
+\setcounter{biburllcpenalty}{9000}
+
+\sisetup{locale = DE, per-mode = symbol, range-phrase = { až }}
+\DeclareSIUnit\byte{B}
+\setlist{itemsep=0.25em,topsep=0.45em}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcommand{\todoauthor}[1]{\textcolor{red}{[DOPLNIT: #1]}}

@@ -1,0 +1,39 @@
+# Learning lab: start services individually; not a validated race setup.
+name: formula-lab
+
+services:
+  influxdb:
+    image: influxdb:2.9.1
+    ports:
+      - "127.0.0.1:8086:8086"
+    volumes:
+      - influx-data:/var/lib/influxdb2
+      - influx-config:/etc/influxdb2
+    mem_limit: 768m
+    memswap_limit: 768m
+    restart: "no"
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  grafana:
+    image: grafana/grafana:13.3.1
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    mem_limit: 512m
+    memswap_limit: 512m
+    restart: "no"
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  influx-data:
+  influx-config:
+  grafana-data:

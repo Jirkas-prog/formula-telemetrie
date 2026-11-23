@@ -1,0 +1,35 @@
+name: O-Leaf
+version: "0.8.0"
+slug: oleaf
+description: Plně offline LaTeX editor s PDF náhledem pro Home Assistant
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: false
+ingress: true
+ingress_port: 8099
+ingress_stream: true
+panel_icon: mdi:leaf
+panel_title: O-Leaf
+panel_admin: false
+backup: cold
+stage: experimental
+map:
+  - type: addon_config
+    read_only: false
+  - type: media
+    read_only: false
+  - type: share
+    read_only: false
+options:
+  projects_directory: /media/projekty/latex
+  autosave_delay_ms: 800
+  compilation_timeout_seconds: 120
+  max_upload_mb: 100
+schema:
+  projects_directory: str
+  autosave_delay_ms: int(250,10000)
+  compilation_timeout_seconds: int(10,600)
+  max_upload_mb: int(1,500)

@@ -1,0 +1,369 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{iftex}
+\ifPDFTeX
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\else
+\usepackage{fontspec}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setmonofont{lmmono10-regular.otf}[BoldFont=lmmono10-regular.otf]
+\fi
+\usepackage[czech]{babel}
+\usepackage[left=25mm,right=22mm,top=22mm,bottom=23mm]{geometry}
+\usepackage{microtype,booktabs,array,tabularx,enumitem,xcolor,xurl,fancyhdr,listings}
+\usepackage[unicode,colorlinks=true,linkcolor=blue!35!black,citecolor=blue!35!black,urlcolor=blue!45!black]{hyperref}
+\hypersetup{pdftitle={Instalace Raspberry Pi 5 na NVMe a sprava pres Wi-Fi},pdfauthor={Podklad k bakalarske praci}}
+\setlength{\emergencystretch}{3em}\setlength{\parindent}{0pt}\setlength{\parskip}{0.45em}
+\setlist{leftmargin=*,itemsep=0.2em,topsep=0.3em}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\pagestyle{fancy}\fancyhf{}\fancyfoot[L]{\small Instalace Raspberry Pi 5 / NVMe / Wi-Fi}\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}\renewcommand{\footrulewidth}{0.3pt}\raggedbottom
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,columns=fullflexible,keepspaces=true,showstringspaces=false,frame=single,rulecolor=\color{black!15},backgroundcolor=\color{black!2},aboveskip=0.5em,belowskip=0.5em}
+\newcounter{postup}
+\newcommand{\krok}[1]{\refstepcounter{postup}\par\vspace{0.25em}\textbf{\thepostup. #1}\par}
+\newcommand{\zdroj}[3]{\bibitem{#1}#2. \url{#3}. [cit.~2026-11-18].}
+\begin{document}
+{\small\bfseries PŘÍLOHA K BAKALÁŘSKÉ PRÁCI \hfill 18. 11. 2026 / v2.0}\par
+{\LARGE\bfseries Instalace Raspberry Pi 5 na NVMe\par}
+{\large Přes dočasnou microSD, vzdáleně po Wi-Fi}\par
+
+\section{Účel a zvolené uspořádání}
+Na počítači se připraví \textbf{microSD se standardním Raspberry Pi OS Lite 64-bit}. Raspberry Pi se z ní spustí a zpřístupní přes Wi-Fi a SSH. Připravený systém se poté jednorázově zkopíruje na NVMe přímo v Pi. Po vypnutí se SD vyjme a další provoz probíhá \textbf{výhradně z NVMe}. Návod je určen k vlastnímu provedení; nezahrnuje Docker, databáze ani výpočtové algoritmy.
+
+\textbf{Princip přenosu.} Použije se otevřený nástroj \texttt{rpi-clone} z repozitáře \texttt{geerlingguy/rpi-clone}, který podporuje PCIe NVMe. Přenese připravený systém včetně uživatele, Wi-Fi a SSH a upraví odkazy na oddíly cílového disku. Jde o jednorázovou migraci, nikoli o průběžné zálohování. Tento nástroj je komunitní projekt, není součástí oficiálního Imageru.\cite{clone}
+
+\textbf{Zdůvodnění Wi-Fi.} Obslužný počítač nemusí mít ethernetový port ani adaptér USB--Ethernet. Počítač i Pi používají stejnou běžnou Wi-Fi nebo hotspot telefonu. Pro stažení systému, balíčků a nástroje je v tomto postupu potřeba internet. Pozdější místní SSH a přenos souborů internet nevyžadují.\cite{remote}
+
+\textbf{Poloha pracoviště: Liberec, Česká republika.} Časové pásmo systému je \texttt{Europe/Prague}; jde o název pásma platného i pro Liberec, nikoli o určení polohy GNSS přijímače.
+
+\section{Vybavení a síť}
+Raspberry Pi~5 se 2~GB RAM, chlazení, kompatibilní M.2 HAT+/PCIe adaptér s kabelem, NVMe SSD, microSD a její USB čtečka, napájecí zdroj a Windows~10/11 s Wi-Fi. Praktická volba instalační SD je 16 nebo 32~GB; pro tento postup použít SSD alespoň stejné kapacity. Pro Pi~5 s periferiemi je vhodný oficiální zdroj USB-C 27~W. USB čtečka NVMe není při této variantě potřeba.\cite{hat,power}
+
+\krok{Připravit společnou Wi-Fi nebo hotspot}
+Připojit počítač do běžné Wi-Fi nebo hotspotu telefonu a ověřit internet. Poznamenat SSID a heslo. Síť musí dovolit komunikaci mezi klienty; izolovaná síť pro hosty není vhodná. Pro první nastavení lze u hotspotu použít 2,4~GHz.
+
+\krok{Zachovat síť dostupnou}
+Hotspot ponechat zapnutý, telefon poblíž a napájený. Pokud to umožňuje, vypnout automatické vypínání hotspotu. Až do dokončení neměnit SSID ani heslo. Přístupové údaje nezapisovat do odevzdávaného protokolu.
+
+\clearpage
+\section{Příprava microSD na počítači s Windows}
+Příkazy této části patří do \textbf{PowerShellu ve Windows}.
+
+\krok{Ověřit SSH klienta}
+Otevřít PowerShell a zadat:
+\begin{lstlisting}
+ssh -V
+\end{lstlisting}
+Pokud příkaz chybí, otevřít PowerShell jako správce a provést následující instalaci. Poté ověření zopakovat v novém okně. Potřebný je SSH klient.\cite{windows-ssh}
+\begin{lstlisting}
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+\end{lstlisting}
+
+\krok{Nainstalovat Raspberry Pi Imager}
+Stáhnout jej z \url{https://www.raspberrypi.com/software/} a nainstalovat. Poznamenat jeho verzi.\cite{imager}
+
+\krok{Vybrat microSD jako cíl}
+Vložit SD do čtečky počítače. V Imageru zvolit \textbf{Raspberry Pi~5}, \textbf{Raspberry Pi OS Lite (64-bit)} a cílovou \textbf{microSD}. Použít standardní obraz z katalogu. K datu přípravy jde o Debian~13 Trixie.\cite{os-download}
+
+\textbf{Zápis smaže celý obsah vybrané SD.} Správnou kartu určit podle kapacity a označení; nevybírat disk počítače ani NVMe. Kartu předem ručně neformátovat.
+
+\krok{Vyplnit přizpůsobení systému}
+V části \emph{Customisation / Přizpůsobení} nastavit:\cite{start}
+
+\begin{tabularx}{\textwidth}{L{39mm}Y}
+\toprule Nastavení & Hodnota\\\midrule
+Hostname & \texttt{formula-logger}\\
+Localisation & Česko, Wi-Fi \texttt{CZ}, pásmo \texttt{Europe/Prague}. Pokud nabídka požaduje hlavní město, vybrat Prague / Praha.\\
+User & Uživatelské jméno \texttt{logger}, vlastní heslo k systému\\
+Wi-Fi & SSID a heslo sítě z kroku 1; zachovat velikost písmen\\
+Remote Access & \texttt{Enable SSH}, \texttt{Use password authentication}\\
+Raspberry Pi Connect & Vypnuto; použije se místní připojení SSH\\
+\bottomrule
+\end{tabularx}
+Pracoviště je v Liberci. Volba Prahy v nabídce hlavních měst Imageru slouží k nastavení českého regionu. Heslo k Wi-Fi a heslo uživatele jsou dva odlišné údaje.
+
+\krok{Zapsat a ověřit kartu}
+Znovu zkontrolovat cíl, potvrdit zápis a vyčkat na úspěšné ověření Imagerem. Kartu bezpečně odebrat z Windows. Wi-Fi konfigurační soubor se ručně nevytváří; nastavení zajistil Imager.\cite{start}
+
+\clearpage
+\section{První spuštění ze SD a příprava systému}
+\krok{Spustit Pi ze SD}
+Při odpojeném napájení vložit SD do Pi. Pro tento první start nechat NVMe odpojené, aby se nemohl spustit dřívější systém z SSD. Manipulovat s PCIe adaptérem pouze podle pokynů jeho výrobce. Zapnout připravenou síť a Pi; při prvním startu vyčkat přibližně pět minut. Doba je orientační.
+
+\krok{Přihlásit se přes SSH}
+V PowerShellu na Windows zadat:
+\begin{lstlisting}
+ssh logger@formula-logger.local
+\end{lstlisting}
+Při prvním spojení po kontrole cíle ve vlastní síti potvrdit \texttt{yes} a zadat heslo uživatele \texttt{logger}. Znaky hesla se nezobrazují. Pokud \texttt{.local} nefunguje, zjistit IPv4 Pi v seznamu klientů routeru/hotspotu a použít \texttt{ssh logger@IP\_ADRESA}, kde se zástupný text nahradí skutečnou adresou.\cite{remote}
+
+Telefon může skrývat adresy klientů nebo blokovat jejich vzájemnou komunikaci. Pokud nelze použít ani jméno ani IP, použít běžnou Wi-Fi, která místní spojení umožňuje.
+
+\krok{Ověřit, že zdrojový systém běží ze SD}
+Od této chvíle příkazy zadávat \textbf{na Pi v SSH terminálu}, pokud není výslovně uvedeno Windows:
+\begin{lstlisting}
+findmnt -no SOURCE /
+findmnt -no SOURCE /boot/firmware
+lsblk -o NAME,SIZE,MODEL,FSTYPE,MOUNTPOINTS
+uname -m
+dpkg --print-architecture
+\end{lstlisting}
+Očekává se root \texttt{/dev/mmcblk0p2}, boot \texttt{/dev/mmcblk0p1}, kernel \texttt{aarch64} a balíčky \texttt{arm64}. Pokud root nepatří SD, nepokračovat migrací podle tohoto návodu.
+
+\krok{Aktualizovat systém a připravit nástroje}
+Příkazy provést postupně, vždy po úspěšném dokončení předchozího:\cite{os}
+\begin{lstlisting}
+sudo apt update
+sudo apt full-upgrade
+sudo apt install git rsync parted fdisk dosfstools bsdextrautils tmux
+sudo rpi-eeprom-update -a
+sudo reboot
+\end{lstlisting}
+Při výzvě APT potvrdit instalaci. EEPROM se aktualizuje z nastaveného distribučního kanálu; nepřepínat na experimentální firmware. Restart ukončí SSH. Po opětovném startu se znovu přihlásit a spustit \texttt{sudo rpi-eeprom-update} pro kontrolu. Bez internetu tuto přípravu nejprve dokončit v dostupné síti.\cite{eeprom}
+
+\clearpage
+\section{Připojení NVMe a příprava migrace}
+\krok{Nastavit pořadí zavádění systému}
+Na Pi spustit:
+\begin{lstlisting}
+sudo raspi-config
+\end{lstlisting}
+Klávesami se šipkami a Enter vybrat \emph{Advanced Options / Boot Order / B1 SD Card Boot}. Potvrdit a ukončit přes \emph{Finish}; provést vyžádaný restart, případně zadat \texttt{sudo reboot}. Poté se znovu přihlásit.
+
+\textbf{Proč B1:} při vložené instalační kartě se spustí SD; po jejím vyjmutí současný bootloader zkusí NVMe a následně USB. NVMe tak nemusí mít přednost před kartou, aby z něj Pi po instalaci samostatně startovalo. Tento postup usnadňuje i návrat ke kartě při potížích.\cite{configuration}
+
+\krok{Vypnout Pi a osadit NVMe}
+Zadat \texttt{sudo poweroff}, vyčkat na dokončení vypnutí a odpojit napájení. Samotné odpojení SSH ještě neznamená dokončené vypnutí. Namontovat NVMe a PCIe adaptér podle výrobce, SD ponechat vloženou. Zapnout Pi a přihlásit se stejným SSH příkazem.\cite{hat}
+
+\krok{Rozlišit zdrojovou SD a cílové SSD}
+Na Pi provést:
+\begin{lstlisting}
+findmnt -no SOURCE /
+lsblk -o NAME,SIZE,MODEL,FSTYPE,MOUNTPOINTS
+\end{lstlisting}
+Root musí stále patřit SD, typicky \texttt{/dev/mmcblk0p2}. NVMe musí být samostatný disk \texttt{nvme0n1}; porovnat jeho model a velikost s osazeným SSD. Jeho oddíly nesmějí být používány jinou aplikací. Pokud NVMe chybí, nejprve vyřešit detekci podle části o potížích. Následující příkaz se nesmí přesměrovat na \texttt{mmcblk0} ani na neověřený disk.
+
+\krok{Stáhnout dohledatelnou verzi rpi-clone}
+Na čerstvém systému provést následující příkazy. Pevný commit umožňuje dohledat použitý kód; neznamená hardwarové ověření konkrétní sestavy.\cite{clone-code}
+\begin{lstlisting}
+mkdir -p ~/instalace
+git clone https://github.com/geerlingguy/rpi-clone.git ~/rpi-clone
+cd ~/rpi-clone
+git checkout --detach e640eff1caa29e70bb3beaea21afb36ad6311313
+git rev-parse HEAD > ~/instalace/rpi-clone-commit.txt
+sudo install -m 755 rpi-clone rpi-clone-setup /usr/local/sbin/
+cd ~
+\end{lstlisting}
+Hlášení \emph{detached HEAD} je při výběru konkrétního commitu očekávané. Pokud složka \texttt{rpi-clone} již existuje, neprovádět další kroky naslepo; ověřit její původ a skutečný commit. Před přenosem zatím neinstalovat databáze a nespouštět měření.
+
+\clearpage
+\section{Jednorázové zkopírování systému na SSD}
+\krok{Spustit přenos v relaci odolné proti odpojení SSH}
+Na Pi otevřít relaci \texttt{tmux}. Program udrží spuštěný přenos i při odpojení SSH. Po otevření se zobrazí další příkazový řádek na stejném Pi.\cite{tmux}
+\begin{lstlisting}
+tmux new -s presun
+\end{lstlisting}
+\textbf{Pozor: příkaz rpi-clone níže přepíše celý cílový NVMe disk včetně všech dosavadních oddílů a dat.} Použít jej pouze na ověřené SSD, jehož obsah lze smazat.
+
+V této relaci znovu ověřit disky a spustit migraci:
+\begin{lstlisting}
+findmnt -no SOURCE /
+lsblk -o NAME,SIZE,MODEL,FSTYPE,MOUNTPOINTS
+sudo rpi-clone -f nvme0n1
+\end{lstlisting}
+Parametr \texttt{-f} vynutí inicializaci cíle. Zdroj je běžící systém na SD; argument \texttt{nvme0n1} označuje celý cílový disk, ne oddíl \texttt{nvme0n1p2}.\cite{clone-code}
+
+V souhrnu nástroje zkontrolovat zdroj \texttt{mmcblk0} a cíl \texttt{nvme0n1}. Teprve pak na dotaz k inicializaci cíle odpovědět \texttt{yes}. Na nepovinný název ext filesystemu stačí Enter. Během kopírování nespouštět aktualizace ani instalaci aplikací a neodpojovat napájení.
+
+Po zprávě \emph{Done with clone} stisknout Enter na závěrečnou výzvu k odpojení cílových oddílů a vyčkat na návrat příkazového řádku. Bezprostředně poté lze zobrazit návratový kód:
+\begin{lstlisting}
+echo $?
+\end{lstlisting}
+Očekává se \texttt{0}, dokončený přenos a žádná nevyřešená chyba kopírování. Samotná nula bez dokončeného přenosu nestačí: i uživatelské zrušení může skončit nulovým kódem. Pokud nástroj ohlásí chybu, nepokračovat přechodem na SSD. Zkopírované Wi-Fi nastavení, účet i SSH klíče zůstávají stejné jako na SD.\cite{clone-code}
+
+\textbf{Při výpadku Wi-Fi:} obnovit síť, přihlásit se znovu přes SSH a vrátit se do stejné relace:
+\begin{lstlisting}
+tmux attach -t presun
+\end{lstlisting}
+Nespouštět současně další klonování. Při výpadku napájení \texttt{tmux} nepomůže; přenos může zůstat neúplný a musí se zkontrolovat ze SD.
+
+\krok{Dokončit přenos a vyjmout SD}
+Po úspěšném dokončení zadat v relaci \texttt{exit}; tím se uzavře \texttt{tmux} a zůstane původní SSH terminál. Poté:
+\begin{lstlisting}
+sync
+sudo poweroff
+\end{lstlisting}
+Vyčkat na dokončené vypnutí, odpojit napájení a \textbf{vyjmout microSD}. NVMe ponechat v Pi. SD se dále nepoužívá jako provozní úložiště ani jako záloha měřicích logů.
+
+\clearpage
+\section{První samostatný start z NVMe a kontrola}
+\krok{Spustit Pi bez SD a znovu se přihlásit}
+Ponechat zapnutou stejnou Wi-Fi, zapnout Pi a vyčkat na start. Z Windows použít:
+\begin{lstlisting}
+ssh logger@formula-logger.local
+\end{lstlisting}
+Hostname, účet a heslo se přenesly se systémem. DHCP může přidělit jinou IP; při spojení pomocí adresy ji znovu zjistit. Protože se přenesly i SSH hostitelské klíče, samotná migrace nemá vyvolat varování o změně klíče.
+
+\krok{Prokázat, že systém i boot oddíl patří SSD}
+Na Pi provést:
+\begin{lstlisting}
+findmnt -no SOURCE /
+findmnt -no SOURCE /boot/firmware
+lsblk -o NAME,SIZE,MODEL,FSTYPE,MOUNTPOINTS
+df -h / /boot/firmware
+\end{lstlisting}
+Očekává se root \texttt{/dev/nvme0n1p2} a boot \texttt{/dev/nvme0n1p1}. SD je fyzicky vyjmuta. Ověřit i velikost root filesystemu vůči kapacitě SSD; klonovací nástroj při inicializaci upravuje velikost posledního oddílu. Pokud root patří \texttt{mmcblk} nebo chybí boot oddíl na NVMe, cíl není splněn.\cite{nvme,clone-code}
+
+\krok{Zkontrolovat SSH, síť, RAM a čas}
+\begin{lstlisting}
+hostname
+nmcli device status
+systemctl is-active ssh
+systemctl is-enabled ssh
+free -m
+timedatectl status
+\end{lstlisting}
+Očekává se \texttt{formula-logger}, připojená Wi-Fi a SSH \texttt{active} a \texttt{enabled}. Pokud služba není zapnutá, použít \texttt{sudo systemctl enable --now ssh}. Pásmo má být \texttt{Europe/Prague}; opravit je lze pomocí \texttt{sudo timedatectl set-timezone Europe/Prague}. Ověřit skutečný čas.
+
+\textbf{RAM:} údaj 2~GB označuje osazenou kapacitu, nikoli volnou paměť. Pro protokol zaznamenat \texttt{MemTotal} a \texttt{MemAvailable}; instalace samotného OS není testem kapacity pro budoucí souběh databází, webu a výpočtů. \texttt{free -m} uvádí hodnoty v MiB. GNSS/PPS synchronizace zatím není součástí této instalace.
+
+\krok{Ověřit opakovaný start bez SD}
+Zadat \texttt{sudo reboot}, znovu se přihlásit a zopakovat obě kontroly \texttt{findmnt} z kroku 19. Úspěch vyžaduje automatické obnovení Wi-Fi a SSH a oba oddíly na NVMe bez vložené SD.
+
+\clearpage
+\section{Záznam výsledků a přenos souboru}
+\krok{Uložit protokol skutečné instalace na Pi}
+Následující příkazy vytvoří výpis aktuálního stavu bez hesel:
+\begin{lstlisting}
+mkdir -p ~/instalace
+{
+  date --iso-8601=seconds
+  cat /etc/os-release
+  uname -a
+  dpkg --print-architecture
+  findmnt /
+  findmnt /boot/firmware
+  lsblk -o NAME,SIZE,MODEL,FSTYPE,MOUNTPOINTS
+  free -m
+  grep -E 'MemTotal|MemAvailable' /proc/meminfo
+  df -h /
+  nmcli device status
+  systemctl is-active ssh
+  systemctl is-enabled ssh
+  timedatectl status
+  cat ~/instalace/rpi-clone-commit.txt
+  sudo rpi-eeprom-update
+  sudo rpi-eeprom-config
+} > ~/instalace/protokol-system.txt
+\end{lstlisting}
+Verzi Imageru, zvoleného image a průběh přenosu doplnit ručně do formuláře. Výpis neprokazuje správnost budoucího GNSS měření.
+
+\krok{Stáhnout protokol do Windows}
+V novém \textbf{PowerShellu na Windows} provést:\cite{remote}
+\begin{lstlisting}
+New-Item -ItemType Directory -Force "$env:USERPROFILE\Documents\RPi-instalace"
+Set-Location "$env:USERPROFILE\Documents\RPi-instalace"
+scp logger@formula-logger.local:instalace/protokol-system.txt .
+Get-Content .\protokol-system.txt
+\end{lstlisting}
+Při použití IPv4 nahradit hostname aktuální adresou. Soubor se musí stáhnout a obsahovat právě naměřený stav. Je to doklad instalace, nikoli automatické zálohování dat.
+
+\krok{Ukončit přípravu nebo pokračovat instalací aplikací}
+Pro vypnutí zadat \textbf{na Pi} \texttt{sudo poweroff}; napájení odpojit až po dokončení vypnutí. Pokud příprava pokračuje, Docker, databáze a logger instalovat nyní již na NVMe. Další přenosy souborů probíhají přes síť.
+
+\textbf{Volitelná kontrola bez internetu:} při zachované místní Wi-Fi dočasně odpojit pouze internet a ověřit SSH/SCP. Vypnutí hotspotu by zrušilo i místní síť. Funkce hotspotu bez mobilních dat závisí na telefonu; výsledek testu výslovně zaznamenat.
+
+\clearpage
+\section{Řešení běžných potíží}
+\begin{tabularx}{\textwidth}{L{39mm}Y}
+\toprule Příznak & Postup\\\midrule
+Pi se nepřipojí k Wi-Fi & Ověřit SSID, heslo, zapnutý hotspot, vzdálenost a napájení. Síť s přihlašovacím webovým portálem není pokryta. U čisté instalační SD lze zopakovat zápis Imagerem se správnými údaji.\\\addlinespace
+\texttt{.local} nefunguje & Použít IP ze seznamu klientů routeru/hotspotu. Pokud telefon adresu nezobrazuje a jméno nefunguje, použít jinou vhodnou Wi-Fi.\\\addlinespace
+SSH timeout & Ověřit společnou síť, aktuální IP, izolaci klientů a VPN. Ve Windows lze zadat \texttt{Test-NetConnection IP\_ADRESA -Port 22}.\\\addlinespace
+NVMe není v \texttt{lsblk} & Při vypnutém a odpojeném Pi zkontrolovat PCIe kabel, adaptér, kompatibilitu SSD a napájení. U adaptéru bez automatické detekce postupovat podle jeho dokumentace; může vyžadovat \texttt{dtparam=pciex1} v \texttt{/boot/firmware/config.txt}. Nepřepínat na PCIe Gen~3.\\\addlinespace
+Výpadek SSH při kopírování & Obnovit spojení a použít \texttt{tmux attach -t presun}. Nespouštět druhý přenos, pokud první stále běží.\\\addlinespace
+Klonování hlásí chybu & Ponechat provoz ze SD, zaznamenat výstup a ověřit cíl, kapacitu, napájení a použitý commit. Při chybě nepovažovat SSD za hotové.\\\addlinespace
+SSD po vyjmutí SD nestartuje & Vypnout a odpojit Pi, vrátit instalační SD a spustit ji. Ověřit root na SD, detekci NVMe a boot order B1 zahrnující NVMe. Při chybné prioritě odpojit NVMe a nastavit B1 ze SD. SSD s potřebnými daty znovu neklonovat.\\\addlinespace
+Varování SSH klíče & Klon zachovává klíče. Nevysvětlenou změnu neignorovat. Až po ověřené vlastní nové instalaci odstranit starý záznam ve Windows příkazem \texttt{ssh-keygen -R formula-logger.local}, případně záznam konkrétní IP.\\
+\bottomrule
+\end{tabularx}
+Detekci PCIe a boot řeší dokumentace adaptéru a Raspberry Pi; u zařízení bez HAT+ viz také následující stranu. Přenos má probíhat při standardním taktu PCIe; Pi~5 není certifikováno pro Gen~3.\cite{hat,nvme}
+
+\subsection{Změna Wi-Fi po instalaci}
+Ponechat Pi dostupné ve stávající síti, zapnout i novou síť a na Pi zadat \texttt{sudo nmcli --ask device wifi connect "NOVE\_SSID"}. Zástupný název nahradit skutečným SSID, zadat heslo, přepojit počítač do nové sítě a znovu se přihlásit. SSH se při změně přeruší. Při ztrátě jediné známé sítě nejprve obnovit její původní SSID a heslo; SSD s daty kvůli změně Wi-Fi nepřepisovat.\cite{configuration}
+
+\clearpage
+\section{Proč tento postup a jaké má meze}
+\begin{tabularx}{\textwidth}{L{42mm}Y}
+\toprule Varianta & Rozhodnutí pro tuto sestavu\\\midrule
+SD, SSH, přenos na NVMe & Zvoleno. Uživatel nejprve ověří funkční Pi a Wi-Fi, potom provede migraci přímo v zařízení. Nastavení se přenese a NVMe nepotřebuje USB čtečku.\\\addlinespace
+Přímý zápis SSD na PC & Platná a kratší alternativa s USB čtečkou NVMe. Uživatel však preferuje prvotní instalaci na SD a následný přenos v Pi.\\\addlinespace
+Nový obraz na SSD z Pi & Možné například Imagerem. Vzdálená instalace bez grafického prostředí vyžaduje znovu zajistit konfiguraci cílového image; zvolená migrace zachová již ověřené připojení.\\\addlinespace
+Desktop a grafický kopírovač & Pro tento postup nejsou potřebné. Cílem je Lite, SSH a 2~GB RAM pro následné aplikace.\\\addlinespace
+Trvalý systém na SD & Nezvoleno. SD je pouze instalační pomůcka; výsledný systém i data patří SSD.\\
+\bottomrule
+\end{tabularx}
+
+\textbf{Odbočka pro adaptér bez HAT+.} Pokud adaptér nepodporuje automatickou detekci HAT+, podle dokumentace výrobce povolit PCIe ještě před migrací. Na systému ze SD spustit \texttt{sudo nano /boot/firmware/config.txt} a do sekce \texttt{[all]} doplnit \texttt{dtparam=pciex1}. Poté spustit \texttt{sudo EDITOR=nano rpi-eeprom-config --edit} a doplnit \texttt{PCIE\_PROBE=1}, ostatní hodnoty zachovat. V nano uložit pomocí Ctrl+O, Enter a ukončit Ctrl+X. Zadat \texttt{sudo reboot}, znovu se přihlásit a ověřit detekci SSD. První nastavení povoluje PCIe v systému, druhé vyhledání NVMe bootloaderem. HAT+ zařízení tyto ruční zásahy nepotřebují.\cite{nvme}
+
+\textbf{Rozsah použití migrace.} Postup počítá s čerstvým standardním systémem bez běžících databází a měření. Kopírování běžícího OS není transakční snímek aplikací ani návod k zálohování rozběhnutého loggeru.
+
+\textbf{Rozsah ověření návodu.} Dokumentace, příkazy a použitý zdrojový kód byly prostudovány, PDF sestaveno a vizuálně zkontrolováno. Při přípravě návodu nebyl zapsán žádný fyzický disk ani otestováno konkrétní Pi. Skutečné výsledky provede a zaznamená autor instalace. Zejména kompatibilitu konkrétního SSD a HATu je nutné ověřit při realizaci.
+
+\textbf{Kritérium dokončení.} SD je vyjmuta, root i boot oddíl jsou na NVMe, Pi je dostupné přes Wi-Fi a SSH, lze stáhnout soubor a vše funguje i po opakovaném restartu. Instalace sama neprokazuje úplnost GNSS logů, přesnost časování ani odolnost vůči výpadku napájení. Na jediném SSD není druhá kopie měřicích dat.
+
+\textbf{Záznam kódu.} Tato verze návodu používá \texttt{rpi-clone} s označením verze 2.0.27, commit:\par
+\path{e640eff1caa29e70bb3beaea21afb36ad6311313}.\cite{clone-code}
+Změna verze nástroje nebo OS vyžaduje znovu ověřit průchod postupu a uvést skutečné verze v protokolu.
+
+\clearpage
+\section{Protokol vlastní instalace}
+Vyplnit až po realizaci. Pracoviště: \textbf{Liberec, Česká republika}. Hesla a soukromé klíče nezapisovat. Očekávané stavy nejsou výsledky experimentu.
+
+\begin{tabularx}{\textwidth}{L{64mm}Y}
+\toprule Údaj & Zjištěná hodnota / výsledek\\\midrule
+Datum, osoba, Pi a RAM & \rule{0pt}{7mm}\\
+Model a kapacita SD / NVMe, HAT & \rule{0pt}{7mm}\\
+Napájecí zdroj & \rule{0pt}{7mm}\\
+Verze Imageru, varianta a vydání OS & \rule{0pt}{7mm}\\
+Zápis a ověření SD Imagerem & \rule{0pt}{7mm}\\
+Wi-Fi: router / hotspot, první SSH & \rule{0pt}{7mm}\\
+Root a boot před migrací & \rule{0pt}{7mm}\\
+OS, kernel, EEPROM po aktualizaci & \rule{0pt}{7mm}\\
+Nastavení boot order & \rule{0pt}{7mm}\\
+Commit rpi-clone (přiložit výpis) & \rule{0pt}{7mm}\\
+Cílový disk a dokončení přenosu & \rule{0pt}{7mm}\\
+Root a boot po vyjmutí SD & \rule{0pt}{7mm}\\
+Architektura kernelu / balíčků & \rule{0pt}{7mm}\\
+Čas a pásmo Europe/Prague & \rule{0pt}{7mm}\\
+MemTotal / MemAvailable & \rule{0pt}{7mm}\\
+Velikost a volné místo rootfs & \rule{0pt}{7mm}\\
+SSH, stažení protokolu přes SCP & \rule{0pt}{7mm}\\
+Boot a SSH po dalším restartu bez SD & \rule{0pt}{7mm}\\
+Místní spojení bez internetu & \rule{0pt}{7mm}provedeno / neprovedeno\\
+Odchylky, chyby, nedokončené kroky & \rule{0pt}{12mm}\\
+\bottomrule
+\end{tabularx}
+
+\textbf{Instalace dokončena:} ano / ne. Přiložit výpis \texttt{protokol-system.txt}. Splnění se posuzuje podle kritéria na předchozí straně; databáze a datový logger jsou další samostatnou etapou.
+
+\clearpage
+\section*{Zdroje a dokumentace}
+Ověřeno k 18.~11.~2026. Rozhraní a nabídka verzí se mohou měnit; zaznamenat skutečně použité vydání. Uvedené odkazy zahrnují oficiální dokumentaci OS a dokumentaci autorů komunitních nástrojů.
+\begin{thebibliography}{99}\footnotesize
+\zdroj{clone}{Geerling, J. a přispěvatelé. \emph{rpi-clone}. Repozitář, použití a podpora NVMe}{https://github.com/geerlingguy/rpi-clone}
+\zdroj{remote}{Raspberry Pi. \emph{Remote access}. SSH, adresy a SCP}{https://www.raspberrypi.com/documentation/computers/remote-access.html}
+\zdroj{hat}{Raspberry Pi. \emph{M.2 HAT+}. Montáž, NVMe a omezení PCIe Gen 3}{https://www.raspberrypi.com/documentation/accessories/m2-hat-plus.html}
+\zdroj{power}{Raspberry Pi. \emph{27W USB-C Power Supply}}{https://www.raspberrypi.com/products/27w-power-supply/}
+\zdroj{windows-ssh}{Microsoft. \emph{Get started with OpenSSH for Windows}}{https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse}
+\zdroj{imager}{Raspberry Pi. \emph{Raspberry Pi Imager}. Stažení nástroje}{https://www.raspberrypi.com/software/}
+\zdroj{os-download}{Raspberry Pi. \emph{Raspberry Pi OS downloads}. Oficiální obrazy}{https://www.raspberrypi.com/software/operating-systems/}
+\zdroj{start}{Raspberry Pi. \emph{Getting started}. Imager a přizpůsobení OS}{https://www.raspberrypi.com/documentation/computers/getting-started.html}
+\zdroj{os}{Raspberry Pi. \emph{Raspberry Pi OS}. Aktualizace pomocí APT}{https://www.raspberrypi.com/documentation/computers/os.html}
+\zdroj{eeprom}{Raspberry Pi. \emph{rpi-eeprom}. Nástroje a dokumentace bootloaderu}{https://github.com/raspberrypi/rpi-eeprom}
+\zdroj{configuration}{Raspberry Pi. \emph{Configuration}. Boot order, firmware a NetworkManager}{https://www.raspberrypi.com/documentation/computers/configuration.html}
+\zdroj{clone-code}{Geerling, J. a přispěvatelé. \emph{rpi-clone 2.0.27}. Použitý zdrojový kód na pevném commitu}{https://github.com/geerlingguy/rpi-clone/blob/e640eff1caa29e70bb3beaea21afb36ad6311313/rpi-clone}
+\zdroj{tmux}{tmux. \emph{Getting Started}. Relace a opětovné připojení}{https://github.com/tmux/tmux/wiki/Getting-Started}
+\zdroj{nvme}{Raspberry Pi. \emph{Raspberry Pi computer hardware: NVMe SSD boot a PCIe}}{https://www.raspberrypi.com/documentation/computers/raspberry-pi.html}
+\end{thebibliography}
+\end{document}

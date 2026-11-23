@@ -1,0 +1,528 @@
+cesta	SHA-256 (obsah v Git)	původ	zdroj nebo registr
+.gitattributes	36f9b01747f8b94eaf19c610551d5f31ee795ade6d9c41a72df0eaecb356d719	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+.gitignore	3d8dcffaef0728b142cb90048d1959b81c84a6f52559c9ffbae1cde85a3f2c5c	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+ESP32_IMU/.gitignore	0e818f2f837460f26ec377f6f8d27cb471767f57da3a9ef7eac659e88f288ca8	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/README.md	02089d42dc15de0e41ebf7ea3d2f78f40263adc54e8bf2cffc86d2ce8e9e6f3c	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/app/analysis_core.js	eca56002d789281b72347459c45482383a5581c20fe9ba6125d83806fd165b86	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/app/analysis_ui.js	b89beed5fab48beeda1d88768629ea5cc45dec1bf596c39262238bb2e0b7d476	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/app/csv_import.js	ee55fb3f98edb38d464d29da4e820729c0144705959456591e7766714274812a	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/app/csv_ui.js	0bf72dec9870c007912d7139316ba12e5961a7bc1609a3a85c68ad6daa2e0115	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/app/viewer.html	fa508048f9de99b367f4255b32f1c52588349b697713c55d3cb89f02393aab2b	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/audit_deceleration.py	19e3969427808b93ff93a966156e820c60dfabbfdd2e8ad935630c1267b787e8	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/build_analysis_app.py	a3b16ba20cd6a9be93fe20e8a47cb4319c65369143b5b70cf43694d45648517b	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/build_driving_analysis.mjs	ebad846874e639b29f7b0a9379ccb98e4d4b41e6bef1e4f78c257ed1c5188f31	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/build_reaudit.py	9403b913f3b36ce7ab966f974af6cfb6e9defb7746b33acdec8a49761ef568fb	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/build_workbook.mjs	9d7ebf2761a7fbe043a2a0e1b878ebc19d56f358fc3a6590ce677c3134259082	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/bundle.py	8dd114c3f054193a121c03138dfd496bd7ce5ebe2b940f9b830f7c9a1093f7e6	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/check_driving_report.py	3269ac9fefd1d61738513ac1737fcc13012e8d2656f5e0b5fb2573bd12ddf180	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/detail.py	e9b5859012b746f17b7ce47a0ab55a3fd10b72ea5ca13e8530d1ea2faded93a6	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/drive_raw.py	f7658d587553e0a84812ad4f63662c757e7f42c914b4b9b649fb9dcbd98e5c38	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/explore.py	491e18af8f5eacd8e8437807a8278656424ce5d6def485576daccd34e968ab43	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/final_analysis.py	d482f8d4868ad890f6480ec5fbacf410b35afc9a7778ceceda947fff90d32b12	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/fix_viewer.py	9f0ee5d435fb89bb6708c2ffdf39d31e532fc0b479a9f4655947c8bac81ac324	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/ingest.py	fb122119dc65b0679979dc386676ecab2ca1d580cb7ed699fd3feae11907ef17	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/laps.py	93bb48da46d4eda70510bc89c3363fe3cfaae684f2faf54f2f7f5e434f50034b	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/make_driving_report.py	c981a0180aed68e1374a85516b906c8806599e3fa867c0e5274f029dd77c6570	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/make_report.py	cff9f6cf1cd06d5b02342a304ea121fdf606f1722dd17e38cd161985020ed302	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/package_complete.py	cd5364cb458ed5d6b311171614a65ae0f000cd42e61ae42e000e9b2cb550afaf	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/package_single_drive.py	0d8e268d8e617264209efb2b6d376c14539aadd4c433fb87c3b86ef99f69d5ff	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/quality.py	eda6b1083f419e6d57082dfc683c4d3b141af0dcb744401da4b90b51e8c33708	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/reaudit_data.py	4b040d37464b82af27cda06dd3d1d3fb297a8e0ebac65a1bbcd63d4b8b066217	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/refine_evidence.py	6134ca561cc764097ccde8c5ec607c16ee4657676596eb0ba0c134b4cb440194	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/serve.py	e483e670aa419bc331f11f2595724f4c6fb93ad9f60d29c447832969890279b7	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/test_csv.mjs	f664506abb358c82a9c5d963dda105e76e94bc63c443494c3073ec05ac6f9fd2	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/test_diagnostics.mjs	e3d22c68795b948777b14d89ad84e72508f6a79901e6d87b5abcca1f3dd4fae0	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/test_flags.mjs	dce2719d0836e60d3ddc3f1ab9fdae84ada890f47e06c021a2ceb5b3e0a1b040	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/test_single_drive.mjs	fb02f2e970ab065b1e2f0df463af3f45e9702a44df88c5be5686471d91475717	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/vehicle.py	e18a30f4ab9b8969ed7990f41c8371c4bae3b0da22249e9bd9f749b037e908d1	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/analysis_20261026/verify_outputs.py	ba251accd50ef788a6ccffcb519755a3f0241db7e4e1ba737bb3e18550f975bf	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/file-manager.md	72a4470d20962cbe6586e127b3bdd16e2d8362ffc15a9375234589eb37f40246	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/high-rate-experiment.md	19ebc497bb02bb607ae34d19777ab08720c57fe649c5a3a9976e0483dbb915d8	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/mdns-fix.md	4380b6ef039145b22db35b4592db84f3458a57823cb2a20454f487edbc1886c2	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/overeni.md	0258790dfe6198cd7f8ec65701e78429780af357324c94bc5c46bd8626723ee5	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/recovery-and-reports.md	2485318e5a5d0f4f52e63de3e2235dc07708c9975686fe2975561f1ff8e640a5	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/recovery-stack-fix.md	2fc2e24d1a61390fe8d8f7de05c22bee76366f79c66625133af85eed63c91ca4	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/sampling-validation.md	4d0d5b308b83dc8d0d0ee5d6ef2c417558b4b3c23194c45f4eb96dae4d7d1769	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/usb-cancel-fix.md	0d88438250c512ae50c6d2f3d997e70538b427097c95ac3616ebfe11dddc5cc1	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/usb-mtp.md	ff9abd7da672e1f568279afa9d9bc29f37360d228f77ac7a8b3451003fd844b8	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/usb-verification.md	124a06f06acdcc77251f4a8238df4e69ddac623efab8ababc068a6fe111f0de9	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/docs/verification-20261021.md	1697c7bed0ea29816d3ba322de25f42d090fa6d2e1f0ab3333fc81e1df1814c6	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/include/http_range.h	cee5184ed973d8255461fde8359812484ed96a01aa93d3e74187e12b58eb2cfb	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/include/local_wifi.example.h	e464d1fb0492e5f8485a9049d01cd52350b6f807f6fc21cea3b6e7e998b326b4	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/include/log_integrity.h	c2b0c34d95078795e44570b8c247fc6835b8c1b80c14f465e102662542881a76	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/include/model.h	ddfa753770dc989677f0061fd150e81acdde7bd3ba6795489cd3b192f1e6d0ba	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/include/network_config.h	54c21c7fff4774665da7d432bb5e299d7039c69bb4b1ef6429e6dbe436fcf1ff	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/include/sampling.h	11ffafc1a10ae36f10530fda8b534effebce8d3d095012af55f97994a6fdcbe4	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/lib/ImuMtp/LICENSE-ESPRESSIF	cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/LICENSE-TINYUSB	b01185698f530f4f61b28f42d5a4d6bbe7834bde6a63f00773235628a7bdce22	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/README.md	08bc41093588657bdbd1eae4e60e809f5839737099d9d3e87ac7a50c5598d2b8	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/library.json	e3d8195b58965bef1d871ef7fa5deaa3abb724707391b4833476fbabc3ac2697	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/ImuMtp.cpp	8018c02dbf151712999c01ca6e9c70f47c61ff0b1225a4ba6cfb72d4687634e4	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/ImuMtp.h	8cc333d57925325114fb44fc323e7fa1f09dd45aff3523e4862b982fe63ed4db	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/class/mtp/mtp.h	cbc9f38e5f8dddac0499ea615dbd243a4c707bc9204ab90752c49f09339a0411	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/class/mtp/mtp_device.c	8698607a9b81398dbf1ddee6b4c1609a9c865929edce4fffd6b40c5678dfac8a	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/class/mtp/mtp_device.h	53a786b6c61d1d5e33ddce3e88f10985666dd0df00523173a4d4059d5796dfb1	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_codec.h	32369864e0ee07719b4f4e21779c232f0bcf4e37f988c873abcdf1328e83e2a8	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_context.h	9a1ef8bd54b8c0947f8a48dcee0fa1b6031de3a52097b8646b757636b2fbe161	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_internal.h	c26790108dd67b6c4eee5dc5f4fdc0e87f40f5e40bac8596c25a20828926967e	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_object_store.h	ef362aa0b0438e5a561af5384f9e85a61098ddb106f212e4c361acf1b93a0512	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_operations.h	f51de9c67f536e5692a8f315a45da01ef0c54a59d47b495d1123e3754218a641	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_properties.h	9de35662a58a3bfb4df2ea3c0592ddfaef92a427391b26ba4c96285494fe777f	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_read.h	4aa1576746ce3686038c304d31ea1b90c64f0d32ce359990d1f5b33ad7a802cf	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_transfer.h	dce7aedb540ddbbc2c96641bf2fae96aa46952eaebbd08f81c5aa0d6ba59b8b9	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_transport.h	01a638b2d9851a1cd00f81a35d5087d496ea0cd7fe05cac8f8bf27d8ed5a4195	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_types.h	ba20fa6c9abe8a40461c71ab99d31c7285b82235278f3c3be7b1e5889ba7c507	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp/tinyusb_mtp_write.h	6ee6f25b328501a78513b9ca70ff67ed923d195faf826ca785f1d532a7102710	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp_capabilities.h	11ab51424057e24adde70f0bf8c887b662eb2cb6c783998ec58b8ee6ee03fb32	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp_compat.h	bb914649658a074d03ac2b5261a23bdf8a43bea1bf8d11058a318a0142941e89	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/mtp_usb_compat.h	d22b232373734a7ee530c9f74247fa1e98b5191b7585ed1c3b5b8031523772ab	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp.c	69649a479908ea08cfe07c505cd5e33b6ccc5c2b90e221581f137fc5e32163c1	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp.h	81863f2017d2de65c1842e5284e3fea7bdf19de343367e2baca96d62e96fbc5a	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp_codec.c	137840ab5ded7b3b58a5814caf576b8fb82a0dd3f960cf2bb60d1a67fa6c4609	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp_object_store.c	0a90abf8889e76a9837867a5cd49c033f4db04b6679b0b66e9d8e5e49aab6a59	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp_operations.c	118b54d0bfde34ef2e928170a8ee97f8a17281339a82136bfc25e11db5b34b15	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp_properties.c	7459b753471f9f4bbc31bd77ec3c8d424c04879a114ab4bf529f0a3f416993d6	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp_read.c	4815ff76031f1b942c6e6143b156a1cb94233c0e2696d74d80ee12f159ec8c79	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp_transfer.c	5996a70e596c98bde66652e2385326239e7a34149f24f4c0f9be984ef4d7fe61	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp_transport.c	1ae286ddfc2df3eb02e535302e7a326d2418c38a3ea22b178f9703ef584f7da0	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/lib/ImuMtp/src/tinyusb_mtp_write.c	0536e68e77455e2e249e8f68ab91e9168bdaea646179ac817977dc2ba3f05a1e	Adaptace Espressif / TinyUSB a vlastní integrace; viz rozlišení podle cesty	ESP32_IMU/lib/ImuMtp/README.md
+ESP32_IMU/partitions.csv	4e240ead9ce073a62d53dc87b9fc6f76ec9f1ecd64df9b50df4b0a54f08e3a18	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/platformio.ini	d0e9a620feeda9b4c2bbb6b2bbb312f58caf45920a8492ccb1385d2100f1ffcc	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/build_mtp_check.ps1	a532ab179b49ea30410b8b54a3c3044d7974b858f1454522cb1bc9128456055e	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/build_paths.py	2b3d2fcbf7871bb05d0999024e9e18d4101a5050e9c9155f042036bc84d1598a	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/embed_web.py	c57cbbb2e71f6c17a6087443cf90b1f3438d895010a816499f4ff4990a6a4900	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/flash.py	e8bdff0635be7cd4360fd6fdc3d776ad7f29d1954f066f683387ed181ed4fabe	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/hardware_check.py	169863f72936bb5944ac51228c364b38a6c3b9720ff0ac1d42b1de2de59ba511	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/preview.py	36d16a5544f859bef8306df554e9d6d1c45dcc98b03e5a50c78e0a26afe833d6	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/preview_storage.py	dcdae904104aa7a2ba239d5268f24cfc50e6dd1fa791f47679387635e302feac	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/project.ps1	14bd10ba24b3732eb517b22252318c48aaeadd65781e4f4c5f4f007d08481c07	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/setup.ps1	136fff8e59ec34e1e001b7889a3c5fd7d51f27c7c8183ba8b6310efa5ed65ecb	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/test_recovery.ps1	a3ab000f09fc909de00d1bad6cc94104026dc0f45d086bb7bd0ecd8c7c735406	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/scripts/webserver_timeouts.py	cb5c45998369f318d298e5de231c2f634bde1aa5e25467b85339403f0d64458f	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/src/log_recovery.h	e75aaa19f71e2d35d047c80e525359e49fe30d02aaf83798df00dc5deaa6b1d4	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/src/main.cpp	953bf2c915a4609776b4d9c37c4d3c85905f923768500e158b83636fc40e0b38	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/src/storage_http.h	cadcd866fd0b2e2a9fa80fa1f67f41d87251306bcfa1510d132e5c9160b21783	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/src/wifi_settings.h	065482655c4378dc508fbe0a8a44ef87d87f4a340def5b1a54a48004c696aae2	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/check.py	2531f5be1ab04920ba93a9d70fe679aceb028acb745806c4c8190d4ba3892649	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/download-client.cjs	b0ba7d4f8fe25fca4bc35f5c1f9f08210aa5137bfde91c062af63dbdbf15620d	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/mdns_probe.py	33408eea32d191f1d380fc3c20c1297782fa7be95c7638485668396eefe0b1cc	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/mdns_soak.py	a7eb617c05b585383cf3aafea5d5baa6fac6a963a4f54b406ed16d7527622165	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/mtp_check.cpp	6a696d3d2333bf2043c82604417e2211c955f5078000995d532bba020c13ecb4	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/network-client.cjs	1f3b463c15eb2483401369f68e9d5279d9503147b329077c51b5ce12d361ab91	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/network_native.cpp	4c335504cc61f1c6b66744c9d762f3f6203828cf1f22ada2f4583a4807274050	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/parser.cjs	0b3cd64a5abe4c57637d7b22d204fb5c5ab982f306bd75a08d73807c1b2edc01	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/recovery_integration.cpp	455638516992f8bf119c45ed0c9e95ec94d1a3818693c05e8a28ed91a87dfa86	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/recovery_native.cpp	b2020aa4ac5194e0a8f1d1109a2fc1decd896e4814f898af31f7baeb1dccd243	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/report.cjs	3d28ec9575f5d9e785d62115e9b55e47580eb60e850c29865503ec4c58d8eef4	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/sampling_native.cpp	9838363a98c071f71a089b26ac8ff2f3b2b0720c3d06ca955c894e2c929f61d8	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/storage_http.py	4d9f33f315f1872c3a0aac4ae24ca2593c857c01770ab3e12af18ccbb80492bf	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/upload-client.cjs	38354563e9a8a8ad1cddc25d7ab9b83633794fd18400db18be44946670b79ffa	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/usb-ui.cjs	857a0a6d33aa5f40a5d310399307cb236da4ad6b4fcbc4a42fb2548adad5727b	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/tests/wifi_http.py	ce1c3c8072274f886d506c5ca3777eb73b9eea9901e65157be60f14a06ff172b	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/vysledky/01_Drivetrain.pdf	2f48908984bdee6816372d6c5c11cb901bb3cec6e3d5f9dcbb118f331ccc2528	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+ESP32_IMU/vysledky/02_Analyza_jizdy.pdf	484f3931c262dd9803fc00f65b74f7017395266ed1cf02d00540295b3c99a6eb	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+ESP32_IMU/vysledky/03_Puvodni_analyza_IMU.pdf	275f46e8f289fd2f7ebeb64842c80d202ecdd2a00ef70aa5d726c1155aac77b4	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+ESP32_IMU/vysledky/04_Revize_kvality.txt	ede383f88dc872a25b9001721d6d9bd81a15cb2028aec1494efb44e8c746cbb5	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+ESP32_IMU/web/app.css	72ca5badc64e0c5df3022e22ab527d63ff2adce9f5071bd32e40b095b7d181c8	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/web/app.js	67c2553538ccb45d7ac40e5e4d898b670d6095b625b7e141ecf0bb8b45265de4	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/web/files.js	8de540f7084fe0f009fd66cdb5dc43001752487c7a80624ba2e163ea8454c95a	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/web/index.html	a2f15b4927a373df0e67830d0568f4fd778e68170eaa36651b36eaac5795c77b	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/web/network.js	279ac405419ab97f014819bd54aacd326a86f20fd14b1301d6f68829c0a2e55c	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/web/pdf-viewer.mjs	efdd574d800a61938da5727837eb0a601128ab031f5cb9200e6f5fcefab3f633	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/web/pdfjs/LICENSE	0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/SOURCE.json	16c05d1172d4ded0865df868d2930a7df6d9056ee4566279fe43365b3b2f2037	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/78-EUC-H.bcmap	d92a261336dc18b8c03a46eb4d462382d33f4338fa195d303256b2031434c874	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/78-EUC-V.bcmap	61670bebc4e4827b67230c054fd0d820d6e30c3584d02e386804e62bbedc032a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/78-H.bcmap	ece6415b853d61e1b2560165151407d35cf16e6556932b85a13ea75276b77402	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/78-RKSJ-H.bcmap	696b1f973c97623496703809eaaa5f9b40696c77540057413f4b826a08edfa7b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/78-RKSJ-V.bcmap	53cb6d560ab377da48cf65d6dcacb0bdb31f13fab7066c580de38c12a73a7ff9	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/78-V.bcmap	289000f02fd34872b6975503217f33abae6bee676e7d28f640473a67c8db1712	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/78ms-RKSJ-H.bcmap	a2442595218f5f8bd8e1b42188e368587d876cfe0cc4cd87196f077c878f72e2	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/78ms-RKSJ-V.bcmap	f8ddceba96bfd9d3740bd1789ee30d1f47c78371520a8084f71f7df58f19be0b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/83pv-RKSJ-H.bcmap	44040051ec818fe09b9703472bea72efd2759d5eeb5ff0d77c718d6bb5e6d1df	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/90ms-RKSJ-H.bcmap	c13e043e85ff715b75bb03801e8fd0fb8f3a75e4a48496faa6baaf92b5b48ba1	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/90ms-RKSJ-V.bcmap	499bb916ce1adbe4289b6e5811f4dc20eb238cdc2ffad20cf26ae56716885bab	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/90msp-RKSJ-H.bcmap	7b8b3b8bbf821702e9a4df9f3596ce292380c8c1b0925dedadbb4e4b2d80498b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/90msp-RKSJ-V.bcmap	6296c2b5c07dca8128e96d5296d621a3268803d4fa0e5812a21e52fe2802aacb	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/90pv-RKSJ-H.bcmap	fb5103f03d3a34547e18d316e52b6d9b26e485c662999222f84d2ba54c2e4fa8	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/90pv-RKSJ-V.bcmap	7bcb5ad2ba55b9662ce379e16c2d9cc2b82d621a579807353741172e4af615c2	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Add-H.bcmap	a2ffab28b990998181bcca9b0e914bb2207820f100ae31d5c469444892e5ad8e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Add-RKSJ-H.bcmap	b29f4b52e2465d0485856d5e69f1ba69927deb2848d8fd328c8035583b35bb7e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Add-RKSJ-V.bcmap	2aa2232c283a3f5d0997c2834a36cead0b79ce2657944cfeed08140c293460ff	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Add-V.bcmap	25125d3b1be64e86b2df5b3344170b45a42bcaa0b46e43a34314ef73c166e542	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-CNS1-0.bcmap	8c65be9d51a9f269a547dc12460707aaf4031ab67ebe8a2900f4b4cc6b3e450e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-CNS1-1.bcmap	73152bc1a59cc594b414ac6068be48e5512b96ae85920c40e32a99269fdb0c04	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-CNS1-2.bcmap	a1b8d353bdef9584c820464e8f1c9e2013d64ebf433cba0aa831dddf515818c2	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-CNS1-3.bcmap	2ffc0c75c79fafde506163d3c08c390d183251009f3fbf6ae50d1167d14b9570	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-CNS1-4.bcmap	98a1f470c878c6b9691a4d7aef776af8ac9b55f5587c9fafa00547f3bf655716	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-CNS1-5.bcmap	ddd6e29955eb8cb545f2ebd09c628c3bbda5023256eda1b728f743c75fb77829	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-CNS1-6.bcmap	317bb2db71e0e5b7b0c47b75de1da915c2e22f65f0c0861507f9ca7ba238f8a2	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-CNS1-UCS2.bcmap	e665837f2197c6bd08cd8955ad4d6932cee2398e2e328b25b00e6bfb3bd72af9	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-GB1-0.bcmap	8b81cce8a11d510e505704953cfa4e4ab080c1a0cab991145a3512ee433946b9	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-GB1-1.bcmap	0426983081788ec7202703e71f1efa4b860f75b936994236010b39d89251a81e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-GB1-2.bcmap	e67b37a83b160ab3831306a71a605893b24454ee81ac9b6123bf2d3984d268d5	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-GB1-3.bcmap	aa299afc3e12a28726147305f191be28c7498078c8b182ece7886ac79cd99078	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-GB1-4.bcmap	8fbd7d74c2ddb1350c1cecce54a73fde3f5453093d4bed445283ec0033d2097f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-GB1-5.bcmap	c22cb2fcff24112fa31dab2111bdc51957006576d31aad5a25e67793ac01428c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-GB1-UCS2.bcmap	20507620260c0c935c35afc1e70e5888aa7125d5ec7ffc03cef1959feb2c1641	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Japan1-0.bcmap	464f08905236f5703b1f5cf8358767c8b18e6bcc808840d081f1de2c7ab38134	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Japan1-1.bcmap	4c823848722187d1ffe75ae3f5f9126ccd2d7895a05fad14c919fb119e037008	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Japan1-2.bcmap	7810fb808e367e70429e90a9478fe6a3fdc3e214f25c7582ce9c2da6a242315c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Japan1-3.bcmap	84deb1828711ad3d390c9899c38abce1bf619d65ff7bf1a326ec95acc45f08f8	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Japan1-4.bcmap	3f8a4f974919c2b8bae5d10175ffa2673be140481e00840542c85d48ef184067	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Japan1-5.bcmap	1d3ce4ff28d977f8cf37a912ae4ec811f4175c3167b1ec0b2567feec3e79e1db	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Japan1-6.bcmap	5609797b9401b30be72ef9645da62a87829f058c3be4b5c623383119f584b1d9	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Japan1-UCS2.bcmap	66c5d0dc4964f4093e77b194023f3a0f689324028ec8330e1e1d0570bcba7c2f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Korea1-0.bcmap	dfb8c3874f0e5a8c3acf597d2c12d2b63e90bc5e4f0fce990ec4c56077d80b32	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Korea1-1.bcmap	62f277b7b1c441c007797ae707d5c37258d029ce4661a2b911e2e1ee35e6adc1	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Korea1-2.bcmap	1d77068af462f96d7ad28ad7e7d43eef6423c685b479d7dc25ff5df38db0380d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Adobe-Korea1-UCS2.bcmap	857b723088be97255053562bfa41bd1075a7f7910d3bab59a0645c8bbc7060ff	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/B5-H.bcmap	718ad0ffbef4c34f8f3f31292c462e519cd567a5511fc8b346c60010d64f4ef9	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/B5-V.bcmap	b5c37383517477620ced927b6b4ffd4f4cc6230d8051b5b46a21d6768e07f7d8	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/B5pc-H.bcmap	bab6028aead1d6149400e904ab10cfd319082d826473ed4c582c8eeed920f17e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/B5pc-V.bcmap	41543142b9767f3b76133899fc8453282b01ad3c653acaeea42d78c5a7d08c63	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/CNS-EUC-H.bcmap	e8f89cd61e6486b948205da46499d659ed0aed949b7095fd3c8e95ffe2b0e7a9	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/CNS-EUC-V.bcmap	cae422bec2ac6dbe86bf921cec942bacd2d0b733ffcca5f91b3ba14e917025a0	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/CNS1-H.bcmap	e8487971ab20cd16f3de3e8ac56ec994b72b658ad113f2818239dfd5108f501a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/CNS1-V.bcmap	42df8076aaa7574505e7304af83a3323ec032c4177d64b1309db8c043d594a8a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/CNS2-H.bcmap	bc6024d274d440f0625c69e25f37036ef6cb6689432ceaa160d3432a2a716ca7	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/CNS2-V.bcmap	2e4f70a8afd23a121030fc2e5b5f3816e903b11e7ba8b8c09654b31c80399c38	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/ETHK-B5-H.bcmap	d2f10fa519336bc4efcc7b6deb9604b75429946b40d82e311cb3a97a1994c89a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/ETHK-B5-V.bcmap	1fea3fd0d9f0f679f80505800851ef2e4131d81127e18c006938ffa2f4c8b247	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/ETen-B5-H.bcmap	87ee6b3f5bfda5fe26fa35431264c7d73070d10dbbf398a75185d63ae322c18d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/ETen-B5-V.bcmap	47dc0d2c21e3bde317947aec1675ceabc1d5460a60bf9c24334b8c407a17172c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/ETenms-B5-H.bcmap	d5f5a73da4173b7da9a3a20e16f26f9cd5d12deb1553409919e0cec6fd37fdee	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/ETenms-B5-V.bcmap	18252fca90f472f479af1bddd60d6ab51c8e1b55dcf6845951426504934543e0	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/EUC-H.bcmap	f9939cd57fccdc65c5d9f4c205fd497ebdbd283643308da5663801a8c1d9c595	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/EUC-V.bcmap	1283a50a706507c4436da83ede9ad7a4440be25378f2e96f6c81a430081426a3	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Ext-H.bcmap	4000ed4e61a1c668ef453bbd0603cfa383defa793abd46a57ed870d7f527350b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Ext-RKSJ-H.bcmap	e0d2f0df337660e73813238dd4a725f11f0621b90f3273857db253d0e7694caa	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Ext-RKSJ-V.bcmap	f617a22b6d67febb187990952006c91a9f5a4db21155d268c656252d0c21985d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Ext-V.bcmap	c2087fb845a9e3acea0c2922cd40e6af67e11957bec74dcd597f1285edd490ce	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GB-EUC-H.bcmap	928bad06fd84a48f5ba7150d7716609119fb660f2aaa73eccad81ddab9b9d203	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GB-EUC-V.bcmap	a9ad88ac2479da529b16dc48abc5952332e27bc355335f91df5729a587533324	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GB-H.bcmap	1018c777a8910b5bb46d7d54a4aee9d51ca5cff8addb2b41c969d9101cb3fd1c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GB-V.bcmap	0b96789143c0bbf9f1641ae7165b3456dccd14dabffcbb0bd654d5bf6f94f863	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBK-EUC-H.bcmap	2103fed28650ede096a2281104a1a8a4304dae0db414342c636867522307123b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBK-EUC-V.bcmap	a7fd35dd14d9dbdb955f34e6c0630618b6620dfd09d4283b2f65a65ce77fcaea	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBK2K-H.bcmap	3d919ae72af16c5cc6846ec87a4326a9f125e493c59d3628429d35c2c95fe8c4	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBK2K-V.bcmap	b927fdfd595c07ce9158bf2ec13f4641b2e83b01c70989dadfabd6ed7c6ac2dc	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBKp-EUC-H.bcmap	d15ebd8e81fb4fe8a244f1b1e877922e03500ac69eddf5001093e502430451d2	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBKp-EUC-V.bcmap	fdc736d46e642625dccc8ad8c59f2c69fc7db7a13f2e799c6c6b779e707bb97a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBT-EUC-H.bcmap	dc5f44e48a39f3367ae28665027d8ab1d8cedb5a9dcc5068a900acd6709f60f9	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBT-EUC-V.bcmap	a1ad24e63653b8aa388c18fa5e498f007564e43dde699a9f91ccb4645c999be8	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBT-H.bcmap	8afda745a505763f3ff54c8126eeb48ef376ea9ed07d9f42ff9a22c5c547ec57	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBT-V.bcmap	cdc2ec5c3c7c7033290c9a8894878202f08674eb9b1ae7d36218430326768771	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBTpc-EUC-H.bcmap	7b23e2f7bfdb6c918f567b7324bf858f398bd8cd5f268d74ece19a3c91bf4f32	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBTpc-EUC-V.bcmap	d7a1b13ead9ab511cf2cd01de6ce8b02aa8e8767e84895337d7a3b67f039f93b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBpc-EUC-H.bcmap	3c4a4eb82f05abe51f6650985c630e180438bfdd491318f5d20d2ec29236e1c3	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/GBpc-EUC-V.bcmap	215bdfa2842705624b4cf4cd29b8e3c720f1e192365e0305c11030a424c84d7c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/H.bcmap	a0233e21047ec00b852125b243cbcf30abee511155b6d8159c24f944384bc9ee	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKdla-B5-H.bcmap	5242bce18fb13ab4cc59b146a03eba36e4ce42667eeff09e10981a9d2aa4996b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKdla-B5-V.bcmap	2e0537f786c0791d41a925f72bad2d4e7268aa6cbf15a1400a722672cec38e2c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKdlb-B5-H.bcmap	fdc8159984bf5dbe475c0d5dfcb621ecee4dea07c38c668bd77f4c679e23b9b3	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKdlb-B5-V.bcmap	b249eb9dcb915ab45057c5d4d7aa55ef88d0efbb092af6bae0b2d4705d139abf	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKgccs-B5-H.bcmap	ab64c7fc5e9b2e97750cc4f269b0da14fd8649e49151b7598c8df86599bac591	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKgccs-B5-V.bcmap	02ebdf7cdffb5395fb21091cd58a013a18ae5388922822f9dc6292ef16b98956	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKm314-B5-H.bcmap	bfd8bbde6b36a9da4c1c902c74121a30d9807a7079a00eeea218be6adc223cef	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKm314-B5-V.bcmap	2a64a815cfb6fdd480674a868762e3d161fda17543b20c9209978559f0667164	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKm471-B5-H.bcmap	49d7c037758826b5b6c0fa329c35bbf25d3943197754e72ecd30c6fb04d745e6	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKm471-B5-V.bcmap	be24c109e78aa4fe3c1f27d30aab3ed0741e783fa1b6b6c2719741072b54b132	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKscs-B5-H.bcmap	08599378f41d96b40537adef6e6edcc4a787bc63f5accf47c026df4905a13914	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/HKscs-B5-V.bcmap	d073542b7dad1c4cbf01c1af5f0cd13218d1281a491956e310c55702fc8705c4	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Hankaku.bcmap	b454701f7aecd7856769016dfd04ca64280a060f2c67a2466d50b4395d24974e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Hiragana.bcmap	2ed669394756dd9458651cd9995ab29ab691ecb7686659003306cdf22767a414	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSC-EUC-H.bcmap	6784e16dbc5861c036c23d3e55f0d4ba0975a3e464da0ee8e49bcfff0be070c4	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSC-EUC-V.bcmap	fdb36bad85e9924823d49db374067988e024cf80fc894711f2c9178951cbbe95	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSC-H.bcmap	c1f6d61f1d3304fd539a65ae72624fa567ecc3853bf52e283958a7a2515b3eee	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSC-Johab-H.bcmap	939993d213f68db763bf156217c217ae23af082b91a0eacecf3d11eb4ff8ef8c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSC-Johab-V.bcmap	5d61967aac0e666def721e8b8d0fed8f95a879a14f2e76ce516c3d11c621e519	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSC-V.bcmap	d7da5afd9f1fe74816d79c9325f0139a4efb6438664ebfdf9a7aa92f3034360f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSCms-UHC-H.bcmap	5b70d8f6a4fa9e2283dc649f0ff95d906d56efbee50a20e8d2faec3a8fed078e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSCms-UHC-HW-H.bcmap	a5e6ba22aceb02fdedee11bfb9ed138463d89e85b87810b9f075b469d936f8ec	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSCms-UHC-HW-V.bcmap	890332a6a26880d463a12f2a6ff048bf9cf7e45077cfb1ca8815b89baa7bf411	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSCms-UHC-V.bcmap	1631b531c9a40c8cbe24c2317dba107362e49fa6e18af620414d627c111d570c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSCpc-EUC-H.bcmap	709480682c55cedbb0124b9960d78e28febeee0df2e34607d61aac6601647ec7	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/KSCpc-EUC-V.bcmap	031707887d6fc2378a36cdb6775334fd7a236c3f95048d8436abf43fe26fc49d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Katakana.bcmap	3b6ca6642fbf8822da00d5e58a8aa275216d5c32dbf2bd73e934197fc9fc5c53	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/LICENSE	aa92ab5a472974865a96fd4a4e9c13bb41bf6fe1b309cb6b8da48bc9e19839a2	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/NWP-H.bcmap	286c6c9e335da330928a01edc3c97a3a623f1f7f3c42762b0a7dc2f651b1a78f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/NWP-V.bcmap	3a75fb7b59adfb172710758c425d8ac6c93fd5360a64dd4afd5dd04e60ab4b4d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/RKSJ-H.bcmap	a70de61a22a898f693f02cc011c3e3cff2e10aaa7cddb4661e456a21ae859f78	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/RKSJ-V.bcmap	68c1a64506471a524ea5cfc3b3a9f8f70031989a6bd95427b1351f33ccf50b06	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/Roman.bcmap	1c6b3ef9d9e5cb1aa329142ce9414b90f9b6d7f9182a2a9e927378dab8f0d43f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniCNS-UCS2-H.bcmap	779428116752f34e2490a1941d24e4634c71e3c22d053b811d2090ae2fb3c704	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniCNS-UCS2-V.bcmap	1e5cc184b850ea44abc2df8ae5674279df668e8edf5e2a1a2ea2bd77adbd280f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniCNS-UTF16-H.bcmap	32ff139b3c7b91d6ad25f994701f3ce7b242906022c418fd73e6493fc228bfe5	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniCNS-UTF16-V.bcmap	278eb1e68d1a236c60ef59472cf0176ee0d45f364285e76ca12419a08d46fb9a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniCNS-UTF32-H.bcmap	bf26eb67fe19ee5ba915799e80ca72408400aa8342fdf6a244a4f44de8f97336	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniCNS-UTF32-V.bcmap	f7da3caf83ceb1cb37936fa10700d9ba6e9c3f72c5bc9724e3ac79bff0c0179e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniCNS-UTF8-H.bcmap	2f2a742bcd1a84a148a4a518b9eed51a8f9c6ca5ed3bc5e2e41fff97de5dc2d8	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniCNS-UTF8-V.bcmap	b7c3f10780a8c62dd1c8ff6c30dc1e4e23b6cdc87c3a96fcd514cc98ffd3af9d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniGB-UCS2-H.bcmap	9201569b402e81ad8860650bd86350c4fa28e5dd5971f05fcacaf40f51de18ed	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniGB-UCS2-V.bcmap	f10282335e4d64203bc2a653a3a47d745ec76c8ae04549f4d50180c1899be216	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniGB-UTF16-H.bcmap	386fd39581245c034da016a92d23f3df1117d169f996100050b264fc09a84e35	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniGB-UTF16-V.bcmap	0473cfbba612b92dd9918f0ff8aee9112897c48e0ffdc0eb82da3144ed8ea84a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniGB-UTF32-H.bcmap	f48a145dc4e3ed1dca1dde7111716a72306a2a4191ab05c6bae3a5c3a961cd2f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniGB-UTF32-V.bcmap	106acc49b7118bdef944e32107b4f348238f3929a0a15d3b7aab7b9101535993	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniGB-UTF8-H.bcmap	f217b439c80ee5fa1bc2cf6d1defcc319f8d84483d166a00ee199e05a68588df	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniGB-UTF8-V.bcmap	a64df947632878eacc532fa193c735c92a383b7d66e6f8374ac193af7c64fc63	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UCS2-H.bcmap	ad2352f40870880fbf7f8ee5abadff743fbd025fbf9830b8ada472d1c5e4da0b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UCS2-HW-H.bcmap	16e87edca954177c0881c874859d6783220925d821b5cdfb8755b61ebd93f9ce	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UCS2-HW-V.bcmap	1973457e2c0192819947e56068625b34fb9a72ecc8a476ce6d7eaae5f73e2e5c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UCS2-V.bcmap	42a133d8e2ce9dd6d2288018e01592d2bf2435b326d39b94ea0b6e6a44ac33d3	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UTF16-H.bcmap	f6a89c5688978548c83fcee990e205bc63c74274d5c69b49032a3bd4c49a05ee	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UTF16-V.bcmap	c67126fc7c73850855186bb0d6482ac0a365057e0b58778c4ab9f234683fef53	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UTF32-H.bcmap	96195950ce0fe24443d8eb426fa6b88534ec421d7bef9046f0b2362809cfba73	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UTF32-V.bcmap	ed4dafda402bdd19c4d5d8bf2ab41473c0f86f384552b4c7b963d6627daedeb1	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UTF8-H.bcmap	798fb0bf06ab0788d1f6a91c2db7de581612eef03c628f10e8f7ecd8f70ab448	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS-UTF8-V.bcmap	1021611424f913b2df0bfdbe94bd327c04e224ec89d8e821c6501ea3d21f4265	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS2004-UTF16-H.bcmap	710a32d7cb43fd6bd9dbf30da5971f8c941590f74441e208d852c2be0e74cc97	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS2004-UTF16-V.bcmap	3b149aff5c5707b57fb3215d1775852c8b1f413ec0f679ea628f25cf87fe098d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS2004-UTF32-H.bcmap	8d2658e18741af7937d586a57c89729a6fec0d86121197c1f8518aa58b29cdfb	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS2004-UTF32-V.bcmap	6dd475782f2897648a683c48b2fa015a15b8f06856760bddc8a17a63f418bacb	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS2004-UTF8-H.bcmap	691c614ce432b3e62486efb54e5c84c6da5afe9b51b21253bde4758feb484183	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJIS2004-UTF8-V.bcmap	40a8c7ea2d46711c5f78fc9a878a7db68b1543ba5cd60ecf14f519a2deb829b7	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJISPro-UCS2-HW-V.bcmap	6826f94d789d7bf1960668c1c5819c34c9585c1b23152fbc19ee81c7df08524b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJISPro-UCS2-V.bcmap	493de9fd1a08f7946065d8ab58f0c3c9fe489f5a0f109f2d05a3169b4bd5789f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJISPro-UTF8-V.bcmap	6181d382cf736c5e09492e8be9f26f31fa25b7462253f23ab16646af432cad81	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJISX0213-UTF32-H.bcmap	692044e1fb33445668632bc9fe7386805c624864be1ddeb29d65bb0c99fc630c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJISX0213-UTF32-V.bcmap	dd54e16ca7bffb3a886242549b2bf7d78a277087f7c60d2636f118c21a5b0646	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJISX02132004-UTF32-H.bcmap	f80ea5a989be30ccda5a8804baef6d3b4b044d2b339bf8b31c671b2466171cf6	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniJISX02132004-UTF32-V.bcmap	94c22bd99e771c5fbe0dd8dc39850570d4db0075074aca13e272813edd7cc57f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniKS-UCS2-H.bcmap	a1081396ab4adb6f4a5b6c15f896963c244c1c9bcb65ce5616d06096a1b9811c	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniKS-UCS2-V.bcmap	6cab547431958fbdc1d401d06ebd4dd61a73f5509a10f974df32bcbca11a2e43	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniKS-UTF16-H.bcmap	42d35b396286499dfae1737a07adb3a64500df37b426580bfb1d3ea872938519	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniKS-UTF16-V.bcmap	5bdb7390c80dcc136cb47d41dc7460082560969c17322ee739fe3020fb642410	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniKS-UTF32-H.bcmap	3a01ec51ed1b828101351e337ffb8250abe11880032e5210f881170fed2588de	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniKS-UTF32-V.bcmap	dfda895eceaed081af030dbbb962b49629eea817fc3c02bae15db93d0c68acd7	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniKS-UTF8-H.bcmap	3fac9c65145f72d7d42157a3b9c5ed6904632184e6a0888f2b828699afd2002f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/UniKS-UTF8-V.bcmap	9ecc6cf30dd354b9778ddba163b6cc7302b087ce9f39d1ba73472d2b75ed13ca	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/V.bcmap	b9ad1c0c09ff14bca52f9a28a9767eb857ad0e8946e64ba14c7387a7eb69866a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/cmaps/WP-Symbol.bcmap	543923bead225732aba30976690ee89095a19628277b5863efecc2c728d5d7bf	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/pdf.mjs	bc51f4874a66e3853189cb5d50aba4b3096afa83ed433b885d293a3d94583cdc	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/pdf.worker.mjs	bb422f60804477de4a0b09091d8347a916a387755ed1cbad24ccaec1d09c78bf	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitDingbats.pfb	845c752392b6c914fb989c75a08b7792b88f542d2499042ef2889f8c814a16ed	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitFixed.pfb	b6c8fe53f134b8b6d4578cd2d544df4cee9624c4efa8d51a560fb40ea296101b	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitFixedBold.pfb	f1b7159702973f54fc86254ea38bcf3712b2a736eb3a0995751e9f4bb45ad603	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitFixedBoldItalic.pfb	8a000945843bd31add06aee63bf9fd41b7578b4f3242a4b7cd46349ad9d24d4d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitFixedItalic.pfb	5007faf8320fa1fcc08b8894b356ad976f60b992ba29ee5272578bbdebaf3876	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitSerif.pfb	4f57d2b9d884af8f907bf22df6019b52d86cbf6214fdbd02b1ae05472a543f35	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitSerifBold.pfb	0bdf4b04e964139818d51eda03d566ba999fc3ba2421b1c6c51f9dc969022e80	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitSerifBoldItalic.pfb	a406cac82583bf98175cb62c87ed5e95c45fbb34eece63a10b0a13e793cb2e10	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitSerifItalic.pfb	610ae0687198045c4db5d1a6650fd5e92536631706382eb8b72e38df578d0ae9	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/FoxitSymbol.pfb	47967d055530e7357088a08403115425643ec2cdfd6201ba8af0fbd7116c1539	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/LICENSE_FOXIT	b578cdd2345840ada550bd12519533812320d5f1d21cf4c1c7e1b1b0a31c98b7	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/LICENSE_LIBERATION	d2c4d5b3e115a519cb58eb691aa64538397e2611f9ebe801392cf9667997e7dc	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/LiberationSans-Bold.ttf	361c61b82d575c5c35fd9157fda8b0194bcfcd0d88ea8521a4fb5dd53d33dddc	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/LiberationSans-BoldItalic.ttf	a224075ac17495ad0a3af3bc0a419ac0704a8b3fd1095456201fb9b095fc281d	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/LiberationSans-Italic.ttf	832b4406dbef23628800d3aaad21048534ac84d7e3ad955be83b8172ed8ef512	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/standard_fonts/LiberationSans-Regular.ttf	f8ace1f892b2bd9dc1792ba7f097fa7588f84fed48321480e04de5390828221f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/LICENSE_JBIG2	9e66b7f1b934a28b37f3bc4dac97915de1674271e79a0a88182a18ed9731b4d1	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/LICENSE_OPENJPEG	a6af136f3e15038a666b61f376612a07d9a4e48cb7c01adbf3e33b3f14ab49b6	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/LICENSE_PDFJS_JBIG2	aad3cce09842e00e9e11ad5e8fef8cc02fbc3a3768fe2f007443b9cee37aaee5	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/LICENSE_PDFJS_OPENJPEG	717fc62da03292dbb4dd0c8280bd4ce7bb8550dcf31d772bc93455fb50313425	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/LICENSE_PDFJS_QCMS	508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/LICENSE_QCMS	36d847ae882f6574ebc72f56a4f354e4f104fde4a584373496482e97d52d31bc	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/jbig2.wasm	466f45c2a61a698152fb5400c27e56ff2ceb73dcb71fde3fc366a502308eaab0	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/jbig2_nowasm_fallback.js	68686ced624a48c42f84cdaa482ec44b72b0de4dc84a0df903af1fb7b45b5d9a	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/openjpeg.wasm	95e5002597af0824004aa57b1900fe019715db389e37640b1e58395e42f00cc5	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/openjpeg_nowasm_fallback.js	9047b34b6bc142d85e4b0aa1b08b0b9baad4c6f8b7ac87641b9e8f90eb6fd23e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/qcms_bg.wasm	663d86126d5f5fcb1c61490f94353e2a8375660b8c5498ab3ebab5a34b08800e	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/quickjs-eval.js	fe7930418e869791ce892567dbd0bc4698152b7e550b5cefa553992c56ddc325	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/pdfjs/wasm/quickjs-eval.wasm	7bcacc9f22cacf7e9b23866d2a6d1639693d40c7f144e41b7c69ed37ba9cbe8f	Mozilla PDF.js; včetně dílčích licencí fontů, map a kodeků	ESP32_IMU/web/pdfjs/SOURCE.json
+ESP32_IMU/web/report.mjs	71fc08d91b364c05e2bfc931e4d593fa1b97ed71d9befd51620f6c258a968173	Projekt IMU; firmware, analytika, ověřování nebo vlastní dokumentace	docs/studie-a-imu.md
+ESP32_IMU/web/vendor/LICENSE-jspdf	dc388ec35ff463288cdde3588a36fd4ed12a45deff053243b37309acc9ef583b	jsPDF; distribuce a licence	ESP32_IMU/web/vendor/SOURCE.json
+ESP32_IMU/web/vendor/SOURCE.json	d2fa38ef21fd5cfe54f4ff9e709660ccf787e2feab01243aae09cb3729ca4f15	jsPDF; distribuce a licence	ESP32_IMU/web/vendor/SOURCE.json
+ESP32_IMU/web/vendor/jspdf.umd.min.js	e6551fcdc32f09d6853b2c5126d18d01d9447e0da618a41a11ebeee0f6c20d54	jsPDF; distribuce a licence	ESP32_IMU/web/vendor/SOURCE.json
+Formula_Manager/PPK.md	d359fd9df4dcda7dadc9d908d00315636d9f47eadb2d8a338e723ed767cbfe19	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/README.md	84a8e3180cbdb9135c7e9a72f850cab560c599e22f3eb9b5c8aef2c28d7e2bc2	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/accuracy.py	eb36d3c22f9b12e4feb581f94e0ef82013d0ee3253e75c9159f5ba82ddd5cac4	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/collector.py	8ae9785bd48f4f76013dd6d3a7eb4f1cb243caab3c7db7da6bb25fadb91fbf44	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/corrections.py	b54ff6714cdcc7ebdfb28b206fffb1ec9af5c94d3cbaa96aac2359e8d508a5fb	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/62-formula-usb.rules	cd478782c73408e222f8342341f06d055395d12af40aedc4294b1f3c0258c06c	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/check_live.py	94461537b74f2220e5d927112059348a3963f46e7b20dba96040c4f919fa37be	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/check_ppk.py	29f7ed2736f307f7a28d9a9404a56462204053287387421a7b294d718c9f1104	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/formula-eduroam-test.service	0d307c366815cc483977434c7d23c7407e19ce8ea99f75ef16e1273f956f23b2	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/formula-manager.service	04159cdf6c5579257e62d72b6468abc5a30a68cec396984287edbd590eedd561	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/formula-wifi-profiles.service	3c9f287ff37bfaf49a2aef5adbe47c8c9f5bfea7c72bced6b54015a38c4d7c25	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/formula-wifi-profiles.socket	f64b42763a9b05e9c20e89edce6f732e9b86bc18196dec8138594ce572dd2b93	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/formula-wifi-return.service	b17e5074373d88499fb5b159a68068558a44b340d15bca5101b49bb1d211c250	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/formula-wifi-return.timer	37dd0be7b1c1f30388898978520260213cdc875486e1ae36d382b9d8d0041ccd	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/install.sh	388fcca15c9ba989e2132c3f0ff7ef92c6517c1b1e05283e3b7ee0da87e0a45d	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/network-drive.sh	73a7d4334d70c0646b712711117342219042dd90daefd2a8a26d3b9edf2386ba	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/nginx.conf	d56e537a20e9d320bcafc0067f9534cfc329cfe5d56dbdb8aacacecc8f71b894	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/samba-password.py	c8ea9d2ac79a621fc3f35e5c7331a91d3f9b47d4ebf3f25813ae3de7db320a91	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/smb-ppk.conf	935221aee6b56ca17ca7aa9f4f7890142e3d77d34ac5faa0d0b2f5f614f77a06	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/tul-eduroam-ca.pem	0376d500f71f46a91c05d3e82d69cb47d876c5f9d61132a5dbecc060c045167d	TUL / eduroam CAT; veřejný certifikát	docs/zdroje.md
+Formula_Manager/deploy/wifi-fallback.sh	6dfa41cbec6aa0e3c64759e97b77bb40790477c8706fc97329bd823faada6143	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/wifi-profiles.py	bb750cabf7693836e04595131949020a006c258f64970e9764b73e521d4d856e	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/deploy/wifi-return.py	5fda6dbb27e92b0b8efc63c0e053813ae8e90fdf5fdd0bc461bcfc1d0e8316cf	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/diagnostics.py	cb93b74ffa5f15e833bd3e9f34e0c6961e2666a063f462994282891c55e2cc8e	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/hardware.py	1cc310a21639d7205dadace90a69a9cdfdc06165c4daa7b8340d3bba1d0f21cb	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/mediafiles.py	4123db794200a730f90706f08d63c84d9e2281f3c5525197f47a77ac9e9a7e7e	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/overview.py	0318b59503036e734abbf5aae50d8fc7bb91ba3cd31926946ae22e9f551b12d5	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/ppk.py	461b5739710937df53bf0dbdb94d76391db1e09fc31719db085e9bfe822d56ca	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/server.py	e13ec57d77a920f93fe41d5c7dfce1c34752473b17056f19a191e6a195c0b200	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/accuracy.js	6118956861550d0600ad65af6b5422f3d810c839ba4ac3f561e919aea5a12a6e	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/app.css	fa25c90e79d9f81642136d3b039f8980e598e2cd9a092e13026bea40efc42d62	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/app.js	ff4dce88e13001c9915799e8be3a646cee6f8257144b65651868beda7c57def4	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/gps.js	bb109dfba78832048ba9fc89578bd1a6e9e81ee5eb1cd5a3c1fb83c1ed59208c	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/index.html	45efba95a51aee3a9c271775c1ecb99c680e63dd746733758edc5fce6c168609	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/mark.svg	734c8ba9ff6cbe0f1979acefd805cfa8bd1e6de5b47adcc5b9ec425303d3b57d	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/network-drive.js	0079af4bf2795180a8b9b5b8561f18614c9fa50d33aa7e5c137e8f8e8b9a4051	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/operations.js	70ddfeb1782c20babe0a88deaf056e474d641c3434fed2286d5af1e0f9f1e361	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/overview.js	27e81311977411e3988c83946e763d4ce4d0816dea0469ba87f5d96518cdff3a	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/pi-overview.js	6e311263b4f315b8404496d3de51b38bf5cf4d76b58563114043f2a9a71625ba	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/ppk.js	4b543f4d373523a02ec7e16faad7843cdd020e3eaeb278e543fa2c862f843509	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/tools.css	3dc58cecf6c01614bf499bb730b5ffb9d3e7ff34a154d702a74860ec8d86d7c9	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/static/vendor/BarlowSemiCondensed-SemiBold.ttf	bd299f4bc5b44d30be8d42e9bad3a5df7d66af1cd55d0ed72a8b8916360a1424	Barlow; SIL OFL 1.1	docs/zdroje.md
+Formula_Manager/static/vendor/LICENSE-leaflet	53e8dc25862014e4324741ca18fbe3611e11d42ef69f59f86ea8c5389647d4cb	Leaflet 1.9.4; BSD-2-Clause	docs/zdroje.md
+Formula_Manager/static/vendor/OFL-Barlow.txt	186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f	Barlow; SIL OFL 1.1	docs/zdroje.md
+Formula_Manager/static/vendor/leaflet.css	a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6	Leaflet 1.9.4; BSD-2-Clause	docs/zdroje.md
+Formula_Manager/static/vendor/leaflet.js	db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a	Leaflet 1.9.4; BSD-2-Clause	docs/zdroje.md
+Formula_Manager/static/wifi.js	0a96a4a0d88ac91ada065c05923faa69db882de3da02cbc77daebaf177cbc04f	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+Formula_Manager/transfers.py	6066bf23d1c4b9a994059813527136fd6d0e1868abee3f126883094ba5b4206b	Projektový kód nebo dokumentace Formula Manageru; spolupráce s AI	docs/zdroje.md
+README.md	c6609e8e39aec466ce723bd2c991bf721f995723be3ed8256fa15a9872dfff4e	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/dalsi-podklady.md	51114d2cd51937a92469e81aa6faa9e90775e5b38a77632b14ae756f6dd72306	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/instalace.md	bdf57ee71d73169dec54bc00f14e3297a2103279c1d88fd9a2852bb56cbc303f	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/overeni.md	e322ebea1a4c3d448c87431b47f1c1b317e20b05188c5d0d652ff63d2c603fe5	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/studie-a-imu.md	c71010abdbef8a54e6bf7915f61bf47b4865a40cc1cd2a7ac7776b8d5025b6f2	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/technicka-dokumentace.pdf	1040067fea7c456b9248535739c31c524c5216f2c131f2991144be07dba4db50	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/technicka-zprava.md	21074caed4bc7e586e1e742bb1628fdbf03141be1b94e547955e6f263b0a7efd	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+docs/zdroje.md	df1a27567107f0c3652e39a264b57a141bf666e5bd4b4575027bc00037e524fe	Redakce elektronické přílohy; zdroje a podíl AI podle registru	docs/zdroje.md
+nastroje/archiv-nvme-ntfs/Flash-Nvme.ps1	462541582c13de87178b41563834a529ff62974b57673e2b6e089dcef4c2737b	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+nastroje/archiv-nvme-ntfs/build-image.sh	75db5bf3280386f4636c9caf359f8331b393810f76be0bd46056425c62168c2b	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+nastroje/archiv-nvme-ntfs/check-final-image.sh	b49d954ae050273e8ca1b4e1cb8c19d2ff9330b62affb598b7ab47e1ba0b64b5	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+nastroje/archiv-nvme-ntfs/configure-image.py	cecd160ec60f6883df05b4cc7a4fb2e4c84948d5894618fbdd5c4f2158a72cd0	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+nastroje/archiv-nvme-ntfs/finish-image.sh	1c4ce1a5287d8c493d3a401a3ad0befa8896231e834d2f7655f66b87d4a9a424	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+nastroje/archiv-nvme-ntfs/inspect-image.sh	72d84b634a848fa2de76e2facc5e2599e5c4e2296af2ee16545496ed3b2db6f3	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+nastroje/archiv-nvme-ntfs/resume-image.sh	cd8dbae1072be10b0a5716db35a461020b3505d6486abc06a2fc3ca991e991f4	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+nastroje/archiv-nvme-ntfs/verify-image.py	d2c4746735d699e89d10d3d019f235a8c9802c0cc4559f3f5497a479d6ab96b2	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+nastroje/o-leaf/.gitattributes	a98257d7085b61f92ea49310e1df5282473e700ac8f53a048eb24f800e8d41cc	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/.gitignore	01bf2649fb36ed47979a305c2ff81361c92a0c6a6cefc4d5676f10104fad420a	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/PLUGIN_FORMAT.md	9361ef97295108079a12bdb31eb52a13b448988e759004cbe9a2e38002901439	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/README.md	32e585edf77778e6036836aef6b68319945b510aa4f2519a21aaaba2908c2d82	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/.dockerignore	eb39e5d52fb6c9abefbfb0dce1fbf5cbbe373f919755d039af45217274e350b6	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/CHANGELOG.md	10302e554f7f989f1672be2fe59527ac83a3dd7ce65c402eaae6959a3a82d55e	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/DOCS.md	042bfec9f727aa4c9e51344370648459b58474c37159261860145add2c7c9047	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/Dockerfile	a6dd5149c4627b7dd2b7a5e42102891e99ee2b3ec5203da64f5aa03c97a632ad	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/README.md	2475ab1fbc1388e9c348982ff83ce0960b2dd2e0de361e242106902716dd1427	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/lib/archive.js	ead517856d9298874ac98149bef324a581b16481f0c21897066a17917f456f20	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/lib/auth.js	0103c8ff064085ce1ea4bcf6d117f6f2970710dfc4a1a912264f0413790fc4c5	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/lib/compiler.js	efe1dcb1333c997645a4786471500d8fc8b89f696ea09c5516ef32ff135e142c	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/lib/file-preview.js	52fd5c427fe2b93a7c111fc71a1429d4ffd044f8734bf417b23e5fa747368845	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/lib/files.js	c99ebf5f81ae2be7c61d1ea2f0a5ff09da7feec77074d6a1ead124f16fe64512	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/lib/folders.js	9ce72ac84cd840314e71b1a9168602223e92a7f39f7f95ad18f785fcbde6db30	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/lib/synctex.js	aca7ab7923843d79183fc12d4fc820204c6a44fa64498d17395b1621da362f6c	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/package-lock.json	e37c92dfd8545aa269fa548af7b0e99824ad82d1b7eaea9aa533e3caa15561c3	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/package.json	3de837e1d29d84b6ea9a0c8e69997a00e8df26c5de38fc6571abcdc468c86a5f	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/app.js	cb75aeedc2f85cd6e20647d67092f5ed18360562c88e05f0027a84f8a1c62976	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/cursors/arrow.svg	02af406f2b76fa91109e8ef8541796701b906619b14d7108631f88eaba52c749	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/cursors/disabled.svg	dac4bd6f89bb074c98f6610a48ae7e872f3ca71b1593fe597b3704179c82e648	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/cursors/grab.svg	137e571944f17b59a857d1ee89473d3338a1cb4eac141629f3fb384e3a19f454	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/cursors/grabbing.svg	97261a6f71de49b2a8bdb6748578190d9c000ec8486c359c39aae18dc75f0c8c	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/cursors/pointer.svg	411b725ee52143403e535779fef7a171162caf273e95ea71b99761dd968a42f3	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/cursors/resize.svg	b03f6161f2a7d53e8beb5f503189a563444f442c1a86f7e81e763f1f93fcf4dd	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/cursors/text.svg	ca4a3284b602d2976eded96807e5df61a6454cecee2412df57bb51c60e437f2a	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/layout.js	25a58e171d2a0063c422da59547defc369e228c4ef0d5fe5cffeeba914562fb7	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/projects.js	28f1d426f7d065d3d27a01020eccf866d410c66ce1679b2ed9a2f3568d8511f3	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/styles.css	c4e43d3007a1e92f1e6a7f905aa67f25b22bb6539212822c41fed0a8afb01ffe	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/assets/workflow.css	dcf41baaf15ead2bd8e492bbd79d7eb85b4627a0981c70766a3ed467b9ba83aa	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/index.html	c1d50185fcc605641e267b2d3f450812d644fe36d407aa375f35dddb78791a3a	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/public/vendor/codemirror/LICENSE	168a4becc968f5001e2ee2e0291b6e4daabafc1894a11ade1e11d56e96096e07	CodeMirror 5.65.16; MIT	nastroje/o-leaf/oleaf/app/public/vendor/codemirror/LICENSE
+nastroje/o-leaf/oleaf/app/public/vendor/codemirror/codemirror.css	eb494ea972d2661ef86f7f6ac656dd6786d721e49c9c1b46e1eb967e4b6f9bf3	CodeMirror 5.65.16; MIT	nastroje/o-leaf/oleaf/app/public/vendor/codemirror/LICENSE
+nastroje/o-leaf/oleaf/app/public/vendor/codemirror/codemirror.js	0644e6418c4129c9584b9b772b8b8bdb0b4fbab1efd848a98baf1fe147381f22	CodeMirror 5.65.16; MIT	nastroje/o-leaf/oleaf/app/public/vendor/codemirror/LICENSE
+nastroje/o-leaf/oleaf/app/public/vendor/codemirror/mode/stex/stex.js	edc1f57c69920967a31defb66954aa29f5751fdb2f7ed8e52fa08978ff890e3b	CodeMirror 5.65.16; MIT	nastroje/o-leaf/oleaf/app/public/vendor/codemirror/LICENSE
+nastroje/o-leaf/oleaf/app/public/vendor/codemirror/theme/material-darker.css	5835aabae48149dbf6d47cf61160155f030e33882b4a80c35f9a3d60ed068680	CodeMirror 5.65.16; MIT	nastroje/o-leaf/oleaf/app/public/vendor/codemirror/LICENSE
+nastroje/o-leaf/oleaf/app/server.js	6edf9635465022786fc4cdaf0d682789710eedfdb23e66731708c2f5e6a3a715	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/test/auth.test.js	513d4b6b8c4d78025536fa8bea524f7c3ff5966a3332f168c64093fcafd1e3d1	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/test/file-preview.test.js	6b2200607a8d37d863a81d129f00ab09e40c8437b479057a0aa3e72476e1a89b	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/test/files.test.js	6c1a9888b98261d70a64378d9c9530f2a0a24b469c6ac1bd0fe3f79c677d5372	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/test/folders.test.js	cbf4018d0fa603750bf96a5059c09da191e85c210a3a0573c262720561e0340d	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/test/layout.test.js	6155564e3e75e987ef70a83615a3a8d9e249868eb51ea1a5871234f5b84edb94	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/test/projects-api.test.js	12d78148b2bbaff108a44e2abbd46fbf5f6469c17859914094cb67a6f08a76a2	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/app/test/synctex.test.js	bdead43e9ae4d055238e414365b82ec0276632c3f5fa590cb48c71037d37782b	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/config.yaml	48fc2035767f62216d6c380d659be2ad3ab3f67b691f7c16e8ffd5529442046e	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/icon.png	3cfa7a283194dda29d925fc84b00b54e9543119ff3d0d65c30e42ae7bfcca225	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/logo.png	564a163d587bc87ca797b1b331aad4cb372b6356c428298da17a8fb05e2c3342	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/run.sh	115a4c396c5103483c53b7e15df00e42de7b3dfed300d45020ca0629b6071b4d	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/translations/cs.yaml	9c682a86a2beec9cd1d481e5d9978574fc7b0e891802ca5936979f91d97f7f11	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/oleaf/translations/en.yaml	ddea55888ed6790089d3ec8100fe4c5163ca38da887880870efaad116b2b8745	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/repository.yaml	6238368cc8bacf1c4bc795d9b2ff7f0d757000d91d9450d873037a1036b4497e	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/tools/generate_brand_assets.py	247cf5361dccd84d15baba7bf5140a332a6735a96ee2f38c3974592b3b48ca74	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/tools/package-addon.ps1	d0639bd67295507ff6dfe756eb996d2ead5aa8efcb4b36f0022b6317b6a2e858	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+nastroje/o-leaf/tools/set-repository-url.ps1	c57b587d6e25bb1d2bff507dc1533b06742e2777497906a1332b6098453af589	Projekt O-Leaf; závislosti podle npm lockfile	docs/dalsi-podklady.md
+overeni/integrita_exportu.json	44130cfe074a99616697cd0ce7616064784fd38bd9ecd7eec8ebb61841ce9aeb	Vlastní kontrolní výpis stolního měření ze dne 18. 11. 2026	docs/overeni.md
+podklady/praxe/praxe.tex	83e8084dceb7b628d45ea5262b1adf0302a9228d9ec8806508edda12da6b61bf	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+podklady/rozpocet/nakupni-kosik.pdf	44baf70cb43ad1b4de02021462fffce5ba180c1a0a19e51a4917e3c7f28327c2	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+podklady/senzorika-prezentace/Senzorika_FS_TUL_2026-10-14_v2.deckcraft	658d224d38301155bd6aff83d795e3d6f959e7bbfffe348df51afe2ac1d6940f	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+podklady/senzorika-prezentace/Senzorika_FS_TUL_2026-10-14_v2.pdf	9f6d4223975f9e4ec8961206f649fa9f5ecc281c7fd0a93a5505324f78f3e1a3	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+podklady/senzorika-prezentace/Senzorika_FS_TUL_2026-10-14_v2.pptx	d17d06c512858fa4b1029e7c8647832e2028c0481332ae3b2ca8a2a4e9efe218	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+podklady/senzorika/Prehled_senzoru_FS_TUL_odkazy.pdf	a319bccc1b3ca45b2055f6a95a37a265b695d9d39810321997e487af123b19c5	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+podklady/senzorika/Studijni_pruvodce_senzorikou_FS_TUL.pdf	1bcdf609da36a32e8ea921d3b7083a7f4ac30920f06c3789deedc7c3bfa8a4f6	Projektový dokument nebo historický instalační skript; dobové podklady	docs/dalsi-podklady.md
+studie/00_Puvodni_reserse/Puvodni_podklad_RTK_GNSS_IMU_TUL.pdf	4d5efba008c59152ee19a165cdee97b91f6f4fcd12920f92674a1f03d20a6f79	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/RTK_GNSS_IMU_reserse_pro_dekana_TUL.pdf	95530de6d2d1720e07d075a99c2d0ad31d154df3353e20acbe53ec67b3187148	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/BOM.csv	3e19d145b36f595837ccb8b79a0d5f23bbe3dab6ed1fd881925fe993ab9a702c	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/README.md	bf77e9ca081a4dbaf98b248fd6fae5c73aed858edd7eb75750cc3531618b48c1	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/chapters/01-vyber-systemu.tex	31f3b0c9f3e3843caf3eb5b606fdb60b96f18c10a2af6ea1927ff717b888e262	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/chapters/02-realizace-a-overeni.tex	9b82999f3bb580346165587fffd60e13801d8845ab103d5806bf2d8267e4be2e	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/chapters/03-integrace-do-vozidla.tex	90e2879d79b735c07317f9f650961650410d0737daafef4b1bca223403fe8b77	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/frontmatter/abstracts.tex	4b69f83845ea305ba527a0cc5db1d1f8185581e41a9fdf11810efee7fb931da9	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/frontmatter/decision-summary.tex	d0d04d14b7318e22e77965dc1a6b7ed8de7ca2636a616e16a0a87ae0eaf778a9	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/main.tex	c2396afff2a281228a14e74099cfd969c73888de36361930edf17b04cd03680a	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/nakupni-kosik.tex	a3b2faffd3f3b05fb9756609b1c49a73e170f18f63129153eff269e44c63823a	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib	9079e2eed744f18bbe6590b4a781b834f48c6465d21193c7db7f4e75cca07cbf	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/research.tex	e4a9f5de2670aff1b6bf27797fabae6a6ad8c9268e4ce5d03f064285c33c31df	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/00_Puvodni_reserse/Zdrojovy_projekt/settings.tex	a666867abdf597e062e13decc6e197543ac4a266e393b63285b1b5b40122a58b	Historická projektová rešerše a její literatura	studie/00_Puvodni_reserse/Zdrojovy_projekt/references.bib
+studie/01_presnost_RTK/01_Studie_presnost_RTK.pdf	1b1b47f2baaf585430343483564e4e1f8f4d6ddf83b89d9235a19094e6cabde9	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/01_presnost_RTK/main.tex
+studie/01_presnost_RTK/main.tex	661682904529b451f52e12d6bd90f79f025b0a7901ab89bc2bab9c3b91ea3fb7	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/01_presnost_RTK/main.tex
+studie/02_prenos_RTCM/02_Studie_prenos_RTCM.pdf	d2c70632c99d405b7ff3914f6bdc9278126accb34e5db3b45b869ebe496f83db	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/02_prenos_RTCM/main.tex
+studie/02_prenos_RTCM/main.tex	9c05a7a3828fa53678805d586441cd66762cf230287def0e5144941ce374a16a	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/02_prenos_RTCM/main.tex
+studie/03_NTRIP_a_referencni_stanice/03_Studie_NTRIP.pdf	a1bd1204df3375377d3c16096cbe7f9e9d37bd59c7db637569bd1ca2a547921f	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/03_NTRIP_a_referencni_stanice/main.tex
+studie/03_NTRIP_a_referencni_stanice/main.tex	408f5e138429143d0ecb2a00bfedeef9fdc8065823dddd605d39e0224d0bc260	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/03_NTRIP_a_referencni_stanice/main.tex
+studie/04_ELRS_prenos_RTK/04_Studie_ELRS_prenos_RTK.pdf	1d5754cb935088210c6a0ff534c6a304c63bfd6bb9cd8c375121892738b7773f	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/04_ELRS_prenos_RTK/main.tex
+studie/04_ELRS_prenos_RTK/main.tex	2254a82d09fa69d5f80a564400bfb279b9d17399272cd061b583cbd8dcebbda0	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/04_ELRS_prenos_RTK/main.tex
+studie/05_rychlosti_komunikacnich_rozhrani/05_Studie_rychlosti_rozhrani.pdf	4e19c0b0539cca50011d146bcb21cf62ae45c19391ef965630d32acfeaa2a17d	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/05_rychlosti_komunikacnich_rozhrani/main.tex
+studie/05_rychlosti_komunikacnich_rozhrani/main.tex	0a75b853a9ba592134c5d8756a8697c31944d6bfea6721b19a35f1aa82e33267	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/05_rychlosti_komunikacnich_rozhrani/main.tex
+studie/06_OS_a_spolehlive_logovani/06_Studie_OS_a_spolehlive_logovani.pdf	c0e97e0a6414d1c568503f89b50a40537fa533454447b20c4bd3ee5ea57ef663	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/06_OS_a_spolehlive_logovani/main.tex
+studie/06_OS_a_spolehlive_logovani/main.tex	d5d2407e6c15b20a1f620ea566a433089f91c4991d9383f330ef4db33cba8a91	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/06_OS_a_spolehlive_logovani/main.tex
+studie/07_Infrastruktura_RPi_pruvodce/07_Studie_Infrastruktura_RPi_pruvodce.pdf	69b1494d3bf4ca28f64902b180165aa78c281267769c4bca79ab5323c3a429ba	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/07_Infrastruktura_RPi_pruvodce/main.tex
+studie/07_Infrastruktura_RPi_pruvodce/main.tex	0c3b1969c57e5a3a84545fe5c9b7406c5fd478b38c46a6c0c7b5d3028884c5d8	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/07_Infrastruktura_RPi_pruvodce/main.tex
+studie/07_Infrastruktura_RPi_pruvodce/ukazky/compose.yaml	65407be4cc5d53a56c8e1cb31f39d51f4c4966228b8f998ae236e98d79cc4e93	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/07_Infrastruktura_RPi_pruvodce/main.tex
+studie/07_Infrastruktura_RPi_pruvodce/ukazky/demo.flux	1558a67187edf43b6c798a14113ac157bd99720967a5a6fae0dc992b3011bdef	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/07_Infrastruktura_RPi_pruvodce/main.tex
+studie/08_Stacionarni_zakladna_F9P/08_Stacionarni_zakladna_F9P_a_spolehlivy_zaznam.pdf	60609309ff4b3503e05cb80539f2017ced076cb55fc489a976698603af8f94d1	Studie F9P včetně seznamu pramenů v generátoru	studie/08_Stacionarni_zakladna_F9P/vytvor_studii.py
+studie/08_Stacionarni_zakladna_F9P/vytvor_studii.py	eda05f5beccb5ed1b6af8149910a9fe954f8ccfbd7cc188950bda98865c0159c	Studie F9P včetně seznamu pramenů v generátoru	studie/08_Stacionarni_zakladna_F9P/vytvor_studii.py
+studie/instalace-nvme/Priloha_Instalace_RPi5_NVMe_WiFi.pdf	83e8e66f366478c71df61c52ff68a3917e294a5fc7005265338b92f7fdb0498f	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/instalace-nvme/main.tex
+studie/instalace-nvme/main.tex	fc1fc211a1d2b2afcb7bfba81a77e7a570b761e4dc929b49af946c1e4177530a	Projektová studie a její bibliografie nebo doprovodná ukázka	studie/instalace-nvme/main.tex
+studie/podcast/Kapitoly.m3u8	1db0224bd97a8d25952837e6f43d6161307f8e329bae7554116234c50f4d91f2	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/Podcast_Raspberry_Pi_GNSS.mp3	cce7942295a4f47c9dafdeea890cd5af40af214d2c7fa1a81c7789b70d104a14	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/Poslech_a_kapitoly.txt	7e22bd08c9c862b9914a441ed96b1545c2a9115914730b3dc5ba82428fbbe525	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/Zdroje_a_poznamky.txt	8f4789d8075a4d66656776b8b83a74326d2c69795f978a2b230a5745cf10abda	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/01.json	ef7c9fb778edc61f983b65b91b5da99fcd01b285308b06e05c232d2a386d6eab	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/01.mp3	e085119b232ea02c84c8b0febfa1ed28a91b4147cc739a6fdf7ade9121830e16	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/02.json	379a897c54103a46a133f4c5d070873ffe48df33390e98bea8d8dce21df064f0	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/02.mp3	292989b696845c143086e06ecdc4f81d420a9c2627747470bb36948a96054c7e	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/03.json	b807e7ea525b53eb42a0b43581145e00a76a1da9c790497de7c399a2ecfac403	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/03.mp3	9cabc81edb0eadc86a712fdc70898e8ac922cdbdfef5642618f76f4b53b088d0	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/04.json	10619cabb86b349d3c6866475946362b2e6688dfbb95b914bd2b568f991dc840	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/04.mp3	4b6eb26b0f21e679891d1acd16df993f6986dc450e852cd6c1fd93d63ebb190b	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/05.json	c69f4056099985915f0d717512b1e524606fbbb002363b3cf266afd76c7f8211	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/05.mp3	bbb450189575d117ae6739a0e1d34ed44c896eccfbd7de9dadb3df54ac91d638	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/06.json	7c32af3cf7d3a68759ef382b2ae12c5f923475450969e1480eca7e416119a86f	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/06.mp3	a5e5a3998ea7f94f47a737c89c4bb44ee75bc2997feedf23fe3d06afbafae168	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/07.json	0fed0b06248d3b3f7dbca641ce15a265d71c9f57d1c81973dcd3b8ab02763171	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/07.mp3	40b5031045d65b95db313f4919c3e0f66d805effc47a7bb983d6e647cd1556c0	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/08.json	cfb340c050473dbf930dcfdbcbce775a9847314823adcf79307ba8643693f7c4	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/08.mp3	3f2bfb746229db56025e079193b071b486b9ba1485a6cb9e02a96ec138427d98	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/09.json	edad79410cc3bee2002e86d729efb9130e1f76ec6b2d99ca4fe3e8aeb0becb81	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/09.mp3	38ae337c83e477d51c894d36ede8f6af781273e2a19a27538c507b08f6e88cc0	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/10.json	9240eecdf758b3daa1669f3a033a53e8bd5435557a506c699a52cb58a1a3bf4b	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/10.mp3	e47e3e84ebb88bfa6380dfe262de4ac5a1294c6c97d4175c6ee253b023b2b9a6	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/11.json	cf28dfe16dfb6655dea9c4d47fec8f933bc639d3cbf9a897cfdc527f917b3cb5	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/11.mp3	e27cc39d3498ead5b5b84de73d898287828b921a7d8f0ab23ff70e0cb7a3d5ce	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/12.json	1d6278e962b5a28fb6b1493ae91fbf701548f7fa692ea50ae80e24f28ac60b6c	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/kapitoly/12.mp3	cd62e2792ae18a0551f8aa204c31db39eb4c0dc12fc5d0d73b66b6dc4d4c15ff	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/scenar.txt	df2f70a51aeaf62b0bb796729b714f17297eb33fc796d1f107c2faee2269b5bd	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/vyroba/dokoncit_audio.py	932e867f916f4ce71cb0ad5b04b6c6a2fb67492eecf3924809ac41f190a66c2a	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt
+studie/podcast/vyroba/vytvor_audio.py	e906394940ce6355fe443c8e59d2e3ef7e626846e9a916495ebfed2642edcf6e	Projektový scénář, tvorba a syntetický hlas dle přiložených poznámek	studie/podcast/Zdroje_a_poznamky.txt

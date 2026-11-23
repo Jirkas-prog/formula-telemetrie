@@ -1,0 +1,11 @@
+[Unit]
+Description=Formula Manager Wi-Fi configuration socket
+
+[Socket]
+ListenStream=/run/formula-wifi-profiles.sock
+SocketGroup=formula-manager
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target
+

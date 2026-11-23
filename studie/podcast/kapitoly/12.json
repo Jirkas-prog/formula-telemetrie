@@ -1,0 +1,13 @@
+{
+  "number": 12,
+  "title": "V jakém pořadí to skutečně postavíš",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "a04ff1ff80da10ac468d268623188688dd3c92c8dbc94d0c29035c4057e712c9",
+  "sha256_audio": "cd62e2792ae18a0551f8aa204c31db39eb4c0dc12fc5d0d73b66b6dc4d4c15ff",
+  "duration_seconds": 143.04,
+  "word_count": 333,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

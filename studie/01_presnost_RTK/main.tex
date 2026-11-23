@@ -1,0 +1,189 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{lmodern,microtype}
+\usepackage[left=30mm,right=20mm,top=24mm,bottom=25mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,tabularx,longtable}
+\usepackage{enumitem,xcolor,xurl}
+\usepackage{fancyhdr}
+\usepackage[unicode,colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!45!black]{hyperref}
+\setlength{\emergencystretch}{3em}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{1.2em}
+\setlist{itemsep=0.2em,topsep=0.4em,leftmargin=*}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[L]{\small Rešeršní studie \textbullet{} 21.~10.~2026}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.3pt}
+\raggedbottom
+\newcommand{\studietitle}[3]{\noindent{\small\bfseries STUDIE #1 \hfill Verze 1.0 / 21. 10. 2026}\par\vspace{0.7em}
+{\LARGE\bfseries #2\par}\vspace{0.5em}\noindent{\large #3\par}\vspace{0.8em}}
+\newcommand{\zdroj}[3]{\bibitem{#1}#2. Dostupné z: \url{#3}. [cit.~2026-10-21].}
+\begin{document}
+
+\studietitle{01}{Přesnost RTK a podmínky jejího dosažení}{Princip metody a požadavky na stavbu měřicí sestavy}
+
+\section{Zaměření a výchozí podmínky}
+Studie vysvětluje, proč může metoda RTK dosahovat centimetrové přesnosti, které chyby tímto způsobem potlačit nelze a jaké podmínky musí splnit stavba měřicí sestavy pro vozidlo Formula Student. Výstupem je návrh montážních a ověřovacích kroků, nikoliv tvrzení o již dosažených výsledcích. Samostatné studie 02 a 03 řeší přenos RTCM a použití NTRIP.
+
+Aplikačním východiskem jsou místní projektové podklady \emph{RTK GNSS a IMU pro Formula Student}, stav hlavního projektu \texttt{rtk-gnss-bakalarka} dostupný k datu rešerše: rover ArduSimple simpleRTK3B Pro se Septentrio mosaic-X5, pevná přenosná základna simpleRTK2B Budget se ZED-F9P, dvě antény ANN-MB2-00, Raspberry Pi 5 a zamýšlený spoj XIAO ESP32S3/Wio-SX1262. Jde o zvolenou architekturu, nikoli o potvrzení nákupu, osazení nebo funkčnosti. Přesná varianta F9P a verze firmwaru se musí při oživení zaznamenat.
+
+Rešerše vychází z dokumentace výrobců a výukových podkladů ESA. Převzaté technické skutečnosti jsou citovány. Číselné příklady, návrhové meze a zkušební postupy jsou vlastní odvození pro tento projekt. Při přenosu závěrů do bakalářské práce je nutné zachovat toto rozlišení.
+
+\section{V čem spočívá RTK}
+\subsection{Kódové a fázové měření}
+GNSS přijímač určuje vzdálenosti k družicím z přijatého rádiového signálu. Kódové měření využívá časový posun známé sekvence; fázové měření sleduje fázi nosné vlny. Fázi lze měřit podstatně jemněji než kód, avšak samotná fáze neříká, kolik celých vln mezi družicí a přijímačem leží. Tento neznámý celočíselný počet je fázová neurčitost neboli ambiguita. RTK využívá společná měření základny a roveru a odhad těchto neurčitostí.\cite{esa-rtk,esa-ambiguity}
+
+Pro pochopení metody postačuje zjednodušená fázová rovnice v metrech
+\begin{equation}
+ \Phi_r^s=\rho_r^s+c(\delta t_r-\delta t^s)+T_r^s-I_r^s
+          +\lambda N_r^s+\varepsilon_r^s .
+\end{equation}
+Index $r$ označuje přijímač a $s$ družici, $\rho$ geometrickou vzdálenost, $c$ rychlost světla, $\delta t$ chyby hodin, $T$ troposférické zpoždění, $I$ ionosférický člen, $\lambda$ vlnovou délku a $N$ ambiguitu. Zbytek $\varepsilon$ shrnuje šum a nevyjádřené vlivy. Záporné znaménko ionosférického členu platí pro fázi; kód má opačné. Rovnice je didakticky zjednodušená, bez úplného modelu přístrojových odchylek.
+
+Rozdíl mezi dvěma přijímači a následně mezi dvěma družicemi vede k dvojité diferenci. Při vhodném modelu odstraní hodinové členy a dovolí řešit celočíselné ambiguity. Blízké přijímače navíc pozorují podobné atmosférické a orbitální chyby, jejichž rozdíl je menší než původní chyba. Tento princip nevylučuje zbytkové chyby ani špatné určení celého počtu vln. Přerušení sledování může způsobit skok o celý počet cyklů (cycle slip); příslušnou ambiguitu je pak nutné znovu vyřešit.\cite{esa-ambiguity}
+
+\subsection{Základna, rover a režim FIX}
+Pevná základna poskytuje svou referenční polohu a časově označené observace. Rover z nich spolu s vlastními měřeními určí vektor vůči základně. V běžném RTK tedy nejde jen o zasílání jedné univerzální opravy zeměpisné šířky a délky. Pro krátkou základnovou vzdálenost lze očekávat dobrou podobnost společných chyb; s rostoucí vzdáleností tato výhoda slábne. Zastínění a přerušení fázového sledování mohou vyvolat novou inicializaci.\cite{esa-rtk}
+
+\par
+\begin{table}[htbp]
+\centering\small
+\caption{Význam základních stavů řešení; žádný stav sám neurčuje chybu vůči nezávislé referenci.}
+\begin{tabularx}{\linewidth}{L{27mm}YY}
+\toprule
+Stav & Co vyjadřuje & Interpretace při vyhodnocení\\
+\midrule
+Samostatné GNSS & Poloha bez řešení RTK vůči základně. & Nezahrnovat do souboru výsledků označených jako centimetrové RTK.\\
+RTK FLOAT & Ambiguity jsou odhadovány jako reálné hodnoty. & Uvést zvlášť; přesnost závisí na podmínkách a době konvergence.\\
+RTK FIX & Přijímač přijal celočíselné řešení ambiguit. & Nutná, avšak nepostačující informace pro důkaz správnosti polohy.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+\par
+
+FIX označuje výsledek rozhodnutí algoritmu. Nesprávná souřadnice základny, špatně zadaná výška antény či nesoulad souřadných rámců mohou existovat i při stabilním FIX. Proto tato studie navrhuje posuzovat stav řešení současně s odchylkou od reference, stářím korekcí, dostupností měření a kontinuitou záznamu.
+
+\section{Co přesně znamená požadovaná přesnost}
+\subsection{Relativní a absolutní poloha}
+Vektorové vyjádření výsledku je
+\begin{equation}
+ \widehat{\mathbf x}_{R}=\widehat{\mathbf x}_{B}
+                      +\widehat{\mathbf b}_{BR}.
+\end{equation}
+Z toho plyne důležitý konstrukční důsledek: chyba souřadnice základny se promítne do absolutní souřadnice roveru, i když je relativní vektor určen velmi přesně. Základna posunutá v zadání o jeden metr může vytvářet vzájemně přesné trajektorie posunuté v mapě přibližně o jeden metr. Přesná velikost přenosu chyby závisí na modelu a vzdálenosti; příklad vyjadřuje dominantní účinek chybného počátku.
+
+Pro projekt je vhodné samostatně deklarovat:
+\begin{itemize}
+\item \textbf{přesnost relativní trajektorie} v místním systému tratě;
+\item \textbf{opakovatelný souřadný počátek} pro porovnávání různých jízd a dnů;
+\item \textbf{absolutní přesnost} vůči zaměřené referenci ve známém rámci a epoše.
+\end{itemize}
+Krátký autonomní \emph{survey-in} není automaticky geodetickým určením absolutní polohy. Pro opakovatelnost je nutné zachovat referenční bod a uložené souřadnice; při přestěhování antény je znovu určit. Manuál F9P rozlišuje režim survey-in a zadání pevné polohy základny.\cite{f9p}
+
+\subsection{Přesnost, opakovatelnost a statistika}
+Malý rozptyl bodů neprokazuje malou systematickou chybu. Výsledek se má popsat alespoň vodorovnou a svislou složkou, dobou měření, referencí a statistikou. Pro vodorovnou chybu vzorku $i$ lze použít
+\begin{equation}
+ e_{H,i}=\sqrt{(E_i-E_{\mathrm{ref},i})^2+
+                   (N_i-N_{\mathrm{ref},i})^2}.
+\end{equation}
+Uvádět se má například medián, 95.~percentil, maximum a podíl platných vzorků. Výrobní údaj RMS, směrodatná odchylka a CEP nejsou zaměnitelné; bez znalosti rozdělení chyb nelze jeden přepsat na jiný.
+
+Často používaný model přesnosti $a+b\,d$ kombinuje konstantní a vzdálenostní člen. Pro čistě ilustrační hodnoty $a=10$~mm a $b=1$~ppm vychází při $d=1$~km 11~mm, při $d=10$~km 20~mm. Tento výpočet \emph{není specifikací celé sestavy}. Neobsahuje chybu ustavení, rušení, pohyb držáku, referenčního bodu ani časové synchronizace.
+
+\section{Požadavky na mechanickou a elektrickou stavbu}
+\subsection{Anténa a její okolí}
+Vícecestné šíření vzniká souběhem přímého a odraženého signálu. Protože je závislé na místním okolí antény, korekce z jiné lokality je obecně neodstraní. Významné jsou okolní odrazivé plochy, jejich geometrie a vlastnosti přijímací antény.\cite{multipath} Pro stavbu z toho vyplývá umístění s volným výhledem, odstup od velkých odrazivých ploch a zkouška přímo na vozidle, nikoliv pouze na laboratorním stole.
+
+Fázový střed není totožný s libovolně zvoleným bodem plastového krytu. Rozlišují se mechanický referenční bod antény (ARP), offset fázového středu a jeho změny se směrem příjmu a frekvencí.\cite{antenna} Pro ANN-MB2 výrobce uvádí charakterizaci fázového středu na kruhové vodivé ploše o průměru 120~mm a upozorňuje na vliv změny této plochy.\cite{ann} Rozměr 120~mm proto představuje výchozí podmínku pro srovnání s dokumentací, nikoliv univerzální minimum pro každou montáž.
+
+Navržené ověření montáže zahrnuje porovnání referenčního uspořádání s finálním držákem a krytem. Měnit se má vždy jedna vlastnost: podložka, kryt, výška nebo orientace. Zaznamená se přesná poloha ARP, průběhy kvality signálu, FIX a chyba polohy. Shodný typ antén na základně a roveru snižuje počet různých konstrukčních vlivů, ale sám nepotvrzuje shodnou kalibraci v odlišném prostředí.
+
+U formule je třeba zkontrolovat pohled přes ochranný oblouk, pilota a karoserii. Vodivé či uhlíkové díly v okolí nelze posoudit jen podle vzhledu. Držák se nesmí při vibracích nebo aerodynamickém zatížení pohybovat vůči bodu vozidla, jehož trajektorie se vyhodnocuje. Kabel musí mít odlehčené konektory a opakovatelné vedení.
+
+\subsection{Základna a ustavení}
+Pro přenosnou základnu se navrhuje pevný stativ nebo jiný stabilní podklad mimo pohyb osob a vozidel. Zaznamená se označení bodu, výška a orientace antény, souřadnice, metoda jejich určení, souřadný rámec a datum. Přemístění antény při zachování starých souřadnic není platným pokračováním původního měření.
+
+Pokud je cílem především srovnání jízd na jedné trati, lze nejprve pracovat s pevným místním počátkem a později jej navázat na přesné absolutní souřadnice. Tato volba musí být v datech jednoznačná. Výšku nad elipsoidem nelze bez převodu považovat za nadmořskou výšku. Při výměně korekční služby je třeba ověřit rámec a výškový systém, jinak mohou vzniknout zdánlivé skoky trajektorie.
+
+\subsection{Napájení, rádiové rušení a rozhraní}
+Konstrukční kontrola má pokrýt stabilitu napájení pod plnou zátěží, napájení aktivní antény podle konkrétní desky, úrovně UART a oddělení rušivých zdrojů. Hotová deska a samotný GNSS modul mají odlišné napájecí vstupy; závazné jsou návody konkrétních desek.\cite{board-f9p,board-x5}
+
+Praktický A/B test se provede se zapnutým a vypnutým DC/DC měničem, Wi-Fi, LoRa, LTE modemem a ostatní elektronikou. Hodnotí se změna kvality příjmu a řešení, restarty i ztráty dat. Příčinou degradace může být vlastní zařízení, nikoliv družicová geometrie. Odolnost deklarovaná výrobcem GNSS modulu nenahrazuje tento test hotové sestavy.
+
+\section{Konfigurace a návaznost na dynamiku vozidla}
+Při oživení se ověří společné družicové signály, povolené RTCM zprávy a shodné ID základny. Vícepásmová anténa nerozšiřuje počet frekvencí, které skutečně měří základna. Pro korekci konkrétního signálu je rozhodující měření na obou stranách. Kompatibilitu je vhodné nejprve ověřit kabelem a teprve následně vložit rádiový spoj.
+
+Rychlost výstupu polohy a frekvence přenosu korekcí jsou odlišné parametry. Samotné zvýšení výstupu roveru například na 50~Hz nevyžaduje automaticky 50~Hz RTCM, ale ani nevytváří 50 nezávislých potvrzení centimetrové přesnosti za sekundu. U projektu se má vyhodnotit latence polohy a její skutečné časové označení.
+
+\subsection{Páka mezi anténou a sledovaným bodem}
+Je-li $\mathbf l_{PA}^{B}$ vektor od sledovaného bodu $P$ k anténě $A$ v soustavě vozidla a $\mathbf R_B^E$ rotace do místní soustavy, platí
+\begin{equation}
+ \mathbf p_P^E=\mathbf p_A^E-\mathbf R_B^E\mathbf l_{PA}^{B}.
+\end{equation}
+Před použitím je třeba zjistit, zda výstup přijímače již obsahuje korekci anténního offsetu; stejná korekce se nesmí odečíst dvakrát. Pro pohybující se vozidlo nelze proměnnou páku nahrazovat konstantním posunem v ENU.
+
+Vlastní orientační příklad: při délce páky 0,5~m a chybě orientace $1^\circ$ je příčná chyba přibližně $0{,}5\sin 1^\circ=8{,}7$~mm. Naklonění karoserie tedy může být významné i při dobrém GNSS řešení. Jedna anténa neposkytuje úplnou orientaci karoserie; směr pohybu se při smyku liší od jejího natočení.
+
+\subsection{Časová synchronizace}
+Přibližná chyba při časovém nesouladu $\Delta t$ mezi polohou a referencí je
+\begin{equation}
+ e_t \approx v|\Delta t|.
+\end{equation}
+Při modelové rychlosti 30~m/s znamená 1~ms 30~mm a 10~ms 300~mm. Jde o chybu přiřazení polohy k času, nikoliv o přímý vztah mezi stářím RTCM a chybou RTK. Stará korekce neznamená, že přijímač pouze vydává starou polohu vozidla.
+
+PPS pomáhá navázat časové osy, avšak sám nezaručí, že každý vzorek IMU nebo každá zpráva na USB dostane přesný čas měření. Do ověření patří rozdíl epochy měření a příchodu zprávy, zpoždění ovladačů i chování Raspberry Pi pod zátěží. Čas přijmutí zprávy se nesmí bez ověření vydávat za čas měření.
+
+\section{Navržené ověření dosažené přesnosti}
+\subsection{Zkoušky po etapách}
+\begin{enumerate}
+\item \textbf{Kabelový základ.} Přímý přenos RTCM, otevřený výhled, stabilní antény. Ověřit konfiguraci a opakované získání FIX.
+\item \textbf{Statická reference.} Nejméně tři nezávislé inicializace, více časových úseků s odlišnou geometrií. Porovnat s bodem zaměřeným metodou s vyčíslenou nejistotou.
+\item \textbf{Finální mechanika.} Stejné zkoušky s držákem, krytem a napájením určeným do auta; zahrnout souběžný provoz všech vysílačů.
+\item \textbf{Dynamická zkouška.} Porovnat anténní bod nebo přepočtený bod vozidla s nezávislou časově sladěnou referencí. Samotný návrat na stejnou stopu není referenční trajektorie.
+\item \textbf{Poruchové stavy.} Výpadky korekcí, zastínění, restart rádia, znovupřipojení a změna základny. Sledovat chyby i dobu návratu do spolehlivého řešení.
+\end{enumerate}
+PPK z totožných observací může pomoci diagnostice, ale není plně nezávislou pravdou: sdílí antény, prostředí a část systematických chyb.
+
+\subsection{Metriky a návrhová kritéria}
+\par
+\begin{table}[htbp]
+\centering\small
+\caption{Pracovní návrh přejímky; hodnoty nejsou dosažené výsledky ani výrobní garance.}
+\begin{tabularx}{\linewidth}{L{40mm}YY}
+\toprule
+Ukazatel & Pracovní cíl & Podmínka interpretace\\
+\midrule
+95.~percentil vodorovné chyby & Do 30~mm ve vymezeném úseku s FIX. & Nezávislá reference a doložená časová nejistota.\\
+95.~percentil svislé chyby & Do 50~mm při statické zkoušce. & Známý výškový systém a výška antény.\\
+Dostupnost řešení & Alespoň 95\,\% času zvolené jízdy ve validovaném stavu. & Zvlášť uvést dobu inicializace a všechny výpadky.\\
+Opakovatelnost ustavení & Rozdíl mezi sezeními vyhodnotit samostatně. & Stejný bod, rámec a montáž.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+\par
+Tyto cíle jsou návrhem pro další specifikaci experimentu. Jejich nesplnění se nesmí skrýt výběrem pouze nejlepších úseků. Vedle statistik pro FIX musí být zveřejněn výsledek za celou jízdu, nejdelší výpadek a počet chybných či neplatných řešení. Referenční nejistota má být dostatečně menší než ověřovaná mez; jinak závěr zkoušky zůstává neprůkazný.
+
+Záznam má obsahovat konfiguraci a firmware, surová GNSS data obou přijímačů, přijaté korekce, časové značky, stav řešení, kvalitu signálu, počet použitých družic, odhad nejistoty a identifikaci základny. K tomu patří fotografie a rozměry montáže, podmínky zkoušky a známé zásahy do zařízení.
+
+\section{Závěry pro projekt}
+RTK může poskytnout centimetrové relativní měření, pouze pokud sestava zachová kvalitní fázové observace, správnou referenci a použitelná korekční data. Pro plánovanou formuli mají bezprostřední význam stabilní umístění obou antén, kontrola vodivé podložky ANN-MB2, rušení od vlastní elektroniky, správné souřadnice základny a časová návaznost GNSS/IMU.
+
+První experiment má oddělit vlastnosti GNSS od komunikačního spoje: ověřit sestavu s přímým RTCM připojením a se známou referencí. Teprve potom je smysluplné hodnotit ztráty přesnosti způsobené LoRa nebo internetem. Za důkaz dosažené přesnosti se přijme kombinace reference, statistiky a dostupnosti, nikoli pouze dlouho svítící indikátor FIX.
+
+\begin{thebibliography}{99}\small
+\zdroj{esa-rtk}{GMV / ESA Navipedia. \emph{RTK Fundamentals}. 2011. Oddíly RTK Technique a Performance}{https://gssc.esa.int/navipedia/index.php/RTK_Fundamentals}
+\zdroj{esa-ambiguity}{SANZ SUBIRANA, J.; JUAN ZORNOZA, J. M.; HERNÁNDEZ-PAJARES, M. \emph{Carrier Phase Ambiguity Fixing}. ESA Navipedia, 2011}{https://gssc.esa.int/navipedia/index.php/Carrier_Phase_Ambiguity_Fixing}
+\zdroj{f9p}{U-BLOX. \emph{ZED-F9P Integration Manual}. UBX-18010802, R16, 30. 10. 2024. Oddíl 3.1.5, konfigurace RTK a základny}{https://content.u-blox.com/sites/default/files/ZED-F9P_IntegrationManual_UBX-18010802.pdf}
+\zdroj{multipath}{SANZ SUBIRANA, J.; JUAN ZORNOZA, J. M.; HERNÁNDEZ-PAJARES, M. \emph{Multipath}. ESA Navipedia, 2011}{https://gssc.esa.int/navipedia/index.php/Multipath}
+\zdroj{antenna}{SANZ SUBIRANA, J.; JUAN ZORNOZA, J. M.; HERNÁNDEZ-PAJARES, M. \emph{Antenna Phase Centre}. ESA Navipedia, 2011}{https://gssc.esa.int/navipedia/index.php/Antenna_Phase_Centre}
+\zdroj{ann}{U-BLOX. \emph{ANN-MB2 Data Sheet}. UBXDOC-963802114-12775, R03, 2025. Oddíl 5.2, s. 9}{https://content.u-blox.com/sites/default/files/documents/ANN-MB2_DataSheet_UBXDOC-963802114-12775.pdf}
+\zdroj{board-f9p}{ARDUSIMPLE. \emph{User Guide: simpleRTK2B Budget}}{https://www.ardusimple.com/user-guide-simplertk2b-budget/}
+\zdroj{board-x5}{ARDUSIMPLE. \emph{User Guide: simpleRTK3B Pro}}{https://www.ardusimple.com/user-guide-simplertk3b-pro/}
+\end{thebibliography}
+\end{document}

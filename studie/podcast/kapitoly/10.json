@@ -1,0 +1,13 @@
+{
+  "number": 10,
+  "title": "Prostředí pro tvoje vlastní výpočty",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "0c43aa0475186cf92d3d7db6f0cde64a05a8a155e34c1085fa4a5e58000633c8",
+  "sha256_audio": "e47e3e84ebb88bfa6380dfe262de4ac5a1294c6c97d4175c6ee253b023b2b9a6",
+  "duration_seconds": 137.712,
+  "word_count": 332,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

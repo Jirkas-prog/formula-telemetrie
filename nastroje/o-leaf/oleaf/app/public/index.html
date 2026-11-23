@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>O-Leaf</title>
+  <link rel="stylesheet" href="vendor/codemirror/codemirror.css">
+  <link rel="stylesheet" href="vendor/codemirror/theme/material-darker.css">
+  <link rel="stylesheet" href="assets/styles.css?v=0.8.0">
+  <link rel="stylesheet" href="assets/workflow.css?v=0.8.0">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path fill="#83b7a8" d="M3 8h21l-8 10H3zM3 22h13l8 10H3z"/><path fill="#c2f86b" d="M27 3h10v24L25 37H15l12-14z"/></svg><span>O-Leaf<small>WORKFLOW / LATEX STUDIO</small></span></div><span id="header-project" class="header-project">Váš prostor pro psaní.</span>
+    <div class="top-actions">
+      <span id="workspace-badge" class="badge">Host</span>
+      <button id="settings-button" class="button ghost" data-icon="settings" title="Nastavení">Nastavení</button>
+      <button id="account-button" class="button ghost">Přihlásit</button>
+    </div>
+  </header>
+
+  <nav class="toolbar" aria-label="Nástroje projektu">
+    <button id="open-projects" class="button" data-icon="folder" title="Otevřít projekt">Otevřít projekt</button>
+    <button id="new-project" class="button" data-icon="new" title="Nový projekt" aria-label="Nový projekt">Nový projekt</button>
+    <button id="import-project" class="button" data-icon="import" title="Import ZIP" aria-label="Import ZIP">Import ZIP</button>
+    <button id="export-project" class="button" data-icon="export" title="Export ZIP" aria-label="Export ZIP" disabled>Export ZIP</button>
+    <span class="toolbar-separator"></span>
+    <button id="save-file" class="button" data-icon="save" title="Uložit" aria-label="Uložit" disabled>Uložit</button>
+    <button id="compile" class="button primary" data-icon="compile" title="Kompilovat" aria-label="Kompilovat" disabled>Kompilovat</button>
+    <button id="pane-toggle" class="button pane-toggle" data-icon="pdf" title="Zobrazit PDF" aria-label="Zobrazit PDF">PDF</button>
+    <span id="save-state" class="save-state">Připraveno</span>
+  </nav>
+  <div id="compile-progress-wrap" class="compile-progress-wrap" hidden>
+    <div class="compile-progress-track"><div id="compile-progress-bar" class="compile-progress-bar"></div></div>
+    <span id="compile-progress-label">Připravuji kompilaci…</span>
+    <span id="compile-progress-percent">0 %</span>
+  </div>
+
+  <main class="workspace">
+    <aside id="project-sidebar" class="sidebar" aria-label="Navigace projektu">
+      <section>
+        <div class="section-heading"><h2>Aktivní projekt</h2></div>
+        <div id="project-dropdown" class="dropdown" data-placeholder="Žádný projekt">
+          <button type="button" class="dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
+            <span class="dropdown-label">Žádný projekt</span><span class="dropdown-chevron">⌄</span>
+          </button>
+          <div class="dropdown-menu" role="listbox" hidden></div>
+        </div>
+      </section>
+
+      <p id="project-location" class="project-location">Soukromé projekty i složky z Home Assistantu.</p>
+      <section class="entry-section">
+        <label class="entry-label">Hlavní soubor <select id="entry-file" aria-label="Hlavní soubor"><option value="main.tex">main.tex</option></select></label>
+      </section>
+
+      <section id="pinned-section" class="pinned-section" hidden>
+        <div class="section-heading"><h2>Připnuté soubory</h2></div>
+        <div id="pinned-files" class="pinned-files empty-state">Zatím není nic připnuto.</div>
+      </section>
+
+      <section class="files-section">
+        <div class="section-heading">
+          <h2>Soubory</h2>
+          <div>
+            <button id="new-file" class="icon-button" title="Nový soubor" disabled data-icon="new">Nový soubor</button>
+            <button id="new-folder" class="icon-button" title="Nová podsložka" disabled data-icon="folderPlus">Nová složka</button>
+            <button id="delete-file" class="icon-button danger" title="Smazat vybraný soubor" disabled data-icon="clear">Smazat soubor</button>
+          </div>
+        </div>
+        <input id="file-search" type="search" placeholder="Najít soubor…" aria-label="Najít soubor v projektu">
+        <div id="file-tree" class="file-tree empty-state">Otevřete složku nebo vytvořte nový projekt.</div>
+      </section>
+
+      <section class="plugins-section">
+        <div class="section-heading"><h2>Pluginy</h2></div>
+        <div id="plugin-dropdown" class="dropdown" data-placeholder="Žádný plugin">
+          <button type="button" class="dropdown-toggle" aria-haspopup="listbox" aria-expanded="false">
+            <span class="dropdown-label">Žádný plugin</span><span class="dropdown-chevron">⌄</span>
+          </button>
+          <div class="dropdown-menu" role="listbox" hidden></div>
+        </div>
+        <div class="button-row">
+          <button id="import-plugin" class="button small">Importovat</button>
+          <button id="apply-plugin" class="button small" disabled>Použít</button>
+        </div>
+        <p class="hint">Plugin je ZIP s manifestem <code>oleaf-plugin.json</code>.</p>
+      </section>
+    </aside>
+    <div id="sidebar-scrollbar" class="sidebar-scrollbar" aria-hidden="true">
+      <div class="sidebar-scrollbar-thumb"></div>
+    </div>
+    <button id="sidebar-backdrop" class="sidebar-backdrop" aria-label="Zavřít navigaci" hidden></button>
+    <div class="sidebar-edge">
+      <button id="sidebar-toggle" class="edge-button" aria-controls="project-sidebar" aria-expanded="true" title="Skrýt navigaci" aria-label="Skrýt navigaci"></button>
+    </div>
+
+    <div id="workbench" class="workbench" data-mode="split">
+    <section id="editor-pane" class="editor-pane" aria-label="Editor">
+      <div class="pane-heading">
+        <div class="pane-title">
+          <span id="current-path">Žádný otevřený soubor</span>
+          <span id="dirty-dot" class="dirty-dot" hidden title="Neuložené změny"></span>
+          <span class="synctex-hint" title="Kliknutí do zdroje ukáže odpovídající místo v PDF" aria-label="Křížová navigace ze zdroje do PDF">⇄ <span>Kliknutím propojit</span></span>
+        </div>
+        <div class="pane-actions zoom-controls" aria-label="Měřítko editoru">
+          <button id="editor-zoom-out" class="icon-button zoom-button" title="Zmenšit text editoru" aria-label="Zmenšit text editoru">−</button>
+          <output id="editor-zoom-label" class="zoom-label" title="Měřítko editoru">100 %</output>
+          <button id="editor-zoom-in" class="icon-button zoom-button" title="Zvětšit text editoru" aria-label="Zvětšit text editoru">＋</button>
+        </div>
+      </div>
+      <div id="editor-welcome" class="editor-welcome">
+        <span class="eyebrow">OD PRVNÍHO ŘÁDKU K PDF</span>
+        <h1>Prostor pro<br>vaše myšlenky.</h1>
+        <p>Otevřete rozpracovaný dokument nebo začněte nový. Soubory, text i PDF máte na jednom místě.</p>
+        <button id="welcome-open" class="button primary" data-icon="folder">Otevřít projekt</button>
+        <button id="welcome-new" class="button" data-icon="new">Nový projekt</button>
+        <div class="welcome-note">LOKÁLNĚ V HOME ASSISTANTU<span>Vaše soubory. Vaše úložiště.</span></div>
+      </div>
+      <textarea id="editor" aria-label="LaTeX editor"></textarea>
+      <div id="file-preview" class="file-preview" aria-live="polite" hidden></div>
+    </section>
+
+    <div id="pane-divider" class="pane-divider">
+      <div id="pane-resize" class="pane-resize" role="separator" tabindex="0" aria-label="Změnit poměr editoru a PDF" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-controls="editor-pane preview-pane" title="Tažením změnit poměr · šipkami na klávesnici posouvat">
+        <span class="resize-grip" aria-hidden="true"></span>
+      </div>
+      <div class="divider-actions">
+        <button id="pane-left" class="edge-button" title="PDF přes celou pracovní plochu" aria-label="PDF přes celou pracovní plochu"></button>
+        <button id="pane-right" class="edge-button" title="Editor přes celou pracovní plochu" aria-label="Editor přes celou pracovní plochu"></button>
+      </div>
+    </div>
+
+    <section id="preview-pane" class="preview-pane" aria-label="PDF náhled">
+      <div class="pane-heading">
+        <span>PDF náhled</span>
+        <div class="pane-actions">
+          <span class="synctex-hint" title="Kliknutí do PDF otevře odpovídající zdrojový řádek" aria-label="Křížová navigace z PDF do zdroje">⇄ <span>Kliknutím propojit</span></span>
+          <div class="zoom-controls" aria-label="Měřítko PDF">
+            <button id="pdf-zoom-out" class="icon-button zoom-button" title="Zmenšit PDF" aria-label="Zmenšit PDF">−</button>
+            <output id="pdf-zoom-label" class="zoom-label" title="Měřítko PDF">100 %</output>
+            <button id="pdf-zoom-in" class="icon-button zoom-button" title="Zvětšit PDF" aria-label="Zvětšit PDF">＋</button>
+          </div>
+          <span class="pane-action-separator" aria-hidden="true"></span>
+          <button id="pdf-prev" class="icon-button" title="Přejít na předchozí stranu" disabled>‹</button>
+          <span id="pdf-page-label" class="pdf-page-label">– / –</span>
+          <button id="pdf-next" class="icon-button" title="Přejít na další stranu" disabled>›</button>
+          <button id="open-pdf" class="icon-button" title="Otevřít PDF v nové kartě" disabled>↗</button>
+          <button id="download-pdf" class="icon-button" title="Stáhnout PDF" disabled>↓</button>
+          <button id="refresh-pdf" class="icon-button" title="Obnovit náhled">↻</button>
+        </div>
+      </div>
+      <div id="preview-placeholder" class="preview-placeholder">
+        <svg class="preview-document" viewBox="0 0 100 120" aria-hidden="true"><path d="M15 5h48l22 22v88H15zM63 5v22h22M30 48h40M30 60h40M30 72h25"/></svg><h2>Váš dokument, naživo.</h2><p>Po kompilaci se zde zobrazí PDF.<br>Kliknutím přejdete zpět do zdrojového textu.</p>
+      </div>
+      <div id="pdf-renderer" class="pdf-renderer" tabindex="0" aria-label="Plynulý náhled PDF" hidden>
+        <div id="pdf-pages" class="pdf-pages"></div>
+      </div>
+    </section>
+    </div>
+
+    <section id="console-pane" class="console-pane">
+      <div class="console-heading">
+        <div class="console-title"><span id="console-indicator" class="console-indicator"></span><strong>Konzole</strong><span id="console-summary">Připraveno</span></div>
+        <div class="console-actions">
+          <button id="copy-console" class="icon-button" title="Kopírovat celý log">Kopírovat</button>
+          <button id="clear-console" class="icon-button" title="Vyčistit konzoli">Vyčistit</button>
+          <button id="toggle-console" class="icon-button" title="Sbalit konzoli">⌄</button>
+        </div>
+      </div>
+      <pre id="debug-console" tabindex="0"><span class="console-muted">O-Leaf debug konzole je připravena.</span></pre>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="auth-dialog" aria-labelledby="auth-title">
+    <form id="auth-form" method="dialog">
+      <div class="dialog-heading">
+        <h2 id="auth-title">Přihlášení</h2>
+        <button type="button" id="auth-close" class="icon-button" aria-label="Zavřít přihlášení">×</button>
+      </div>
+      <p id="auth-description">Po přihlášení uvidíte pouze svůj pracovní prostor.</p>
+      <label>Uživatelské jméno<input id="auth-username" autocomplete="username" required minlength="3" maxlength="32"></label>
+      <label>Heslo<input id="auth-password" type="password" autocomplete="current-password" required minlength="8"></label>
+      <p id="auth-error" class="error" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" id="auth-switch" class="button ghost">Vytvořit účet</button>
+        <button type="submit" id="auth-submit" class="button primary">Přihlásit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <form id="settings-form" method="dialog">
+      <div class="dialog-heading">
+        <h2 id="settings-title">Nastavení O-Leafu</h2>
+        <button type="button" id="settings-close" class="icon-button" aria-label="Zavřít nastavení">×</button>
+      </div>
+      <div class="settings-folders">
+        <h3>Složky projektů</h3>
+        <label for="projects-directory">Výchozí složka v Home Assistantu</label>
+        <div class="path-field"><input id="projects-directory" placeholder="/media/projekty/latex" required><button type="button" id="choose-default-folder" class="button">Procházet</button></div>
+        <p class="field-help">Zde začne výběr složky i vytváření nových projektů. Složky v /media a /share jsou společné pro uživatele addonu.</p>
+        <p id="settings-error" class="error" role="alert" hidden></p>
+      </div>
+      <fieldset class="theme-picker">
+        <legend>Barevné téma</legend>
+        <label class="theme-card workflow"><input type="radio" name="theme" value="workflow"><span>WorkFlow</span></label>
+        <label class="theme-card midnight"><input type="radio" name="theme" value="midnight"><span>Půlnoční</span></label>
+        <label class="theme-card light"><input type="radio" name="theme" value="light"><span>Světlé</span></label>
+      </fieldset>
+      <label class="setting-row"><span>Velikost písma editoru</span><output id="font-size-output">14 px</output><input id="font-size-setting" type="range" min="11" max="22" step="1" value="14"></label>
+      <label class="setting-toggle"><input id="word-wrap-setting" type="checkbox"><span>Zalamovat dlouhé řádky</span></label>
+      <label class="setting-row"><span>Výška konzole</span><output id="console-height-output">220 px</output><input id="console-height-setting" type="range" min="120" max="420" step="20" value="220"></label>
+      <div class="dialog-actions end">
+        <button type="button" id="reset-appearance" class="button ghost">Výchozí</button>
+        <button type="submit" class="button primary">Uložit nastavení</button>
+      </div>
+    </form>
+  </dialog>
+
+
+  <dialog id="projects-dialog" class="wide-dialog" aria-labelledby="projects-title">
+    <div class="dialog-body">
+      <div class="dialog-heading"><div><span class="eyebrow">PRACOVNÍ PROSTOR</span><h2 id="projects-title">Otevřít projekt</h2></div><button class="icon-button" data-close="projects-dialog" aria-label="Zavřít">×</button></div>
+      <div class="project-start-actions"><button id="browse-ha" class="button primary" data-icon="folder">Složka v Home Assistantu</button><button id="library-new" class="button" data-icon="new">Nový projekt</button><button id="library-import" class="button" data-icon="import">Import ZIP</button></div>
+      <div class="list-heading"><h3>Nedávné projekty</h3><input id="project-search" type="search" placeholder="Hledat projekt…" aria-label="Hledat projekt"></div>
+      <div id="recent-projects" class="recent-projects"></div>
+      <p class="field-help">Složku na serveru otevřete přímo. ZIP slouží pro přenos projektu z počítače nebo z Overleafu.</p>
+    </div>
+  </dialog>
+  <dialog id="folder-dialog" class="wide-dialog" aria-labelledby="folder-title">
+    <div class="dialog-body">
+      <div class="dialog-heading"><div><span class="eyebrow">HOME ASSISTANT / ÚLOŽIŠTĚ</span><h2 id="folder-title">Otevřít složku jako projekt</h2></div><button class="icon-button" data-close="folder-dialog" aria-label="Zavřít">×</button></div>
+      <div id="folder-roots" class="folder-roots"></div>
+      <form id="folder-path-form" class="path-field"><input id="folder-path" aria-label="Cesta ke složce" spellcheck="false"><button class="button" type="submit">Přejít</button></form>
+      <nav id="folder-breadcrumbs" class="breadcrumbs" aria-label="Umístění složky"></nav>
+      <div class="folder-tools"><button id="folder-up" class="button" type="button">O úroveň výš</button><button id="folder-create" class="button" type="button">Nová složka</button><input id="folder-search" type="search" placeholder="Filtrovat složky…" aria-label="Filtrovat složky"></div>
+      <p id="folder-error" class="error" role="alert" hidden></p>
+      <div id="folder-list" class="folder-list" aria-live="polite"></div>
+      <p id="folder-detail" class="field-help"></p>
+      <div class="dialog-actions end"><button class="button" data-close="folder-dialog">Zrušit</button><button id="folder-select" class="button primary" disabled>Otevřít tuto složku</button></div>
+    </div>
+  </dialog>
+  <dialog id="new-project-dialog" aria-labelledby="new-project-title">
+    <form id="new-project-form">
+      <div class="dialog-heading"><h2 id="new-project-title">Nový projekt</h2><button type="button" class="icon-button" data-close="new-project-dialog" aria-label="Zavřít">×</button></div>
+      <p>Začněte čistým dokumentem main.tex.</p>
+      <label>Název projektu<input id="new-project-name" required maxlength="80" placeholder="Například Technická zpráva" autocomplete="off"></label>
+      <label>Umístění projektu</label><div class="path-field"><input id="new-project-parent" aria-label="Nadřazená složka" required><button id="new-project-browse" type="button" class="button">Procházet</button></div>
+      <label class="setting-toggle"><input id="new-project-private" type="checkbox"><span>Uložit do soukromého prostoru addonu</span></label>
+      <p id="new-project-destination" class="field-help"></p><p id="new-project-error" class="error" role="alert" hidden></p>
+      <div class="dialog-actions end"><button type="button" class="button" data-close="new-project-dialog">Zrušit</button><button type="submit" class="button primary">Vytvořit projekt</button></div>
+    </form>
+  </dialog>
+  <dialog id="action-dialog" aria-labelledby="action-title">
+    <form id="action-form"><div class="dialog-heading"><h2 id="action-title"></h2><button type="button" class="icon-button" data-close="action-dialog" aria-label="Zavřít">×</button></div>
+      <p id="action-description"></p><label id="action-field"><span id="action-label"></span><input id="action-input" autocomplete="off"><select id="action-choice" aria-label="Způsob použití" hidden></select></label><p id="action-error" class="error" role="alert" hidden></p>
+      <div class="dialog-actions end"><button type="button" class="button" data-close="action-dialog">Zrušit</button><button id="action-submit" class="button primary" type="submit">Potvrdit</button></div>
+    </form>
+  </dialog>
+
+  <input id="project-upload" type="file" accept=".zip,application/zip" hidden>
+  <input id="plugin-upload" type="file" accept=".zip,application/zip" hidden>
+
+  <script src="vendor/codemirror/codemirror.js"></script>
+  <script src="vendor/codemirror/mode/stex/stex.js"></script>
+  <script src="assets/layout.js?v=0.8.0"></script>
+  <script src="assets/projects.js?v=0.8.0"></script>
+  <script src="assets/app.js?v=0.8.0"></script>
+</body>
+</html>

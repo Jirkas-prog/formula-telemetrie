@@ -1,0 +1,14 @@
+{
+  "sbf_bytes": 117776,
+  "csv_rows": 858,
+  "blocks": {
+    "4027": 858,
+    "4000": 858,
+    "4007": 858,
+    "4014": 17
+  },
+  "crc_errors": 0,
+  "bytes_outside_complete_frames": 0,
+  "sample_sequence_contiguous": true,
+  "invalid_position_coordinates_empty": true
+}

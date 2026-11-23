@@ -1,0 +1,132 @@
+PODCAST: RASPBERRY PI A GNSS LOGGER PRO FORMULI
+Podklady a kontrola zdrojů: 18. 11. 2026
+
+Výklad byl vytvořen pro Raspberry Pi 5 / 2 GB RAM, Raspberry Pi OS Lite
+64-bit, jediný NVMe SSD a dočasnou instalační SD kartu. Jde o vysvětlení
+návrhu a pracovního postupu, nikoli o protokol již dokončeného měření.
+Neprovádí instalaci Dockeru ani změny na Raspberry.
+
+Scénář je původní studijní výklad. České audio je syntetické:
+Microsoft Edge TTS, hlas cs-CZ-AntoninNeural, prostřednictvím projektu edge-tts.
+Službě byl předán text výkladu; přístupová hesla nejsou jeho součástí.
+Výslovnost některých názvů a zkratek je při syntéze přepsána foneticky.
+Není to profesionální lidská nahrávka ani zvuk původních autorů dokumentace.
+
+VÝCHOZÍ PROJEKTOVÉ PODKLADY
+
+Aktuální zadání a rozdíl vůči historickým studiím:
+D:\01_Skola\01_TUL\BAKALÁŘKA\Samotná_BAKALÁŘKA\BAKALÁŘKA V2\README.md
+Zde je stanoveno 50 Hz, vlastní základna F9P, následné PPK a volitelnost IMU.
+Podpora 50Hz výsledku se skutečnou základnou a řešičem musí být ověřena.
+
+Instalační návod SD -> NVMe a Wi-Fi:
+D:\01_Skola\01_TUL\BAKALÁŘKA\Doplňkové_materiály\Raspberry_Pi_5_instalace\Navod_NVMe_WiFi_2026-11-18\Priloha_Instalace_RPi5_NVMe_WiFi.pdf
+
+Dosavadní rozbory infrastruktury a logování:
+D:\01_Skola\01_TUL\BAKALÁŘKA\Studie\07_Infrastruktura_RPi_pruvodce\main.tex
+D:\01_Skola\01_TUL\BAKALÁŘKA\Studie\06_OS_a_spolehlive_logovani\main.tex
+Historické frekvence, IMU a návrhy zálohování nejsou automaticky aktuálním zadáním.
+
+ZDROJE PODLE TÉMAT
+
+Kapitoly 2–4: systém, headless instalace, úložiště
+
+[1] Raspberry Pi: Raspberry Pi OS downloads.
+Oficiální Lite 64-bit, Debian 13 Trixie, vydání 6. 10. 2026.
+https://www.raspberrypi.com/software/operating-systems/
+
+[2] Raspberry Pi: Getting started.
+Zaváděcí média, Imager, vzdálené nastavení a síť.
+https://www.raspberrypi.com/documentation/computers/getting-started.html
+
+[3] Raspberry Pi: Raspberry Pi hardware documentation.
+NVMe/PCIe, zaváděcí program, napájení a konkrétní modely desek.
+https://www.raspberrypi.com/documentation/computers/raspberry-pi.html
+
+[4] Zephyr Project: Raspberry Pi 5 (Cortex-A76).
+Existence podpory desky neznamená shodnou podporu celého linuxového stacku.
+https://docs.zephyrproject.org/latest/boards/raspberrypi/rpi_5/doc/index.html
+
+[5] Jeff Geerling: rpi-clone.
+Repozitář použitého nástroje pro vytvoření spustitelného cílového disku.
+https://github.com/geerlingguy/rpi-clone
+
+Kapitola 5: přijímač a původní data
+
+[6] Septentrio: mosaic-X5 product documentation.
+https://www.septentrio.com/en/products/gnss-receivers/gnss-receiver-modules/mosaic-x5
+
+[7] Septentrio: mosaic-X5 Reference Guide, firmware 4.14.10, 23. 9. 2024.
+Dokument výrobce distribuovaný dodavatelem nosné desky. Zejména oddíly
+1.2, 1.3 a část SBF Reference. Při implementaci použít dokumentaci
+odpovídající skutečně instalovanému firmwaru.
+https://www.ardusimple.com/wp-content/uploads/2024/10/mosaic-X5-Firmware-v4.14.10-Reference-Guide.pdf
+
+Kapitoly 6–7 a 11: trvalost zápisu, paměť, správa služeb
+
+[8] Linux man-pages: fsync(2).
+Synchronizace souboru, chybové stavy a zvláštní synchronizace adresáře.
+https://man7.org/linux/man-pages/man2/fsync.2.html
+
+[9] Linux kernel documentation: ext4 General Information.
+Žurnálování a režimy datových zápisů.
+https://www.kernel.org/doc/html/latest/admin-guide/ext4.html
+
+[10] systemd: systemd.service.
+Správa služby, start, restart a oznamování připravenosti.
+https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html
+
+Kapitoly 8–9: kontejnery, databáze a zobrazení
+
+[11] Docker: Install Docker Engine on Debian.
+Při instalaci zvolit větev pro Debian a architekturu arm64.
+https://docs.docker.com/engine/install/debian/
+
+[12] Docker: What is a container?
+https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/
+
+[13] Docker: How Compose works.
+https://docs.docker.com/compose/intro/compose-application-model/
+
+[14] Docker: Volumes.
+Trvalost dat vůči životnosti kontejneru; svazek není automatická záloha.
+https://docs.docker.com/engine/storage/volumes/
+
+[15] InfluxData: Get started with InfluxDB OSS v2.
+Výklad navazuje na návrh s řadou 2; netvrdí, že jde o nejnovější řadu.
+https://docs.influxdata.com/influxdb/v2/get-started/
+
+[16] Grafana: InfluxDB data source.
+https://grafana.com/docs/grafana/latest/datasources/influxdb/
+
+Kapitola 10: vlastní výpočty
+
+[17] Python documentation: venv — Creation of virtual environments.
+https://docs.python.org/3/library/venv.html
+
+Výroba zvuku
+
+[18] rany2: edge-tts.
+https://github.com/rany2/edge-tts
+
+VLASTNÍ ILUSTRAČNÍ VÝPOČTY, NIKOLI VÝROBCEM GARANTOVANÁ SPOTŘEBA
+
+Model RAM v kapitole 7 (MiB):
+OS a služby 300 + logger 100 + fronta 128 + průběžný výpočet 200 = 728.
+Docker 150 + InfluxDB 600 + Grafana 350 = dalších 1100.
+Celkem 1828; s rezervou 300 celkem 2128 MiB, tedy nad 2048 MiB.
+Rozpočtové položky jsou předpoklady pro názorné sčítání. Nejsou minimální
+požadavky ani naměřené hodnoty. Skutečná spotřeba závisí na konfiguraci,
+importu, dotazech, datech a použitelném MemTotal na konkrétní desce.
+
+Fronta: 128 MiB / 1 MiB/s = 128 s. Při 0,1 MiB/s = 1280 s = 21 min 20 s.
+Režie objektů, kopií a dalších bufferů tuto výdrž může zmenšit.
+
+Historie čísel: 12 hodnot × 8 B × 500 Hz × 3 h × 3600 s/h
+= 518 400 000 B = 518,4 MB = přibližně 494,4 MiB, bez další režie.
+Příklad 500 Hz popisuje možný inerciální experiment, nikoli hlavní
+požadavek na GNSS a nikoli nutnou spotřebu průběžného filtru.
+
+Jeden SSD, RAM fronta, ext4 ani fsync nezajišťují absolutní ochranu před
+všemi poruchami. Zvolený interval synchronizace není sám o sobě
+garantovanou horní mezí ztráty dat. Návrh musí potvrdit měření.

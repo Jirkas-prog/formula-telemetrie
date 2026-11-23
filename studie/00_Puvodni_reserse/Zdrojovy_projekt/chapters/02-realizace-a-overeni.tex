@@ -1,0 +1,426 @@
+\chapter{Plán realizace a ověření}
+\label{chap:realizace}
+
+\section{Nákup a aktualizovaný rozpočet}
+
+Nákupní seznam jsem sjednotil s aktuálním výběrem komponent. Požadavek na
+omezení počtu dodavatelů řeším dvěma skupinami: RPiShop pro výpočetní uzel,
+IMU a rádia, ArduSimple pro oba přijímače a antény. ArduSimple dodává ze
+Španělska; před objednávkou ověřím konečný daňový režim, dostupnost a dopravu.
+\cite{ardusimple-faq}
+Názvy položek v tabulkách odkazují přímo na veřejné produktové stránky.
+
+\subsection{RPiShop: výpočetní část, IMU a LoRa}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Vybrané položky RPiShopu; ceny v Kč včetně DPH}
+  \label{tab:rpishop}
+  \begin{tabularx}{\textwidth}{@{}rYrr@{}}
+    \toprule
+    Ks & Položka & Kč/ks & Celkem \\
+    \midrule
+    1 & \href{https://rpishop.cz/535838/raspberry-pi-5-2gb-ram/}
+      {Raspberry Pi 5, 2~GB (RPI502)} & 1\,629 & 1\,629 \\
+    1 & \href{https://rpishop.cz/chladice-pro-raspberry-pi-5/6496-raspberry-pi-5-active-cooler.html}
+      {Raspberry Pi 5 Active Cooler (OFI118)} & 149 & 149 \\
+    1 & \href{https://rpishop.cz/502557/raspberry-pi-m-2-hat/}
+      {Raspberry Pi M.2 HAT+ (OFI134)} & 349 & 349 \\
+    4 & \href{https://rpishop.cz/595653/xiao-esp32s3-wio-sx1262-kit-pro-meshtastic-lora/}
+      {XIAO ESP32S3 + Wio-SX1262 Kit (SEE319)} & 339 & 1\,356 \\
+    1 & \href{https://rpishop.cz/652161/adafruit-9osy-imu-modul-icm-20948-se-stemma-qt-qwiic/}
+      {Adafruit ICM-20948, 9osá IMU (ADA076)} & 449 & 449 \\
+    \midrule
+    & \textbf{Celkem s DPH} & & \textbf{3\,932} \\
+    & Přepočet bez 21\,\% DPH & & 3\,249,59 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Ceny Raspberry Pi, chladiče a HAT+ vycházejí z podkladu z 24.~9.~2026.
+LoRa a IMU jsou aktualizovány k 30.~9.~2026.
+\cite{rpishop-pi5-2gb,rpishop-active-cooler,rpishop-m2hat,rpishop-xiao-wio,rpishop-icm20948}
+Nová IMU nahrazuje původně uvažovanou položku od Farnellu a čtyři
+XIAO/Wio sady nahrazují dvojici Waveshare. Staré i nové varianty se proto
+do rozpočtu nesčítají.
+
+Pro aktivní spoj jsou potřebné dvě rádiové sady. Dvě další jsou v počtu
+čtyř zahrnuty pouze jednou a plánuji je pro vývoj a rezervu. Nepočítám se
+čtyřmi sadami pro rover a dalšími čtyřmi pro základnu.
+
+\subsection{ArduSimple: GNSS rover a přenosná základna}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Vybrané položky ArduSimple; ceny bez DPH}
+  \label{tab:ardusimple}
+  \begin{tabularx}{\textwidth}{@{}rYrr@{}}
+    \toprule
+    Ks & Položka & EUR celkem & Přepočet Kč \\
+    \midrule
+    1 & \href{https://www.ardusimple.com/product/simplertk3b-x5/}
+      {simpleRTK3B Pro / mosaic-X5} & 569 & 13\,872,22 \\
+    2 & \href{https://www.ardusimple.com/product/u-blox-gnss-tripleband-antenna-ann-mb2-00/}
+      {u-blox ANN-MB2-00, rover a základna (61 EUR/ks)} & 122 & 2\,974,36 \\
+    1 & \href{https://www.ardusimple.com/product/simplertk2b/}
+      {simpleRTK2B Budget / ZED-F9P} & 172 & 4\,193,36 \\
+    \midrule
+    & \textbf{Celkem bez DPH} & \textbf{863} & \textbf{21\,039,94} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Podkladem jsou ceny přijímačů z nákupního seznamu z 24.~9.~2026 a cena
+ANN-MB2-00 ověřená 30.~9.~2026.
+\cite{ardusimple-x5,ardusimple-annmb2,ardusimple-f9p}
+Pro srovnatelnost zachovávám kurz ČNB 24,380~Kč/EUR z 23.~9.~2026,
+nikoli tvrzení o kurzu platném v den objednávky.\cite{cnb-rates}
+Obě antény ANN-MB2-00 mají v ceně 5m kabel se SMA konektorem. Jeden kus
+je určen pro rover a druhý pro základnu; nejde o dvouanténní rover.
+
+\subsection{Mouser jako alternativa nákupní cesty}
+
+Vedle přímé objednávky u ArduSimple jsem zvažoval přesun obou GNSS desek
+a obou antén k distributorovi Mouser. Jde o alternativního prodejce
+stejné koncepce, nikoli o druhou současnou objednávku. Předběžný rozdíl
+jsem pro komunikaci se školitelem odhadl přibližně na 200~USD v neprospěch
+Mouseru. Tento pracovní odhad není závaznou nabídkou a do tabulky
+v korunách jej nepřičítám; případná změna vyžaduje novou kalkulaci všech
+položek ve shodné měně a daňovém režimu.
+
+Mouser může dávat smysl při jednodušším schvalování dodavatele univerzitou
+nebo výhodnějším potvrzeném termínu. Samotná doména českého obchodu však
+neprokazuje místo expedice. Před rozhodnutím bych ověřil shodu objednacích
+kódů, hardwarovou revizi, příslušenství, sklad a dodací podmínky.
+Současný nákupní podklad ponechávám rozdělený na \textbf{RPiShop a
+ArduSimple}; přímá expedice ArduSimple ze Španělska odpovídá preferenci
+evropského zdroje.\cite{ardusimple-faq}
+
+\subsection{Součet a hranice kalkulace k 30. září 2026}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Souhrn oceněné elektroniky; nejsou započteny dosud nevybrané instalační díly}
+  \label{tab:budget-2026}
+  \begin{tabularx}{\textwidth}{@{}Yr@{}}
+    \toprule
+    Skupina & Kč bez DPH \\
+    \midrule
+    RPiShop: 3\,932 / 1,21 & 3\,249,59 \\
+    ArduSimple: 863 EUR při 24,380 Kč/EUR & 21\,039,94 \\
+    \textbf{Vybraná elektronika celkem} & \textbf{24\,289,53} \\
+    Cílová částka & 25\,000,00 \\
+    \textbf{Rezerva před dopravou a instalací} & \textbf{710,47} \\
+    \midrule
+    Orientační celek s 21\,\% DPH & 29\,390,33 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Výpočet vychází z nezaokrouhleného přepočtu částky RPiShopu; součet samostatně
+zaokrouhlených řádků se může lišit o haléř. Pro stručnou komunikaci používám
+\textbf{24~290~Kč bez DPH} a rezervu přibližně \textbf{710~Kč}.
+Kontrolní cena s DPH je orientační sjednocený přepočet, ne závazná nabídka
+ani určení daňového režimu faktury univerzity.
+
+SSD dodám vlastní. Pro první laboratorní etapu počítám s týmovým
+notebookem základny; předpoklad jeho dostupnosti musím potvrdit.
+U SSD ověřím NVMe provedení, formát 2230/2242 a kompatibilitu s HAT+.
+Notebook mohu při cílovém samostatném provozu vypustit až po doplnění
+a ověření lokálního raw loggeru. Košík tedy není kompletní cenou
+autonomní základny včetně veškerého příslušenství.
+
+Částka \textbf{nezahrnuje} dopravu, DC/DC zdroj, ochrany a energetický
+doběh, USB a signálovou kabeláž, konektory, kryty, držáky, stativ ani
+případné kvalitnější LoRa antény. Nezahrnuje ani samostatné úložiště
+raw dat základny a jeho rozhraní. Tyto položky zatím nemají konečnou
+specifikaci a cenu, proto je neoceňuji nulou. Celková cena funkční instalace
+bude vyšší. Původní orientační kalkulace s jinými deskami a modemy už není
+aktuálním podkladem objednávky.
+
+\section{Etapy sestavení}
+
+\subsection{Stolní prototyp}
+
+Nejprve ověřím obě GNSS desky s anténami, Raspberry Pi s chlazením a SSD
+a přímé SPI/INT připojení IMU. Laboratorní napájení musí mít dostatečnou
+proudovou rezervu pro celou sestavu. V této etapě nechci návrh uzavírat do
+finální krabičky, která by ztížila přístup k měřicím bodům.
+
+Sběr proběhne nejprve bez online filtru. Po ověření souborových formátů a
+časování přidám fúzi a vyzkouším současnou zátěž CPU, USB a NVMe. LoRa
+vyvíjím nejprve s generovanými daty, potom se zaznamenaným RTCM a nakonec
+s živou základnou. Předinstalovaný Meshtastic nahradím firmwarem, který
+umožní kontrolovat rámce, čas ve vzduchu a stáří přenášených korekcí.
+
+Následně přidám konfiguraci ZED-F9P přes UART a lokální webovou správu
+ESP32. Odděleně ověřím souběh Wi-Fi, rádia a zápisu raw dat. Teprve když
+základna uchová kompletní observace i po výpadku rádia a správně uzavře
+záznam při vypnutí, přejdu k provozu bez notebooku.
+
+\subsection{Doplňky nutné pro provoz}
+
+\small
+\begin{longtable}{@{}L{0.27\textwidth}L{0.33\textwidth}L{0.32\textwidth}@{}}
+  \caption{Instalační položky mimo původní rozpočet a jejich ověření}\label{tab:bom-b}\\
+  \toprule
+  Položka & Účel & Co zbývá rozhodnout \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Položka & Účel & Co zbývá rozhodnout \\
+  \midrule
+  \endhead
+  Napájení roveru & DC/DC, jištěný výstup PMU, filtrace a ochrany & nastavení PMU, příkon, přepětí a bezpečné vypnutí \\
+  USB kabely & GNSS a XIAO k hostitelům & konektory, datové provedení, délka a jištění; kit XIAO kabel nemá \\
+  SPI, INT a PPS kabeláž & signály a společná zem & dostupné GPIO pod HAT+, délky a úrovně PPS \\
+  Kryt a držáky & ochrana a opakovatelné ustavení & vibrace, odvod tepla, magnetické rušení a montáž antén \\
+  Základnový stativ & stabilní bod s volným horizontem & výška, zaměření a zajištění proti posunu \\
+  Napájení základny & přijímač, rádio a hostitel & výdrž při celé disciplíně a záznam poklesu napětí \\
+  Lokální úložiště základny & raw log pro PPK bez notebooku & například microSD, rozhraní a piny nekolidující s Wio; kapacita, výdrž zápisu a zotavení \\
+  Vodivá podložka antény & ověření montážní konfigurace & materiál, rozměry, mechanické uchycení a A/B test krytu \\
+  LoRa antény pro provoz & rádiová rezerva a vhodná montáž & nejprve test dodaných FPC; případné náhrady včetně zisku a konektorů \\
+  Převodník pro FSYNC, volitelný & případné rozšíření synchronizace & \SI{1.8}{V} úroveň a ověření významu synchronizačního záznamu \\
+  \bottomrule
+\end{longtable}
+\normalsize
+
+Základna bude mít ZED-F9P, anténu ANN-MB2-00 a jednu aktivní
+rádiovou sadu. Raw data nejprve zaznamená existující notebook, cílově
+doplněné místní úložiště. Rover bude mít X5 s ANN-MB2-00,
+IMU, Raspberry Pi a druhou aktivní rádiovou sadu. Tento rozpis určuje použití
+již oceněných komponent, nikoli další nákup stejných kusů.
+
+\section{Kontroly před objednávkou}
+
+U ArduSimple chci potvrdit konkrétní variantu obou přijímačů, dostupnost
+a obsah dodávky. Pro X5 je zásadní současná frekvence raw observací a
+skutečného RTK řešení při vybrané konfiguraci, potřebná licence a firmware.
+Dále ověřím vyvedení PPS, jeho elektrické parametry a vhodnost antény.
+U základnové desky potvrdím revizi, fyzické rozměry a nastavení IOREF
+pro UART. Držák neuzavřu podle obrázku jiné revize. U antén ověřím pevný
+5m kabel a místo pro jeho bezpečné vedení ve vlastním krytu.
+
+U RPiShopu ověřím dostupnost jedné desky ADA076 a všech čtyř sad SEE319.
+U ICM-20948 beru v úvahu EOL a neplánuji dostupnost náhrad podle aktuálního
+jediného skladového kusu. Zkontroluji zapojení SPI, INT a odlišné napětí
+FSYNC podle dokumentace Adafruit. Konektor STEMMA QT není náhradou za SPI
+kabeláž.
+
+Před potvrzením nákupu je potřeba doplnit dopravu a neoceněné povinné díly
+a porovnat celkovou částku s rozpočtem. Volba XIAO/Wio znamená také vlastní
+vývoj firmwaru a ověření rádiového režimu; nejde o nákup dvou již hotových
+a odzkoušených RTCM modemů.
+
+\section{Implementační plán}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Pracovní balíčky a jejich ověřitelné výstupy}
+  \label{tab:plan}
+  \begin{tabularx}{\textwidth}{@{}L{0.10\textwidth}L{0.29\textwidth}Y@{}}
+    \toprule
+    Balíček & Obsah & Výstup \\
+    \midrule
+    WP1 & Rozhraní a nákup & úplný soupis včetně napájení, dopravy a potvrzení dostupnosti \\
+    WP2 & IMU a časování & SPI/FIFO/INT ovladač, PPS, odhad epoch a protokol nejistoty času \\
+    WP3 & Záznam na Pi OS & tři proudy, metadata, diagnostika ztrát a bezpečné ukončení \\
+    WP4 & Základna a LoRa & raw log, UART konfigurace, webová správa, RTCM most a ověřený rádiový režim \\
+    WP5 & Online ESKF & poloha, rychlost, orientace, biasy, kovariance a odmítání rušení \\
+    WP6 & Postprocessing & převod observací, PPK a reprodukovatelné vyhlazení \\
+    WP7 & Kalibrace a montáž & lever arm, boresight, teplota, vibrace a magnetická kalibrace \\
+    WP8 & Validace & výsledky zkoušek proti kritériím tabulky~\ref{tab:acceptance} \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Online fúzi a definitivní kryt zařadím až po ověření raw loggeru. Změna
+senzoru nebo časového modelu tak neznehodnotí již pořízené záznamy.
+
+\section{Ověřovací a kalibrační plán}
+
+\subsection{Časování a úplnost záznamu}
+
+Na osciloskopu nebo logickém analyzátoru budu současně sledovat PPS, INT
+a SPI přenosy. Porovnám fyzické hrany s kernelovými časovými značkami,
+periodou měření a obsahem FIFO. Test má trvat nejméně 30 minut v klidu
+i se zatíženým CPU, USB, rádiem a diskem. Vyhodnotím zpoždění, jitter,
+přetečení, návaznost počtu vzorků a reakci na odpojení senzoru.
+
+Zvlášť ověřím akcelerometr, gyroskop a magnetometr. Nový magnetický vzorek
+musí být odlišen od staré hodnoty a musí mít vlastní odhad času a stav
+platnosti. Ztráta jedné události nesmí vést k nepozorovanému posunu všech
+následujících epoch. Pokud nedokážu přiřazení obnovit, logger uzavře
+časově souvislý úsek a označí mezeru.
+
+\subsection{Inerciální a magnetická kalibrace}
+
+Provedu šestipolohovou kontrolu akcelerometru, kontrolovaný rotační pohyb
+a statický záznam pro posouzení šumu a Allanova rozptylu. Porovnám bias po
+opakovaném zapnutí a při různých teplotách. Tyto zkoušky nejsou automaticky
+úplnou teplotní kalibrací, ale mohou odhalit nevhodné nastavení nebo kus.
+
+Magnetometr nejprve zkalibruji mimo vozidlo a poté ověřím v konečné montáži.
+Test zahrne více orientací, vypnutou a zapnutou výkonovou elektroniku
+a různé proudové zatížení. Vyhodnotím velikost i směr pole a rezidua po
+hard-iron/soft-iron korekci. V datech uchovám původní i kalibrované hodnoty
+a verzi kalibrace. Pokud rušení za jízdy nelze spolehlivě rozpoznat,
+magnetické aktualizace do filtru nezařadím.
+Součástí testu bude také vliv magnetu GNSS antény, šroubů a držáků;
+stálou odchylku i změnu pole při provozu vyhodnotím odděleně.
+
+\subsection{GNSS a rádiový spoj}
+
+Rover a základnu postavím na stabilní body s otevřeným horizontem. Změřím
+skutečnou četnost observací a PVT, dobu do FIX, stáří korekcí a datový objem
+RTCM. Stejný proud porovnám přes kabel, LoRa a případně NTRIP. Tím oddělím
+chybu rádiové vrstvy od problému samotného GNSS.
+
+Pro přesnost použiji lokální referenci navázanou na základnu: například
+nezávisle zaměřené body a známé vzdálenosti. Samostatně uvedu vodorovné
+a svislé chyby, jejich rozdělení a nejistotu reference. Prosté odčítání
+průměrné polohy měří opakovatelnost, nikoli samo o sobě přesnost.
+Při opakování zkoušky zachovám počátek ENU a montáž; po změně základny
+zdokumentuji převod do společné soustavy.
+
+Kryt a podložku antény porovnám při zachování jejího referenčního bodu
+a pokud možno obdobného výhledu i družicové geometrie. Test zopakuji
+s aktivním Wi-Fi, LoRa a DC/DC. Zaznamenám C/N0, FIX, rozptyl i odchylku
+od reference. Jediný krátký test nepovažuji za obecný důkaz lepší antény.
+
+U LoRa zaznamenám konfiguraci, počty zpráv a fragmentů, chyby integrity,
+ztráty, RSSI/SNR, latenci a čas ve vzduchu. Provedu test až do požadované
+vzdálenosti přibližně \SI{1}{km} a projedu trať s reálnou výškou antény
+a orientací vozidla. Nevyžaduji fyzikálně nemožnou záruku nulové rádiové
+ztrátovosti; požaduji její měřitelnost a přijatelné stáří použitých korekcí.
+
+Řízeně přeruším spoj a ověřím nepřerušený raw log na obou koncích, označení
+zhoršené kvality a obnovení RTK po návratu korekcí. Následně ověřím, že lze
+jízdu zpracovat PPK i přes výpadek rádiového přenosu.
+
+\subsection{Dynamika a napájení na vozidle}
+
+Po zaměření montáže začnu pomalou jízdou, osmičkou, brzděním a slalomem.
+Teprve potom přejdu k plné dynamice. U každé osy vyhodnotím maxima,
+99,9.~percentil a četnost překročení 80\,\% rozsahu. Z naměřeného spektra
+posoudím rezonance držáku, filtraci a potřebu jiného rozsahu.
+
+Změřím teplotu Raspberry Pi a SSD, napájecí poklesy a vliv rádia i DC/DC
+měniče na GNSS a magnetometr. Test řízeného vypnutí musí ověřit čitelnost
+již uzavřených bloků a označení neúplné relace. Energetický doběh se musí
+navrhnout podle skutečné doby potřebné k bezpečnému ukončení.
+
+\small
+\begin{longtable}{@{}L{0.23\textwidth}L{0.38\textwidth}L{0.31\textwidth}@{}}
+  \caption{Navržená akceptační kritéria; nejde o dosažené výsledky}\label{tab:acceptance}\\
+  \toprule
+  Zkouška & Kritérium / pracovní cíl & Doklad \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Zkouška & Kritérium / pracovní cíl & Doklad \\
+  \midrule
+  \endhead
+  IMU, 30 minut & žádné nevysvětlené mezery ani přetečení při plánované zátěži & počty dat, událostí a příznaky FIFO \\
+  Vazba epoch & změřená nejistota; pracovní cíl pod \SI{100}{\micro\second} & externí záchyt hran, rezidua a zpoždění filtrů \\
+  Magnetometr & rozlišené nové vzorky a ověřené odmítnutí rušených dat & kalibrační protokol a srovnání fúze s/bez kompasu \\
+  GNSS frekvence & dosažena dodavatelem potvrzená raw i RTK četnost & rozdíly časů SBF epoch \\
+  Statické RTK & pracovní cíl 95\,\% epoch FIX po inicializaci na otevřeném bodě & stav, korekce a referenční souřadnice \\
+  Místní přesnost & cíle 2 cm vodorovně a 3 cm svisle posouzené proti nezávislé referenci & chyby, jejich statistika, nejistota reference a společný rámec ENU \\
+  Samostatná základna & úplný raw log a přenos při souběhu s webovou správou & srovnání s USB záznamem, zátěž a zkouška restartu \\
+  LoRa na trati & změřená ztrátovost, omezené stáří korekcí a vyhovující rádiový režim & čas ve vzduchu, latence, RSSI/SNR a RTK stav \\
+  Saturace & žádná při běžné jízdě; rezerva k 80\,\% rozsahu & maxima, percentily a označené špičky \\
+  Výpadek spojení & raw log pokračuje a korekce se po návratu obnoví & události a návaznost relací \\
+  Výpadek napájení & uzavřené bloky čitelné, neúplnost zjistitelná & kontrolní součty a opakovaný start \\
+  Trajektorie & rozdíly online/PPK/smoothing mají vysvětlitelné příčiny & rezidua, reference a rozdělení podle kvality \\
+  \bottomrule
+\end{longtable}
+\normalsize
+
+Kritérium 95\,\% FIX se týká otevřeného referenčního testu, nikoli garance
+pro celou závodní trať. Pokud časování nedosáhne cíle, musím skutečnou
+nejistotu promítnout do fúze a rozhodnout o změně synchronizace.
+
+\section{Rizika a rozhodovací milníky}
+
+\small
+\begin{longtable}{@{}L{0.32\textwidth}L{0.60\textwidth}@{}}
+  \caption{Hlavní rizika aktualizovaného návrhu}\label{tab:risks}\\
+  \toprule
+  Riziko & Opatření \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Riziko & Opatření \\
+  \midrule
+  \endhead
+  Jiná RTK četnost X5 než očekávaná & potvrzení varianty a konfigurace; kontrola skutečných epoch před montáží \\
+  Drift nebo vyšší šum ICM-20948 & statické testy, kalibrace a porovnání výpadků GNSS; případný návrat k jiné IMU \\
+  Magnetické rušení & měření ve vozidle, kalibrace, detekce odlehlých dat a možnost kompas nepoužívat \\
+  EOL a nedostupnost další desky & potvrdit aktuální kus; neodvozovat dlouhodobou dostupnost z jedné nabídky \\
+  Jitter Linuxu nebo ztráta FIFO & přerušení, FIFO, zátěžová zkouška, časová nejistota a značení přerušených úseků \\
+  RTCM se nevejde do LoRa režimu & změřit objem a airtime; redukovat zprávy jen při zachování RTK; záložní přenos \\
+  Firmware rádia není hotový modem & samostatné testy rámcování, fragmentace, resetu, stáří dat a rádiové shody \\
+  Anténa nebo držák zhorší měření & montážní A/B test, vhodná zemní plocha, zaměření a kontrola vibrací \\
+  Nový survey-in posune porovnávané jízdy & uložit souřadnice a identifikátor ustavení; společný počátek nebo doložená transformace \\
+  Samostatná základna ztratí raw data & oddělit logger od rádiové fronty; ověřit úložiště před odpojením notebooku \\
+  Rozpočet není úplný & doplnit napájení, instalační díly a dopravu před schválením celkové objednávky \\
+  \bottomrule
+\end{longtable}
+\normalsize
+
+Prvním milníkem je úplný raw logger se změřenou časovou vazbou. Druhým je
+současně funkční základna, RTK rover, ověřený přenos korekcí a reprodukovatelné
+PPK. Třetím je vozidlová validace včetně magnetického rušení, saturace,
+teploty a napájení. Teprve po těchto krocích má smysl uzavírat návrh finálního
+krytu a případné vlastní desky.
+
+\section{Dílčí závěr výběru GNSS/IMU}
+
+Pro první realizaci jsem vybral \textbf{simpleRTK3B Pro s mosaic-X5},
+jedinou přenosnou základnu \textbf{simpleRTK2B Budget se ZED-F9P},
+dvě antény \textbf{ANN-MB2-00} (po jedné pro rover a základnu),
+\textbf{Adafruit ICM-20948} a \textbf{Raspberry Pi 5 2~GB} s chlazením,
+M.2 HAT+ a vlastním SSD. Přímý korekční spoj mají zajistit dvě ze čtyř
+objednávaných sad \textbf{XIAO ESP32S3 + Wio-SX1262}.
+
+Původní šestiosou IMU jsem změnil s ohledem na možnost využít kompas,
+dostupnost a sdružení nákupu. Přínos této změny není automatický:
+magnetometr musí projít kalibrací a zkouškou rušení, zatímco šum a drift
+inerciálních kanálů musí odpovídat záměru práce. EOL čipu omezuje
+perspektivu opakované výroby. Pro aktuální prototyp tuto nevýhodu přijímám,
+ale v dokumentaci ji nezamlčuji.
+
+Raspberry Pi bude číst IMU přímo přes SPI a INT, bez samostatného
+časovacího STM32. GNSS PPS a GPIO události vytvoří základ společné
+časové osy, jejíž nejistotu ověřím měřením. ESP32 zůstává součástí rádiových
+sad a u základny má navíc zajistit konfiguraci a místní webovou správu.
+Pro samostatný provoz musím doplnit úložiště raw dat. Vlastní firmware, legální rádiová konfigurace
+a změřená propustnost jsou nezbytné realizační úkoly.
+
+Aktuální oceněná elektronika vychází na \textbf{24~289,53~Kč bez DPH},
+tedy přibližně \textbf{24~290~Kč}. Rezerva do cílové částky je asi
+710~Kč před dopravou a dosud neoceněnou instalací. Nákup je soustředěn
+u dvou dodavatelů. Úplný rozpočet bude možné uzavřít až po volbě napájení,
+kabeláže a mechanických dílů.
+
+Dvě ANN-MB2 volím pro společné montážní řešení a nižší cenu; jejich
+přesnost v krytu teprve ověřím. Prioritou je místní trajektorie vůči
+základně, nikoli centimetrové umístění na mapě. Volba vývojové desky
+místo Holybro vychází z přístupu k rozhraním a vlastní konstrukce,
+ne z předpokladu přesnějšího GNSS čipu. Mouser ponechávám jako
+alternativu nákupu, nikoli dalšího současného dodavatele.
+
+Zachování tří měřicích proudů umožní porovnávat online filtr s pozdějším
+PPK a vyhlazením. Za nejdůležitější výsledek přípravné fáze považuji
+ověřitelný návrh a jasné experimentální otázky; skutečnou přesnost
+trajektorie bude možné uvést až po realizaci a validaci.
+
+Tento výběr představuje navigační část širšího měřicího systému.
+Kapitola~\ref{chap:integrace} rozšiřuje návrh o senzoriku vozidla,
+centrální ADC, dvě rozhraní CAN pro auto, napájení a montáž. Nové komponenty nejsou
+automaticky zahrnuty do zde uvedeného cenového snímku GNSS/IMU sestavy.

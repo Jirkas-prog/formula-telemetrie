@@ -1,0 +1,444 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+  \setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+  \setsansfont{lmsans10-regular.otf}
+  \setmonofont{lmmono10-regular.otf}
+\fi
+\usepackage[czech]{babel}
+\usepackage{microtype}
+\usepackage[left=30mm,right=20mm,top=24mm,bottom=25mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,tabularx,longtable}
+\usepackage{enumitem,xcolor,xurl,fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,babel}
+\usepackage[unicode,colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!45!black]{hyperref}
+\setlength{\emergencystretch}{3em}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{1.2em}
+\setlist{itemsep=0.25em,topsep=0.4em,leftmargin=*}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\pagestyle{fancy}\fancyhf{}
+\fancyfoot[L]{\small Rešeršní studie 06 \textbullet{} 25.~10.~2026}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}\renewcommand{\footrulewidth}{0.3pt}
+\raggedbottom
+\newcommand{\zdroj}[3]{\bibitem{#1}#2. Dostupné z: \url{#3}. [cit.~2026-10-23].}
+\newcommand{\novastrana}{\clearpage}
+\begin{document}
+\noindent{\small\bfseries STUDIE 06 \hfill Verze 2.0 / 25. 10. 2026}\par\vspace{0.7em}
+{\LARGE\bfseries Operační systém a spolehlivé logování\par}
+\vspace{0.5em}\noindent{\large Raspberry Pi 5, systém i záznam GNSS/IMU na jediném NVMe}\par\vspace{0.8em}
+
+\section{Otázka a doporučené řešení}
+Jak uchovat data roveru Formula Student při výpadku NVMe, zpoždění zápisu, pádu programu a odpojení napájení? Výchozí sestavou je Raspberry Pi~5 se 2~GB RAM, M.2 HAT+, vlastní NVMe, přijímač Septentrio mosaic-X5 na simpleRTK3B Pro a IMU Adafruit ICM-20948. Studie navazuje na současnou bakalářskou práci a předchozí studie; nemění jejich zdrojové soubory.\cite{projekt}
+
+\textbf{Rozhodnutí projektu z 25.~10.~2026: Raspberry Pi OS Lite 64-bit, systém i všechny logy pouze na NVMe, bez SD a bez druhé kopie dat.} Tato verze nahrazuje předchozí návrh duálního ukládání. PREEMPT\_RT porovnat podle měření časování; samo neřeší trvanlivost souborů ani poruchu SSD.\cite{rpos,rt,fsync}
+
+\begin{enumerate}
+\item \textbf{OS, logger a data na SSD:} boot přímo z NVMe, v prvním prototypu standardní oddíly vytvořené Imagerem. Data v určeném adresáři s kapacitním limitem; SD se nepoužívá.
+\item \textbf{Jeden zapisovač:} příjem senzorových dat oddělit od blokujícího zápisu na NVMe. Evidovat skutečně dokončené synchronizace.
+\item \textbf{Omezená RAM fronta:} překlene latence a krátké výpadky. Po odpojení napájení se ztratí; nezastupuje zálohu.
+\item \textbf{Obnova:} po pádu ověřit segmenty na SSD a zachovat čitelné záznamy. Žádný backfill z jiného média ani automatická replikace se nenavrhují.
+\item \textbf{Napájení:} jeho stabilita a dokončení zápisu zůstávají samostatným požadavkem. Energetický doběh je posuzovaná možnost ochrany zápisu, nikoli druhá kopie dat nebo již instalovaná UPS.
+\end{enumerate}
+
+\textbf{Hranice návrhu: jedna trvalá kopie.} RAM překlene krátké zdržení pouze za předpokladu, že systém dál běží. Porucha systémového SSD může zastavit celý logger a zničit jediný záznam; pokračování sběru při takové poruše není požadavkem této varianty. Bez znalosti konkrétních médií a měření nelze tvrdit, že NVMe je poruchovější než SD. Původní oddělení systému a dat řešilo dopad poruchy, nikoli její prokázanou četnost.
+
+\novastrana
+\section{Výchozí sestava a hranice požadavku}
+Údaje v tabulce jsou převzaty z projektu, nikoli z nového měření hardwaru. Záměr přímého připojení IMU bez časovacího mikrokontroléru zůstává zachován. Rádiové ESP32 v projektu není nezávislý IMU logger.\cite{projekt}
+
+\begin{table}[htbp]\centering\small
+\caption{Kontext současné bakalářské práce.}
+\begin{tabularx}{\textwidth}{L{35mm}Y}
+\toprule Prvek & Stav a důsledek pro návrh\\\midrule
+Raspberry Pi 5 & 2 GB RAM, Active Cooler, oficiální M.2 HAT+, vlastní NVMe 2230/2242; přesný SSD model a jeho ochrana při ztrátě napájení nejsou uvedeny.\\\addlinespace
+Rover GNSS & simpleRTK3B Pro / mosaic-X5, USB do Pi, PPS samostatně na GPIO; cílem projektu je poloha 100 Hz a RTK alespoň 50 Hz podle režimu přijímače.\\\addlinespace
+IMU & ICM-20948, přímé SPI a INT, cíl přibližně 500 Hz. Skutečné ODR akcelerometru a gyroskopu a konfiguraci FIFO ověřit zvlášť.\\\addlinespace
+Další DAQ & Centrální ADC, GPIO události kol a CAN 1/2; konkrétní provoz a frekvence hran nejsou uzavřeny.\\\addlinespace
+Základna & simpleRTK2B / ZED-F9P; samostatný raw log základny je potřebný pro PPK a není nahrazen logem roveru.\\\addlinespace
+Napájení & Uvažováno 8--16 V na 5 V, palubní PMU; konkrétní DC/DC, energetický doběh a elektrické zapojení zbývá potvrdit.\\
+\bottomrule\end{tabularx}
+\end{table}
+
+\subsection{Tři různé veličiny spolehlivosti}
+\textbf{Úplnost příjmu} říká, zda byly zachyceny všechny očekávané zprávy nebo vzorky. \textbf{Trvanlivost} říká, které přijaté záznamy již přežijí restart a ztrátu RAM. \textbf{Časová věrnost} říká, jak přesně znám epochu měření. Správný soubor může obsahovat mezery nebo nepřesné časy; žádná z těchto vlastností automaticky nedokazuje zbývající dvě.
+
+Pro NVMe vést poslední souvisle potvrzenou sekvenci. Rozlišovat stav \texttt{RECEIVED} a \texttt{DURABLE}. Druhý znamená dokončenou synchronizaci jediné kopie na SSD; úspěšné \texttt{write()} samo není potvrzení trvanlivosti. Platí předpoklad, že zařízení správně respektuje flush; vlastnosti konkrétního SSD se musí ověřit. Ani potvrzený zápis nechrání před pozdější fyzickou poruchou jediného média.\cite{fsync,micron}
+
+\subsection{Co může a nemůže RAM fronta vyřešit}
+Výpadek RTCM nezastavuje logování: ukládat raw GNSS i degradovaný stav řešení. Ztracené RTCM nevracet po obnově jako aktuální korekce. Výpadek USB/GNSS naopak znamená, že Pi data vůbec nepřijalo; jeho RAM fronta je nemůže zpětně vytvořit. Lokální záložní log přijímače v této variantě není zapnutý.
+
+\novastrana
+\section{Porovnání operačních systémů}
+Raspberry Pi zveřejňuje k datu rešerše Lite 64-bit založený na Debianu~13 Trixie, s obrazem z 6.~10.~2026 a jádrem řady 6.18. Konkrétní obraz, kontrolní součet, verzi kernelu i EEPROM je nutné zachytit v protokolu instalace; samotné číslo kernelu neprokazuje zapnutý PREEMPT\_RT.\cite{rpos}
+
+\begin{table}[htbp]\centering\small
+\caption{Posouzení variant pro tento projekt; poslední sloupec je vlastní návrhové hodnocení.}
+\begin{tabularx}{\textwidth}{L{34mm}Y Y}
+\toprule Varianta & Přínos a cena složitosti & Rozhodnutí\\\midrule
+Raspberry Pi OS Lite 64-bit & Oficiální základ pro Pi, nástroje konfigurace, bez desktopu. Běžný kernel neposkytuje obecnou pevnou mez latence.\cite{rpos,rt} & \textbf{Výchozí varianta}. Nejprve ověřit kompletní datovou cestu.\\\addlinespace
+Pi OS + PREEMPT\_RT & Omezuje nepreemptibilní úseky a mění obsluhu IRQ. Vyžaduje vhodný kernel, konfiguraci priorit a regresní testy periferií.\cite{rt} & Druhá větev experimentu, pokud časování první varianty nevyhoví.\\\addlinespace
+Ubuntu Server + RT & Canonical nabízí RT variantu pro Raspberry Pi; aktuální návod pro 26.04+ uvádí balíček \texttt{linux-raspi-realtime}.\cite{ubuntu} & Reálná alternativa k vlastní údržbě RT kernelu; ověřit GPIO/SPI/PPS a spotřebu RAM na konkrétním Pi.\\\addlinespace
+Buildroot / vlastní Linux & Buildroot sestaví kernel, rootfs i nástroje. Přináší kontrolu nad obrazem, ale i údržbu celé konfigurace.\cite{buildroot} & Odložit, dokud nebude změřena funkční aplikace a jasná potřeba menšího obrazu.\\\addlinespace
+Zephyr / jiné RTOS & RTOS ekosystém vhodný pro vyhrazený sběr na podporovaném hardwaru. Podpora všech periferií konkrétního řešení je samostatný úkol.\cite{zephyr} & Pro hlavní Pi logger nevolit jako první krok; případně použít na pomocném MCU.\\
+\bottomrule\end{tabularx}\end{table}
+
+\subsection{Kdy se rozhodnutí změní}
+Pokud se při kombinované zátěži přeplňuje IMU FIFO, nelze dodržet plán ADC nebo měřená chyba epoch překračuje projektový cíl, porovnat stejnou aplikaci na PREEMPT\_RT. Pokud nevyhoví ani tato varianta, přesunout časově kritický sběr na samostatný mikrokontrolér s hardwarovým časováním. Přechod na MCU je změna architektury, nikoli již obsažená vlastnost současného projektu.
+
+Před prvním měřením nezavádět CPU izolaci, maximální FIFO priority ani vlastní distribuci. Každá taková změna potřebuje doložit, kterou konkrétní naměřenou závadu odstranila. RT priorita špatně navržené smyčky může vyhladovět ostatní obsluhu.
+
+\novastrana
+\section{Datová a úložná architektura}
+Navržené rozdělení odděluje rychlé přijímání od potenciálně blokujícího úložiště. Příjem předává binární bloky do omezené fronty; jeden zapisovač potvrzuje dokončené rozsahy. Rozdělení do procesů omezuje přímé blokování aplikace, ale neizoluje kernel ani závislost systému na stejném SSD.
+
+\begin{figure}[htbp]\centering
+\begin{tikzpicture}[box/.style={draw,rounded corners,align=center,font=\small,fill=blue!4,minimum height=13mm,text width=38mm},arr/.style={-{Latex[length=2mm]},thick},lab/.style={font=\scriptsize,fill=white,inner sep=2pt}]
+\node[box] (gnss) at (0,0) {mosaic-X5\\USB + PPS};
+\node[box] (imu) at (5.1,0) {IMU / další vstupy\\SPI, INT, GPIO, CAN};
+\node[box,text width=50mm] (rx) at (5.1,-2.2) {Příjem a omezená RAM\\sekvence, epochy, CRC};
+\node[box,text width=50mm] (ssd) at (5.1,-4.5) {Jeden zapisovač NVMe\\jediný log / ext4};
+\draw[arr] (gnss.east) -- ++(.15,0) |- ([yshift=3mm]rx.west);
+\draw[arr] (imu) -- (rx);
+\draw[arr] (rx.south) -- (ssd.north);
+\end{tikzpicture}
+\caption{Vlastní návrh s jediným NVMe. Stejné SSD obsahuje i OS, aplikaci a knihovny.}
+\end{figure}
+
+\subsection{Uspořádání jediného SSD}
+\textbf{První prototyp:} standardní FAT boot oddíl a ext4 kořenový oddíl vytvořený Imagerem; v něm adresář \texttt{/srv/log-nvme}. Hlídání volného místa musí zahrnovat i potřeby systému. Výchozí systém nepřepínat na RAM overlay, protože by záznam do běžného adresáře na rootfs nebyl trvalý.
+
+Samostatný datový oddíl na stejném NVMe lze doplnit později kvůli oddělení kapacitních limitů a údržbě. \textbf{Není to záloha ani nezávislé médium.} Teprve s odděleným skutečným datovým mountem lze zvážit read-only systém s overlay; není součástí prvního oživení.\cite{rpconfig}
+
+Žádná SD v Pi, žádná karta pro redundantní log v GNSS, RAID ani aplikační replikace. GNSS posílá SBF přes USB na Pi. Raw data samostatné základny pro PPK zůstávají potřebným jiným měřením, nikoli kopií roverových dat.
+
+\novastrana
+\section{Formát a potvrzení trvalého zápisu}
+\subsection{Logování bez přepisování historie}
+Zachovat proudy \texttt{gnss.sbf}, \texttt{imu.bin}, \texttt{nav.bin}, \texttt{events.jsonl} a konfiguraci \texttt{manifest.yaml} z projektu. Prakticky je rozdělit do krátkých segmentů; nativní SBF obsah neměnit, dodatečné indexy a kontrolní součty vést vedle něj. U vlastních binárních proudů navrhnout verzi formátu, délku, typ, pořadí, monotónní čas, stav časové vazby a CRC záznamu.\cite{projekt}
+
+Jízdu identifikovat náhodným UUID, nikoli jen systémovým časem. Každý restart procesu dostane nový identifikátor běhu, takže se sekvence nikdy potichu nezamění. Segmenty propojit s kalibrací, verzí ovladačů, GNSS firmwarem, nastavením SBF, základnou a jejími souřadnicemi. Metadata nutná k interpretaci uložit na SSD společně se záznamem.
+
+\subsection{Navržený protokol jednoho segmentu}
+\begin{enumerate}
+\item Vytvořit unikátní soubor \texttt{.partial} v adresáři cílového média. U nové relace synchronizovat i potřebné adresáře, aby byla po pádu dohledatelná.
+\item Připojovat kompletní záznamy. Ošetřit krátké zápisy a chyby. V návrhovém intervalu 100 ms žádat \texttt{fdatasync}; evidovat dokončený rozsah a latenci, ne pouze odeslaný požadavek.
+\item Segment uzavřít například po 5 s nebo 8 MiB, podle toho, co nastane dříve. Jde o počáteční parametry pro test; synchronizace probíhá i uvnitř otevřeného segmentu.
+\item Dopsat a synchronizovat obsah. Vytvořit popis délky, rozsahů sekvencí a SHA-256. Synchronizovat popis. Přejmenovat soubory v témže filesystemu a synchronizovat jejich adresář.
+\item Segment prohlásit dokončeným teprve tehdy, když jsou potřebné soubory a metadata trvalé. Dvojici dat a popisu nelze považovat za jednu atomickou operaci; po pádu rekonstruovat stav skenem a ověřením obsahu.
+\end{enumerate}
+\texttt{fsync} souboru samo nezaručuje trvalost jeho jména v adresáři; proto je potřebná synchronizace adresáře. Chybu synchronizace nelze převést na úspěch pouhým opakováním bez ověření dat.\cite{fsync}
+
+\subsection{Zotavení po pádu}
+Otevřený segment může obsahovat platný synchronizovaný začátek. Recovery nástroj načte délky, CRC nebo nativní SBF rámcování a zachová platný prefix; neúplný konec oddělí do karantény. Poškozený originál ponechá pro diagnostiku. Index lze znovu vytvořit z dat; nesmí být jedinou autoritou. CRC a hash detekují poškození, ale samy data neopravují.
+
+Ext4 v režimu \texttt{data=ordered} je jednoduchý výchozí filesystem. Jeho žurnál chrání zejména konzistenci metadat; není náhradou aplikační synchronizace ani ochrany SSD před výpadkem.\cite{ext4}
+
+\novastrana
+\section{Výpadky a bezpečný návrat NVMe}
+\begin{table}[htbp]\centering\small
+\caption{Navržené provozní stavy a jejich význam.}
+\begin{tabularx}{\textwidth}{L{32mm}Y}
+\toprule Stav & Reakce systému\\\midrule
+START / RECOVERY & NVMe je podmínkou startu OS. Ověřit adresář logů a prostor; inventuru starých segmentů provádět s omezenou zátěží.\\\addlinespace
+LOGGING & Zapisovač potvrzuje pokrok. Sledovat stáří nepotvrzených dat, zaplnění RAM a místo na SSD.\\\addlinespace
+BUFFERING & Zápis se zdržel, ale OS a příjem běží. Data čekají v RAM; zobrazit zbývající kapacitu. Není to trvalá kopie.\\\addlinespace
+FAULT & Chyba SSD, rootfs, překročení fronty nebo ztráta příjmu. Signalizovat, pokud systém ještě běží. Pokračování záznamu není zaručeno.\\\addlinespace
+DRAINING & Zápis je opět zdravý; vyprazdňovat RAM při pokračujícím příjmu. Trvalá chyba nebo poškození vyžaduje řízené zotavení.\\\addlinespace
+STOPPING & Při řízeném vypnutí ukončit příjem, dokončit zápis na SSD a zastavit Pi.\\
+\bottomrule\end{tabularx}\end{table}
+
+\subsection{Zablokovaný zápis není běžná výjimka}
+Kernel může čekat na vadný disk dlouho; proces v nepřerušitelném I/O nemusí ukončit ani požadavek na zabití. Proto nedávat zápis přímo do přijímací smyčky a nestavět ochranu jen na aplikačním timeoutu. Nejvýše jeden aktivní zapisovač, omezené pokusy a žádné nekonečné vytváření dalších zablokovaných procesů. Rootfs je na stejném SSD, takže oddělený proces nezaručí pokračování při poruše zařízení.
+
+\subsection{Postup obnovy cíle}
+PCIe/NVMe v Pi není návrhově běžný hot-swap disk. Návrat zařízení po resetu řadiče ani obnovení rootfs není zaručené. Při krátkém zdržení a stále zdravém systému lze dopsat RAM frontu; po chybě disku nejprve ověřit stav a integritu. Restart ztratí nedopsanou RAM. Nevytahovat živý PCIe pásek.
+
+Ověřit identitu SSD a filesystemu, zapisovatelnost a kontrolní zápis s flush. Používat UUID či PARTUUID. Pokud se později zavede samostatný datový oddíl, chybějící mount nesmí potichu přesměrovat data do jiného svazku.
+
+Po pádu skenovat existující segmenty a ověřit jejich rámcování, sekvence a hash. Neúplné konce oddělit od platných dat. Bez druhé kopie nelze chybějící či nečitelné záznamy obecně rekonstruovat.
+
+\novastrana
+\section{Datový rozpočet, RAM a kapacita NVMe}
+Projektový model IMU počítá s 64 B při 500 Hz a 32 B při nejvýše 100 Hz pro magnetometr. Výsledkem je 35,2 kB/s. Další senzory v pracovním modelu přidávají 32\,896 B/s plus 16 B na každou hranu kol; analog řízení při 200 Hz přidá 3\,200 B/s.\cite{projekt}
+\begin{equation}
+R_{\mathrm{celk}}=71\,296+16F+R_{\mathrm{GNSS}}+R_{\mathrm{CAN}}+R_{\mathrm{nav}}+R_{\mathrm{rezie}}\quad[\mathrm{B/s}].
+\end{equation}
+$F$ je skutečný součet hran kol za sekundu. Zvolená sada SBF bloků, CAN provoz a fúzovaný formát nejsou změřeny; nelze z katalogové četnosti polohy určit celý GNSS tok. Následující 0,25/1/5 MB/s jsou \textbf{testovací scénáře}, nikoli předpověď auta. MB a GB jsou desetinné, MiB a GiB binární.
+
+\begin{equation}
+t_{\mathrm{RAM}}=\frac{B_{\mathrm{volna}}}{R_{\mathrm{vstup}}-R_{\mathrm{odtok}}},\qquad
+t_{\mathrm{disk}}=\frac{C_{\mathrm{pouzitelna}}}{R_{\mathrm{vstup}}}.
+\end{equation}
+První vztah platí jen při kladném rozdílu toků. Pro nulový odtok a 128 MiB volné datové fronty vychází tabulka~\ref{tab:capacity}. Pro ilustraci vyčlením na NVMe 32 GiB pro logy, z nichž 80~\% počítám jako pracovní kapacitu. Nejde o skutečnou kapacitu SSD; prostor systému a jeho rezerva jsou mimo tento modelový limit.
+
+\begin{table}[htbp]\centering\small
+\caption{Vlastní výpočet kapacitních scénářů bez komprese.}\label{tab:capacity}
+\begin{tabularx}{\textwidth}{YYYY}\toprule
+Tok & Data za hodinu & 128 MiB RAM & 80\% z 32 GiB logů\\\midrule
+0,25 MB/s & 0,9 GB & 537 s / 8,95 min & 30,5 h\\
+1 MB/s & 3,6 GB & 134 s / 2,24 min & 7,64 h\\
+5 MB/s & 18 GB & 26,8 s & 1,53 h\\
+\bottomrule\end{tabularx}\end{table}
+
+\subsection{Návrh limitů a opotřebení}
+Na 2GB Pi začít s celkovou frontou 128 MiB dat a pevným limitem paměti loggeru stanoveným po měření. Do rozpočtu patří kopie, IPC, kernelové buffery i tmpfs. RAM uvolňovat po potvrzeném trvalém zápisu na NVMe. Žádná část aplikace nesmí neomezeně držet buffery. Rozpočet zahrnuje i nepotvrzené bloky před zpožděním zápisu.
+
+SSD musí \textbf{dlouhodobě zvládat celý vstupní tok} a po zdržení mít rezervu pro vyprázdnění fronty. Při 1 MB/s přibývá 86,4 GB zápisů za 24 h před interní write amplification. U konkrétního SSD posoudit deklarovanou výdrž, teploty, latence flush a chování při zaplnění. Samotné označení NVMe neudává odolnost při ztrátě napětí.
+
+Při tlaku na kapacitu zastavit nepodstatné výstupy, vyhlásit chybu a zachovat raw GNSS/IMU podle předem stanovené priority. Neodmazávat nepotvrzená data potichu. Každou ztrátu vyjádřit intervalem a počtem; rezervovat prostor pro systém a události. Při selhání SSD ani událost nemusí přežít.
+
+\novastrana
+\subsection{Celkový rozpočet pro Raspberry Pi 5 se 2 GB RAM}
+\textbf{Závěr odhadu: 2GB varianta má pro zde navržený logger a průběžnou ESKF fúzi stačit.} Počítá se se systémem Lite bez desktopu, bez prohlížeče na Pi, s omezenou historií a s binárními buffery. Tabulka~\ref{tab:ram-total} představuje vlastní návrhové rozpočty jednotlivých částí, nikoli naměřenou spotřebu Raspberry Pi OS nebo ještě neexistující aplikace. Vyšší scénář není prokázaná horní mez.
+
+Pro dimenzování zatím vyhradím \textbf{1\,800 MiB použitelné RAM}. Je to konzervativní pracovní předpoklad pro 2GB desku, nikoli údaj přečtený ze zařízení. Skutečnou dostupnou kapacitu zjistím z \texttt{MemTotal}; část fyzické RAM není systému dostupná kvůli rezervacím.\cite{procmem}
+
+\begin{table}[htbp]\centering\small
+\caption{Vlastní orientační rozpočet fyzické RAM v MiB, včetně plně obsazené datové fronty.}\label{tab:ram-total}
+\begin{tabularx}{\textwidth}{Y L{24mm}L{24mm}}
+\toprule Oblast & Běžný scénář & Vyšší scénář\\\midrule
+Kernel, ovladače a základní služby & 320 & 400\\
+Logger a zapisovač: runtime, zásobníky, knihovny & 96 & 160\\
+Online ESKF, numerické knihovny a krátká historie & 64 & 128\\
+Lehká webová správa a diagnostika & 32 & 64\\
+Jedna sdílená datová fronta & 128 & 128\\
+Pracovní kopie, USB/SPI/síťové buffery, IPC, hashování & 64 & 128\\
+Page cache a nezapsané stránky NVMe & 128 & 256\\
+Tmpfs a systémové logy & 32 & 64\\\midrule
+\textbf{Celkem plánovaná potřeba} & \textbf{864} & \textbf{1\,328}\\
+Samostatná bezpečnostní rezerva & 256 & 256\\
+\textbf{Potřeba včetně rezervy} & \textbf{1\,120} & \textbf{1\,584}\\
+Zbývá do pracovního limitu 1\,800 MiB & 680 & 216\\
+\bottomrule\end{tabularx}\end{table}
+
+\begin{equation}
+M_{\mathrm{vyssi}}+M_{\mathrm{rezerva}}
+=1\,328+256=1\,584\ \mathrm{MiB}<1\,800\ \mathrm{MiB}.
+\end{equation}
+Běžný scénář odpovídá asi 0,84 GiB, vyšší 1,30 GiB; po přičtení bezpečnostní rezervy jde o 1,09 a 1,55 GiB. Rezerva 256 MiB není další skutečně alokovaný buffer. Pracovní rozpočet 1\,800 MiB je nutné nahradit skutečným \texttt{MemTotal}, pokud bude nižší.
+
+Položky jsou rozděleny tak, aby se stejné stránky nepočítaly opakovaně: aplikační runtime nezahrnuje datovou frontu, tmpfs ani samostatně uvedenou diskovou cache. Při měření nelze prostě sečíst RSS všech procesů a přidat celou cache; sdílené stránky se mohou započíst vícekrát. Čistá cache může být větší a uvolnitelná, zatímco nezapsané stránky při vadném médiu nemusí jít včas uvolnit.\cite{procmem}
+
+\novastrana
+\subsection{Co paměť spotřebovává a kdy 2 GB přestanou stačit}
+\textbf{Samotný Kalmanův filtr není velká datová struktura.} Pro standardní 15rozměrný chybový stav (poloha, rychlost, orientační chyba a dva biasy po třech složkách) má jedna kovarianční matice v double přesně
+\begin{equation}
+M_P=15\cdot15\cdot8=1\,800\ \mathrm{B}.
+\end{equation}
+Je to vlastní model pro ESKF zamýšlený v projektu, nikoli finální specifikace implementace. Dvacet stejně velkých matic zabere 36\,000 B. Při ukládání jedné kovariance a 16prvkového nominálního stavu pro každou epochu 500 Hz stojí modelová historie 2 s přibližně 1,84 MiB před režií. Limit historie například 8 MiB proto může být rozumný výchozí požadavek uvnitř rozpočtu fúze; skutečnou potřebnou délku určí zpoždění GNSS a algoritmus.
+
+Naopak \textbf{hodina historie kovariancí} při 500 Hz zabere již $1\,800\cdot500\cdot3\,600=3{,}24$ GB, tedy přibližně 3,02 GiB, a to bez stavů, přechodových matic a dalších dat. Celou historii pro zpětné vyhlazování proto ukládat na disk a postprocessing celé jízdy provádět na počítači nebo po omezených blocích. Online fúze má držet jen krátké časové okno.
+
+\textbf{Nezavádět zbytečné kopie fronty.} Rozpočet předpokládá jedny binární bloky sdílené příjmem a zapisovačem. Dvě další úplné 128MiB kopie například při serializaci a předávání mezi procesy přidají 256 MiB; vyšší rozpočet včetně rezervy by vzrostl na 1\,840 MiB. Také seznamy objektů nebo rozbalené textové záznamy mohou limit překročit; 128 MiB serializovaných dat nemusí znamenat 128 MiB RAM programu. Původní konzervativní rozpočet zůstává zachován i pro jednodušší jednovětvou variantu; menší skutečnou spotřebu musí doložit měření.
+
+\textbf{Při zastavení zápisu na SSD přibývají data pouze do RAM, pokud OS dál běží.} Volných 128 MiB znamená 134 s při 1 MB/s nebo 537 s při 0,25 MB/s. Už obsazená část fronty tyto časy zkracuje. Nejde o garantovanou dobu přežití výpadku systémového SSD. Počáteční frontu ponechat 128 MiB; zvýšení na 256 MiB by vyšší rozpočet včetně rezervy posunulo na 1\,712 MiB a ponechalo jen 88 MiB dodatečné vůle do pracovního limitu.
+
+\subsection{Jak odhad potvrdit na skutečném Pi}
+Při 24h zátěžové zkoušce měřit \texttt{MemTotal}, minimum \texttt{MemAvailable}, \texttt{Dirty}, \texttt{Writeback}, spotřebu tmpfs a využití front. \texttt{MemAvailable} je odhad RAM použitelné bez swapování; malé \texttt{MemFree} samo o sobě neznamená nedostatek.\cite{procmem} Pro cgroup aplikace sledovat \texttt{memory.current}, \texttt{memory.peak}, \texttt{memory.stat} a OOM události. Spotřeba cgroup zahrnuje i jí účtovanou cache; nepřičítat ji k témuž rozpočtu znovu.\cite{cgroupmem}
+
+Jako předběžné kritérium volím \texttt{MemAvailable} alespoň 256 MiB, žádný OOM, žádné swapování a žádný setrvalý růst paměti při zatížení a obnově zápisu. Při nedostatku nejprve omezit web, historii a dočasné kopie. Paměťový limit procesu není náhradou opravy: při jeho překročení může být logger ukončen. Vyšší RAM řeší delší buffery a těžší software, nikoli odolnost dat proti ztrátě napájení.
+
+\novastrana
+\section{Napájení, ztrátové okno a společné poruchy}
+Raspberry Pi pro Pi~5 doporučuje kvalitní 5V/5A zdroj. Jde o požadavek na napájecí řešení, nikoli tvrzení, že logger stále odebírá 25 W. Ve formuli změřit špičky celé sestavy, napětí na vstupu Pi, poklesy na kabelech a chování měniče při přechodových stavech.\cite{pi5}
+
+\subsection{Co přesně znamená synchronizace po 100 ms}
+Při zdravém médiu je ztrátové okno určeno skutečným stářím poslední trvale potvrzené sekvence. Perioda volání \texttt{fdatasync} sama horní mez netvoří:
+\begin{equation}
+T_{\mathrm{ohrozena}}\approx T_{\mathrm{davka}}+T_{\mathrm{fronta}}+
+T_{\mathrm{flush}}+T_{\mathrm{planovani}}.
+\end{equation}
+Hodnoty se mohou překrývat; vztah je konzervativní pracovní rozklad zpoždění, nikoli přesný model kernelu. Bez omezených latencí může okno růst. Začít intervalem 100 ms, předběžný cíl zdravého provozu zvolit stáří potvrzení nejvýše 250 ms a alarm nad 500 ms. Tyto cíle se musí potvrdit měřením a upravit spolu s energetickým doběhem.
+
+\subsection{Energetický doběh}
+Energetický doběh je volitelná ochrana při vypnutí, nikoli datová záloha. Pokud bude osazen, při detekci ztráty palubního napětí omezit fúzi/web, uzavřít vstup na definované sekvenci a dokončit zápis na SSD. Na vadné NVMe nečekat bez omezení. Bez doběhu změřit ztrátu při náhlém vypnutí; zachování posledních nepotvrzených dat nelze slíbit.
+
+\begin{equation}
+E_{\mathrm{zaloha}}\geq\frac{P_{\mathrm{zatez}}t_{\mathrm{dobeh}}}{\eta},\qquad
+C\geq\frac{2P_{\mathrm{zatez}}t_{\mathrm{dobeh}}}{\eta(V_{\max}^{2}-V_{\min}^{2})}.
+\end{equation}
+\textbf{Ilustrační výpočet:} pro 20 W, 10 s, účinnost 0,85 a vybíjení zásobníku z 12 na 8 V vyjde energie přibližně 235 J a kapacita 5,9 F. Těchto 12/8 V je pracovní příklad na zásobníku před měničem, nikoli povolené napětí Raspberry. Výsledný návrh musí zahrnout ESR, toleranci, stárnutí, teplotu, řízení nabíjení a rezervu; nejde o hotový návrh UPS. Potřebný čas určí měření dokončení zápisu a ukončení Pi.
+
+\subsection{Která rizika zůstávají}
+SSD s ochranou dat v klidu nemusí chránit data dosud uložená v cache; rozlišovat \emph{data at rest} a \emph{data in flight}. Konkrétní NVMe model zatím není znám.\cite{micron} Systém i jediný záznam závisejí na stejném zařízení. Chyba aplikace, ztráta SSD nebo jeho nečitelnost proto mohou způsobit neobnovitelnou ztrátu. CRC a žurnál tuto závislost neodstraňují. Automatická záloha ani druhá lokální kopie nejsou součástí zvolené varianty.
+
+\novastrana
+\section{Časování IMU, PPS a význam PREEMPT\_RT}
+Při 500 Hz je perioda 2 ms, ale neznamená to požadavek synchronizovat disk každé 2 ms. Senzorový sběr a trvalý zápis mají různé časové rozpočty. FIFO umožňuje zpracování v dávkách; jeho použitelné místo, formát paketů a rychlost plnění musí odpovídat skutečnému režimu ICM-20948.\cite{projekt}
+
+\begin{equation}
+T_{\mathrm{rezerva\ FIFO}}=\frac{B_{\mathrm{volne\ FIFO}}}{R_{\mathrm{senzor}}},\qquad
+L_{\mathrm{obsluha}}+T_{\mathrm{cteni}}<T_{\mathrm{rezerva\ FIFO}}.
+\end{equation}
+Rezerva se určí pro nejhorší zaplnění a konfiguraci, nikoli z nominálního objemu prázdného FIFO. Přidat bezpečnostní odstup. Časová chyba měření se posuzuje zvlášť: projektový cíl pod 100~$\mu$s nelze prokázat pouhým nepřetečením FIFO.
+
+\subsection{Implementační zásady}
+V přijímací cestě neprovádět diskové zápisy, DNS, synchronní síť, kompresi, rozsáhlé alokace ani vykreslování webu. Předem připravit buffery. GPIO události brát z kernelového rozhraní, zachovat jejich sekvence a časovou bázi; kde existuje vhodný kernelový ovladač, posoudit jej před vlastní obsluhou. API GPIO v2 poskytuje časové a pořadové údaje, ale neuděluje automatickou garanci hardwarově přesné epochy na Pi~5.\cite{gpio}
+
+GNSS nativní čas, monotónní čas hostitele a UTC uchovávat rozlišeně. PPS přiřadit ke správné GNSS sekundě, evidovat platnost, nejistotu převodu, reset a časový skok. Čas přijetí USB bloku není časem všech měření uvnitř. U IMU nezaměňovat opakovanou hodnotu magnetometru za nový vzorek.
+
+\subsection{Experiment běžný Linux versus RT}
+Na stejné sestavě porovnat výchozí kernel a kernel s ověřenou volbou \texttt{CONFIG\_PREEMPT\_RT=y}. Neodvozovat RT režim pouze z \texttt{uname}. Použít \texttt{cyclictest} jako diagnostiku probouzení vláken, ale rozhodnutí založit na měření skutečné cesty INT/PPS--GPIO--SPI a počtech vzorků.\cite{rt,cyclic}
+
+Kombinovat zátěž CPU, USB, sítě a SSD včetně dopisování RAM fronty; měřit maximum a rozdělení latencí, ne jen průměr. Přerušení a priority nastavovat po měření, aby vysoce prioritní aplikace neblokovala IRQ, která sama potřebuje. Odstranit swapové závislosti a sledovat page faulty i paměťový tlak. Izolace CPU je až další experiment.
+
+Pokud ani vhodný RT kernel nezajistí požadované zachycení hran nebo přesnost ADC, zvážit MCU s hardwarovým capture, čítačem a samostatným bufferem. Má-li MCU překlenout i restart Pi, potřebuje dostatečné úložiště nebo trvalý log a vlastní napájecí podmínky. Samotné přidání RTOS na MCU neuchová jeho RAM při výpadku.
+
+\novastrana
+\section{Postup zprovoznění první sestavy}
+Následující postup je realizační plán. Studie neobsahuje již nasazený logger ani výsledky testů na Raspberry.
+
+\subsection{Etapa A: identifikace a základ systému}
+\begin{enumerate}
+\item Zapsat model, kapacitu a firmware NVMe, revizi HAT+, velikost RAM, GNSS firmware a skutečné elektrické připojení. Zaznamenat fotografie konektorů a schéma napájení.
+\item Pro instalaci bez monitoru a SD připojit SSD k Windows přes USB--NVMe adaptér. Imagerem zapsat Lite 64-bit, nastavit uživatele, síť, SSH a hostname. Ověřit cílový disk; zápis přepíše jeho obsah. Zachytit hash obrazu a výsledek ověření.
+\item V laboratorním provozu aktualizovat firmware a systém, ověřit SPI, USB, PPS, chlazení a stabilní napájení. Pro provoz zachytit otestované verze; změny instalovat v servisním okně a znovu ověřit.
+\item Po bezpečném odpojení z PC vložit SSD do HAT+ při vypnutém Pi a ověřit boot bez SD. PCIe ponechat na Gen~2; Pi~5 není pro Gen~3 certifikováno a spojení může být nestabilní.\cite{pihw}
+\item Ověřit rootfs na NVMe, založit adresář logů a nastavit limit jejich velikosti s rezervou pro OS. Nezapínat overlay nad adresářem logů. Samostatný datový oddíl není podmínkou prvního oživení.
+\end{enumerate}
+
+\subsection{Etapa B: nejprve samostatné měřicí proudy}
+\begin{enumerate}
+\item Ve webovém rozhraní mosaic-X5 nastavit požadované SBF proudy na USB a ověřit zachování konfigurace po studeném startu. Lokální SD log není součástí návrhu. Nevystačit jen s NMEA polohou, pokud je cílem PPK.\cite{ardusimple,rxtools}
+\item Pořídit GNSS záznam, zjistit skutečný tok podle aktivních bloků a ověřit čitelnost nástroji Septentrio. Zvlášť uložit raw log základny.
+\item Oživit IMU FIFO/INT/SPI a časovou vazbu PPS. Ověřit vlastní ODR obou inerciálních větví, počet vzorků a detekci overflow.
+\item Implementovat identifikátory, omezenou frontu, jediný zapisovač a recovery nástroj. Ověřit normální záznam, krátké latence a chování při chybě.
+\end{enumerate}
+
+\subsection{Etapa C: dohled a provozní obraz}
+Logger spouštět službou systemd bez závislosti na dostupnosti sítě, po ověření datové cesty na SSD. Zapnout restart při selhání, omezené opakování a srozumitelný stav. Watchdog krmit podle pokroku příjmu a zápisu s definovanou tolerancí krátkého zdržení. Chybějící GNSS nesmí vyvolat nekonečnou smyčku restartů. Samotné nastavení \texttt{WatchdogSec} nestačí: aplikace musí posílat watchdog notifikace.\cite{service,notify}
+
+Omezit systémové logy a ověřit hardwarový watchdog. Prověřit napájení a dokončení jízdy; případný energetický doběh má vlastní test. Nakonec ověřit celý obraz po studeném zapnutí bez připojené správy. Sběr nemá vyžadovat aktivní SSH připojení.
+
+\novastrana
+\section{Dohled, výchozí parametry a ověřovací příkazy}
+\begin{table}[htbp]\centering\small
+\caption{Počáteční parametry prototypu; nejsou zárukou hardwaru.}
+\begin{tabularx}{\textwidth}{L{45mm}Y}\toprule
+Parametr & Výchozí návrh\\\midrule
+RAM fronta & 128 MiB dat celkem, zvlášť měřit skutečnou spotřebu procesu a kernelu.\\
+Synchronizace & Požadavek po 100 ms; sledovat dokončení a stáří potvrzeného rozsahu.\\
+Rotace segmentů & Po 5 s nebo 8 MiB; synchronizovat průběžně i před rotací.\\
+Varování zápisu & Předběžný cíl stáří do 250 ms, alarm nad 500 ms; upravit podle měření.\\
+Dopisování RAM & Po odeznění latence musí zápis zvládat více než aktuální vstupní tok.\\
+Rezerva datového oddílu & Pracovní limit 80\% kapacity, zbytek pro rezervu a obnovu.\\
+Retence logů & Nepřepisovat staré jízdy automaticky; kapacitu hlídat před startem i během sběru.\\
+Energetický doběh & Volitelná ochrana: modelový laboratorní cíl 10 s, skutečná potřeba podle měření.\\
+\bottomrule\end{tabularx}\end{table}
+
+\subsection{Kontrola na Raspberry Pi}
+Příkazy níže jsou diagnostické, neinstalují aplikaci a nenastavují automaticky odolné logování. Nástroje \texttt{nvme} a \texttt{wdctl} musí být v obrazu dostupné. Skutečný NVMe uzel zvolit podle výpisu.
+\begin{verbatim}
+cat /etc/os-release
+uname -a
+lsblk -o NAME,MODEL,SERIAL,FSTYPE,UUID,MOUNTPOINTS
+findmnt /
+findmnt -T /srv/log-nvme
+swapon --show
+vcgencmd get_throttled
+vcgencmd measure_temp
+sudo nvme list
+sudo nvme smart-log /dev/nvme0
+ls -l /dev/watchdog*
+sudo wdctl
+\end{verbatim}
+Adresář \texttt{/srv/log-nvme} je navržená datová cesta. Příkaz s \texttt{-T} zjistí filesystem, který tuto cestu obsahuje; v prvním prototypu jde o kořenový oddíl NVMe. SMART je diagnostika stavu, nikoli garance zachování dat.
+
+\subsection{Dvě vrstvy watchdogu}
+Systemd \texttt{WatchdogSec} hlídá aplikaci; \texttt{RuntimeWatchdogSec} pracuje s podporovaným hardwarovým watchdogem. Ověřit skutečné zařízení, časový limit a reakci v testu. Restart po chybě je zotavení s možnou mezerou, nikoli bezvýpadkové měření.\cite{service,watchdog} Restart zničí neuloženou frontu; nesmí být reakcí na každé krátké zdržení zápisu.
+
+Na stavové obrazovce oddělit \emph{přijímám}, \emph{čeká v RAM}, \emph{trvale uloženo na SSD}, zaplnění, poslední chybu a rezervu RAM. Zelený stav neodvozovat od pouhého běhu procesu.
+
+\novastrana
+\section{Ověřovací plán a kritéria přijetí}
+Zkoušky provádět na vyhrazeném testovacím médiu a s externím referenčním zdrojem sekvencí. Kontrola pouze pomocí čítače uvnitř loggeru neodhalí zprávy ztracené ještě před čítačem. Testovací běh musí uložit verze, zátěž, vnesenou poruchu, pozorované mezery a průběh potvrzení zápisů.
+
+{\small
+\begin{longtable}{L{29mm}L{58mm}L{60mm}}
+\caption{Navržené experimenty; žádný dosud není vykázán jako provedený.}\\
+\toprule Zkouška & Postup & Kritérium\\\midrule\endfirsthead
+\toprule Zkouška & Postup & Kritérium\\\midrule\endhead
+Stálá zátěž & Nejméně 24 h s očekávaným tokem a samostatně se zvolenou rezervou; současně fúze, USB a síť. & Žádná nevysvětlená mezera, overflow ani růst front; doložené maximum stáří potvrzení a latence.\\\addlinespace
+Latence zápisu & Na testovací datové cestě vložit zdržení 1, 10 a 60 s; OS musí během testu zůstat zdravý. & Při dostatečné RAM zachovat proud a po obnově dopsat frontu bez mezer.\\\addlinespace
+Porucha SSD & Odděleně otestovat chyby datových zápisů a poruchu systémového zařízení. & Zaznamenat dopad na OS a čitelnost logů. Nepožaduje se nepřetržitý sběr po ztrátě rootfs.\\\addlinespace
+Plná RAM / disk & Překročit délku fronty, naplnit datový limit, otestovat read-only stav. & Žádné tiché přepisování; alarm a evidence ztráty, pokud systém dovolí její uložení.\\\addlinespace
+Pád procesu & Ukončit proces při zápisu, flush, rotaci a publikaci metadat. & Obnovený platný prefix a identifikované konce; dříve potvrzené rozsahy čitelné za daného modelu média.\\\addlinespace
+Náhlé vypnutí & Nejméně 100 náhodně fázovaných cyklů jako úvodní kampaň, s UPS i bez ní. & S UPS dokončení definovaného konce; bez UPS změřené ztrátové okno a zachování starších potvrzených segmentů.\\\addlinespace
+Výpadek GNSS & Odpojit USB nebo restartovat přijímač v testovací sestavě. & Detekovaná mezera, korektní obnova příjmu; chybějící vzorky se nevymýšlejí.\\\addlinespace
+Čas a restart & Ztráta PPS, skok UTC, restart GNSS i loggeru. & Nezaměněné relace, označená nejistota epoch, žádné falešně souvislé sekvence.\\\addlinespace
+Teplo a vibrace & Uzavřený kryt, dlouhý zápis, radio/DC/DC aktivní, mechanická zkouška. & Bez nevysvětlených resetů a výpadků spojení; doložené teploty a napájecí poklesy.\\
+\bottomrule\end{longtable}}
+
+Pro softwarovou injekci využít například \texttt{dm-flakey} a \texttt{dm-delay} nad testovacím blokovým zařízením. Tyto nástroje simulují chyby a latence; neověří mechaniku PCIe, firmware SSD ani jeho skutečné chování při odpojení napájení.\cite{dm} Fyzické zkoušky dělat řízeně na testovací sestavě.
+
+Úspěšných 100 vypnutí není důkaz 100\% spolehlivosti. Při zjednodušeném modelu nezávislých stejných pokusů a nule selhání dává jednostranná 95\% horní mez pravděpodobnosti selhání $1-0{,}05^{1/n}$ pro $n=100$ přibližně 2,95\%. Reálné chyby bývají závislé na podmínkách; důležitá je šíře scénářů a dohledatelnost výsledků.
+
+\novastrana
+\section{Videa a doporučené pořadí studia}
+Videa slouží k pochopení principů a rozhraní. Konfiguraci nasazeného systému vždy ověřit v aktuální dokumentaci; zejména starší video o PREEMPT\_RT popisuje tehdejší stav začlenění do kernelu. Odkazy a témata byla ověřena z veřejných stránek, úplný přepis videí nebyl podkladem technických tvrzení této studie.
+
+\begin{enumerate}
+\item \textbf{Jan Altenberg / The Linux Foundation: Introduction to Realtime Linux (2017).}
+\url{https://www.youtube.com/watch?v=BKkX9WASfpI}
+
+Začít tímto videem. Zaměřit se na rozdíl mezi rychlostí a determinismem, latencí a deadline a na rozdíl PREEMPT\_RT proti architektuře se dvěma kernely. Výstupem má být vlastní seznam časových požadavků GNSS, IMU a ADC; nikoli automatické rozhodnutí instalovat RTOS.\cite{videoRT}
+
+\item \textbf{Michael Opdenacker / Bootlin: Finding the Best Block Filesystem for Your Embedded Linux System (2023).}
+\url{https://www.youtube.com/watch?v=kLxM4FyiVpQ}
+
+Podklad k volbě filesystemu a vlastnostem blokových úložišť. Následně projít dokumentaci \texttt{fsync} a navrhnout experiment s přerušením zápisu. Samotné srovnání filesystemů není zárukou odolnosti konkrétní karty.\cite{videoFS,fsync}
+
+\item \textbf{Septentrio: How to log data to the SD card of the Septentrio mosaic receiver module.}
+\url{https://www.youtube.com/watch?v=Y9tvOebnoxk}
+
+Pouze doplňkový přehled možností přijímače; SD logování není součástí zvolené varianty a tento bod lze přeskočit. Odkaz je vložen v dokumentaci SparkFun k mosaic-X5; konkrétní nosnou desku a firmware kontrolovat podle ArduSimple.\cite{videosMosaic,ardusimple}
+
+\item \textbf{Septentrio: How to output NMEA data on the Septentrio mosaic receiver module.}
+\url{https://www.youtube.com/watch?v=ArtePkC58-o}
+
+Doplňková orientace v nastavení datových proudů a portů. V projektu se pro hlavní raw záznam používá SBF; NMEA demonstrace nenahrazuje výběr bloků pro PPK.\cite{videosMosaic}
+\end{enumerate}
+
+\section{Závěr pro projekt a otevřené body}
+První prototyp má použít \textbf{Pi OS Lite 64-bit a jediné NVMe pro systém i všechny logy, bez SD a bez druhé kopie}. Příjem oddělit od zápisu, použít omezenou RAM frontu, průběžnou synchronizaci a obnovitelné segmenty. RAM slouží k vyrovnání krátkých latencí, nikoli jako záloha při pádu systémového SSD.
+
+Před finálním dimenzováním doplnit model NVMe, skutečný SBF/CAN tok, konfiguraci FIFO, ODR, parametry palubního měniče a nejhorší latence SSD. PREEMPT\_RT zvolit podle srovnávacího měření časové cesty. Přijímá se možnost ztráty jediného záznamu při poruše SSD; původní požadavek přežití takové poruchy již není součástí této varianty.
+
+\novastrana
+\begin{thebibliography}{99}\small
+\bibitem{projekt} Jiří Buršík. \emph{Návrh RTK GNSS/IMU systému pro závodní vozidlo Formula Student}. Lokální pracovní projekt, stav přečtený 23.~10.~2026: \texttt{Samotná\_BAKALÁŘKA/rtk-gnss-bakalarka}. Podklady: \texttt{README.md}, \texttt{BOM.csv}, kapitola 01, oddíly Role Raspberry Pi 5, Přímý sběr, Časová synchronizace a datové formáty; kapitola 03, oddíly záznam na SSD a napájení. Jde o návrhový podklad, ne experimentální protokol.
+\zdroj{rpos}{Raspberry Pi. \emph{Raspberry Pi OS downloads}, část Lite 64-bit; obraz 6.~10.~2026, Debian 13, kernel 6.18}{https://www.raspberrypi.com/software/operating-systems/}
+\zdroj{rt}{Linux kernel documentation. \emph{Real-time preemption: Theory of operation}, aktuální online dokumentace, oddíly Preface a Scheduling}{https://www.kernel.org/doc/html/latest/core-api/real-time/theory.html}
+\zdroj{fsync}{Linux man-pages. \emph{fsync(2)}, oddíly DESCRIPTION a ERRORS; synchronizace souboru a adresáře}{https://man7.org/linux/man-pages/man2/fsync.2.html}
+\zdroj{ardusimple}{ArduSimple. \emph{User Guide: simpleRTK3B Pro}, oddíly Special function pins a Onboard datalogging (MicroSD card)}{https://www.ardusimple.com/user-guide-simplertk3b-pro/}
+\bibitem{micron} Micron. \emph{How Micron SSDs Handle Unexpected Power Loss}, white paper, části Data at rest / Data in flight a Client / Enterprise Computing. Dostupné z: \url{https://assets.micron.com/adobe/assets/urn%3Aaaid%3Aaem%3A1f5ebe25-dc19-4e6f-89d2-31a2c6b69548/renditions/original/as/ssd-power-loss-protection-white-paper-lo.pdf}. [cit.~2026-10-23].
+\zdroj{ubuntu}{Canonical. \emph{How to enable Real-time Ubuntu}, část Ubuntu Server / Desktop, instrukce pro 26.04+ a Raspberry Pi}{https://ubuntu.com/real-time/docs/how-to/enable-real-time-ubuntu/}
+\zdroj{buildroot}{Buildroot. \emph{Making Embedded Linux Easy}, popis generování systému a komponent}{https://buildroot.org/}
+\zdroj{zephyr}{Zephyr Project. \emph{Zephyr RTOS}, projekt a podpora desek; bez tvrzení o kompletní podpoře této sestavy Pi}{https://www.zephyrproject.org/}
+\zdroj{rpconfig}{Raspberry Pi Documentation. \emph{Configuration}, raspi-config a overlay filesystem}{https://www.raspberrypi.com/documentation/computers/configuration.html}
+\zdroj{ext4}{Linux kernel documentation. \emph{ext4 General Information}, Options a Data Mode}{https://www.kernel.org/doc/html/latest/admin-guide/ext4.html}
+\zdroj{pi5}{Raspberry Pi. \emph{Raspberry Pi 5}, napájení a chlazení}{https://www.raspberrypi.com/products/raspberry-pi-5/}
+\zdroj{pihw}{Raspberry Pi Documentation. \emph{Raspberry Pi computer hardware}, PCIe connector a PCIe Gen 3.0}{https://www.raspberrypi.com/documentation/computers/raspberry-pi.html}
+\zdroj{gpio}{Linux kernel documentation. \emph{GPIO Character Device Userspace API}, v2, události a časové značky}{https://www.kernel.org/doc/html/latest/userspace-api/gpio/chardev.html}
+\zdroj{cyclic}{Real-Time Linux Project. \emph{Getting Started with PREEMPT\_RT Guide}, část rt-tests a cyclictest}{https://realtime-linux.org/getting-started-with-preempt_rt-guide/}
+\zdroj{rxtools}{Septentrio. \emph{RxTools User Manual}, v25.0.0, oddíl 8.2.4, konfigurace výstupů a logování na SD}{https://www.septentrio.com/system/files/support/rxtools_v25.0.0_user_manual.pdf}
+\zdroj{service}{systemd. \emph{systemd.service}, online manuál, Restart a WatchdogSec; ověřit podporu v instalované verzi}{https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html}
+\zdroj{notify}{systemd. \emph{sd\_notify}, WATCHDOG=1}{https://www.freedesktop.org/software/systemd/man/latest/sd_notify.html}
+\zdroj{watchdog}{systemd. \emph{systemd-system.conf}, RuntimeWatchdogSec}{https://www.freedesktop.org/software/systemd/man/latest/systemd-system.conf.html}
+\zdroj{dm}{Linux kernel documentation. \emph{dm-flakey}, simulace periodických I/O chyb; související dm-delay}{https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/dm-flakey.html}
+\zdroj{videoRT}{The Linux Foundation / Jan Altenberg. \emph{Introduction to Realtime Linux}. Video, zveřejněno 4.~4.~2017}{https://www.youtube.com/watch?v=BKkX9WASfpI}
+\zdroj{videoFS}{Bootlin / Michael Opdenacker. \emph{Finding the Best Block Filesystem for Your Embedded Linux System}. Video, 2023; odkaz zveřejněný v katalogu Bootlin Docs}{https://www.youtube.com/watch?v=kLxM4FyiVpQ}
+\zdroj{videosMosaic}{SparkFun. \emph{SparkFun GNSS mosaic-X5: Web Interface}, sekce GPS Data, vložená instruktážní videa Septentrio Data Logging a Stream Data}{https://github.com/sparkfun/SparkFun_GNSS_mosaic-X5/blob/main/docs/web_interface.md}
+\zdroj{procmem}{Linux kernel documentation. \emph{The /proc Filesystem}, MemTotal, MemAvailable, Dirty, Writeback a účtování sdílených stránek}{https://docs.kernel.org/filesystems/proc.html}
+\zdroj{cgroupmem}{Linux kernel documentation. \emph{Control Group v2}, Memory Interface Files: memory.current, memory.peak, memory.stat a memory.events}{https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html}
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,13 @@
+{
+  "number": 11,
+  "title": "Automatický provoz a ověřování spolehlivosti",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "70060e1a0488953cfbd59a0808a7f3e5171671e6b3f981c2e0d1971bf52e9a00",
+  "sha256_audio": "e27cc39d3498ead5b5b84de73d898287828b921a7d8f0ab23ff70e0cb7a3d5ce",
+  "duration_seconds": 151.248,
+  "word_count": 338,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

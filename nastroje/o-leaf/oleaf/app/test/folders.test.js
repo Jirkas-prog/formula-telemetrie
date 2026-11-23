@@ -1,0 +1,52 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const os = require('node:os');
+const { FolderBrowser, writeShared, snapshotSources } = require('../lib/folders');
+const { resolveInside } = require('../lib/files');
+
+test('folder browser confines navigation and creation to mapped folders', async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oleaf-folders-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const media = path.join(root, 'media');
+  await fs.mkdir(media);
+  const browser = new FolderBrowser([media]);
+  const project = await browser.create(media, 'Český projekt');
+  await fs.writeFile(path.join(project, 'main.tex'), 'original', { mode: 0o640 });
+  await fs.mkdir(path.join(project, 'kapitoly'));
+  assert.equal((await browser.browse(media)).parent, null);
+  assert.equal((await browser.browse(project)).texFiles[0], 'main.tex');
+  await assert.rejects(browser.resolve(path.join(media, '..')));
+  await assert.rejects(browser.resolve(`${media}-other`));
+  await assert.rejects(browser.create(media, '../outside'));
+  await assert.rejects(browser.create(media, 'Český projekt'));
+  const before = await fs.stat(path.join(project, 'main.tex'));
+  const directoryBefore = await fs.stat(project);
+  await writeShared(path.join(project, 'main.tex'), 'updated');
+  assert.equal(await fs.readFile(path.join(project, 'main.tex'), 'utf8'), 'updated');
+  assert.equal((await fs.stat(path.join(project, 'main.tex'))).mode, before.mode);
+  assert.equal((await fs.stat(project)).mode, directoryBefore.mode);
+  const link = path.join(project, 'escape');
+  await fs.symlink(root, link, process.platform === 'win32' ? 'junction' : 'dir');
+  await assert.rejects(browser.resolve(link));
+  assert.throws(() => resolveInside(project, 'escape/secret.txt'));
+  assert.ok(!(await browser.browse(project)).directories.some((entry) => entry.name === 'escape'));
+});
+
+test('compiler snapshot excludes metadata and preserves shared source files', async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'oleaf-snapshot-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const source = path.join(root, 'source');
+  const snapshot = path.join(root, 'snapshot');
+  await fs.mkdir(path.join(source, 'chapters'), { recursive: true });
+  await fs.mkdir(path.join(source, '.oleaf-build'));
+  await fs.writeFile(path.join(source, 'chapters', 'intro.tex'), 'source');
+  await fs.writeFile(path.join(source, '.oleaf-project.json'), 'private');
+  await snapshotSources(source, snapshot);
+  assert.equal(await fs.readFile(path.join(snapshot, 'chapters', 'intro.tex'), 'utf8'), 'source');
+  assert.deepEqual(await fs.readdir(snapshot), ['chapters']);
+  await fs.writeFile(path.join(snapshot, 'chapters', 'intro.tex'), 'compiled copy');
+  assert.equal(await fs.readFile(path.join(source, 'chapters', 'intro.tex'), 'utf8'), 'source');
+});

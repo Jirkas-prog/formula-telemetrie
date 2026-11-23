@@ -1,0 +1,16 @@
+[Unit]
+Description=Verify saved eduroam credentials and restore wlan0
+After=NetworkManager.service
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/python3 -I /usr/local/libexec/formula-wifi-profiles.py --test-eduroam
+StateDirectory=formula-wifi-profiles
+StateDirectoryMode=0700
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX
+RuntimeMaxSec=175
+

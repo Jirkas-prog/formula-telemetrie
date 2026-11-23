@@ -1,0 +1,33 @@
+[Unit]
+Description=Formula GNSS Manager
+After=local-fs.target
+
+[Service]
+User=formula-manager
+Group=formula-manager
+SupplementaryGroups=dialout
+WorkingDirectory=/opt/formula-manager
+EnvironmentFile=/etc/formula-manager/auth.env
+Environment=FORMULA_RECEIVER_UI=1
+Environment=FORMULA_DATA_DIR=/var/lib/formula-manager
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/formula-manager/venv/bin/python -u /opt/formula-manager/server.py
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=25
+StateDirectory=formula-manager formula-manager-auth
+StateDirectoryMode=0750
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/media -/run/media
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
+

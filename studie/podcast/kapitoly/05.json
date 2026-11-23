@@ -1,0 +1,13 @@
+{
+  "number": 5,
+  "title": "Co přesně ukládat z přijímače",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "e207ddea59676caa0fc8664949f97e92fd7f3fc89081e456d0b9c7a2b2b17c4f",
+  "sha256_audio": "bbb450189575d117ae6739a0e1d34ed44c896eccfbd7de9dadb3df54ac91d638",
+  "duration_seconds": 153.048,
+  "word_count": 365,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}

@@ -1,0 +1,175 @@
+=== 01 | Co vlastně stavíš ===
+
+Ahoj. V tomhle výkladu si postupně postavíme představu o měřicím počítači pro tvoji formuli. Máš Raspberry Pi pět se dvěma gigabajty operační paměti, rychlý disk a přijímač družicové navigace. Chceš vědět, co na tom poběží, proč to tam bude a jak poznáš, že se na uložená data můžeš spolehnout. Budeme mluvit srozumitelně, ale půjdeme i pod povrch. Výklad je namluven syntetickým českým hlasem. Odkazy na dokumentaci najdeš v přiložených podkladech.
+
+Začněme tím, co je skutečným výsledkem tvého zařízení. Není to spuštěný Docker ani hezká webová stránka. Výsledkem je dohledatelný záznam měření, ze kterého dokážeš později zopakovat výpočet a vysvětlit, jak jsi k výsledku došel. Když po jízdě otevřeš soubor, potřebuješ vědět, kdy vznikl, jak byl nastaven přijímač, zda nechybí část průběhu a jaký program ho zpracoval.
+
+Představ si celý řetězec. Anténa přijímá družicové signály. Přijímač z nich vytváří měření a navigační řešení. Raspberry data přebírá a zapisuje na disk. Tvůj výpočet z uložených měření vytváří další výsledky. Databáze usnadňuje vyhledávání v čase a Grafana zobrazuje grafy. Každá část má jinou odpovědnost. Grafana nezachytí něco, co nikdy nedorazilo z přijímače. Databáze nezrekonstruuje původní pozorování, pokud jsi uložil pouze výslednou zeměpisnou šířku.
+
+Podle aktuální koncepce bakalářky cílíš na polohu při padesáti hertzech a následné zpracování s vlastní nepohyblivou základnou. V autě máš přijímač mosaic iks pět na desce simple RTK tři bé Pro. Základna má být založená na přijímači F devět P. Inerciální jednotka a rádiové experimenty jsou volitelné. Proto budeme navrhovat hlavně dobře fungující záznam družicových dat. Další věci se přidají až k ověřenému základu.
+
+V běžném provozu bude systém i záznam na jediném SSD. Paměťová karta poslouží při instalaci a potom ji vyjmeš. Druhé úložiště ani automatické zálohování do návrhu nepřidáváme. To je důležité pro pochopení hranic spolehlivosti. Můžeme výrazně omezit ztráty způsobené softwarem, ale porouchaný jediný disk žádný chytrý program nenahradí.
+
+=== 02 | Proč Linux a co znamená real-time ===
+
+Volíme Raspberry Pi OS Lite, v šedesátičtyřbitové variantě. Aktuálně jde o systém založený na Debianu třináct, označovaném Trixie. Slovo Lite znamená, že tam není grafická plocha. Programy budeš ovládat přes příkazovou řádku a webová rozhraní otevřeš na svém notebooku. Raspberry tak nemusí spotřebovávat paměť na vlastní okna, panel a prohlížeč.
+
+Operační systém obstarává přístup k procesoru, paměti, síti a diskům. Jeho jádro, tedy Linux, přiděluje procesům čas procesoru a pomocí ovladačů komunikuje s hardwarem. Nad ním běží jednotlivé programy. Logger čte přijímač, databáze zpracovává zápisy a síťová služba čeká na připojení. Nemusíš tyto základní mechanismy psát sám. Tvoje práce je rozumně je poskládat a ověřit jejich chování.
+
+Původně tě napadl real-time operační systém, třeba Zephyr. Tady se vyplatí oddělit dvě vlastnosti. Jedna je včasná reakce. Druhá je trvalé zachování dat. Real-time systém pomáhá vytvářet programy s předvídatelnými časovými lhůtami. Typický požadavek může znít: řídicí smyčka musí dokončit krok před další periodou. Z toho ale neplyne, že při výpadku napájení zůstanou data uložená na disku.
+
+Naopak běžný Linux může velmi dobře zaznamenávat proud měření, i když konkrétní proces občas dostane procesor o několik milisekund později. Podmínkou jsou dostatečné vyrovnávací paměti, průchodnost rozhraní a správné časové značky. Přijímač označí okamžik měření a logger nemusí předstírat, že okamžik převzetí zprávy je okamžikem měření. Přísnější časové požadavky se řeší až na základě změřených zpoždění a potřeb konkrétního algoritmu.
+
+Zephyr má i podporu desky Raspberry Pi pět, takže by nebylo přesné tvrdit, že na ní vůbec nemůže běžet. Pro náš plán s běžnými linuxovými nástroji, Dockerem a databází by ale znamenal zásadně jinou cestu a více vlastní integrace. Smysl může mít na samostatném mikrokontroléru, který přesně vzorkuje rychlý senzor. Raspberry potom převezme hotové vzorky.
+
+Ubuntu Server by dávalo větší smysl při konkrétní potřebě ekosystému ROS dva. Ten teď není podmínkou hlavního výsledku. Zůstáváme proto u systému přímo určeného pro Raspberry, s dostupnou dokumentací a jednoduchou správou. Žádná z těchto voleb sama o sobě nepotvrzuje spolehlivost. Tu ukáže až měření celé sestavy.
+
+=== 03 | Co se děje při instalaci a startu z disku ===
+
+Teď si představ první zapnutí. Raspberry nejprve spustí svůj zaváděcí program. Ten podle nastaveného pořadí hledá médium se systémem. Na něm najde potřebné zaváděcí soubory, načte linuxové jádro a to připojí hlavní souborový systém. Nakonec se spustí služby. Třeba připojení k síti a vzdálené přihlašování.
+
+Obraz operačního systému je připravený obsah disku. Když ho zapisuje Raspberry Pi Imager, nekopíruje na kartu jeden běžný soubor. Vytvoří strukturu oddílů a zapíše jejich obsah. Proto se předchozí obsah karty přepíše. Malý zaváděcí oddíl obsahuje soubory potřebné při startu. Větší linuxový oddíl obsahuje samotný systém, uživatelské soubory a později aplikace.
+
+V našem postupu je karta dočasný startovací prostředek. Připravenou kartu vložíš do vypnutého Raspberry, připojíš správně osazený disk a zapneš napájení. Při prvním startu necháš systému čas na dokončení úvodního nastavení. Z notebooku se přihlásíš přes Wi-Fi a ověříš, že opravdu běží očekávaný systém. Příprava karty ještě neznamená, že jsme ověřili první start nebo funkci disku v konkrétním adaptéru.
+
+Disk označovaný NVMe komunikuje přes rozhraní PCI Express. U Raspberry pět k němu potřebuješ odpovídající adaptér a správně zapojený plochý kabel. Samotný tvar konektoru M tečka dva ještě neurčuje protokol disku. Při sestavování proto kontroluješ kompatibilitu konkrétních součástek a pokyny výrobce adaptéru. Mechanicky zajistíš disk i kabel, protože auto vibruje.
+
+Jakmile systém z karty funguje a vidí SSD, přeneseš na něj čistý základ systému. V připraveném návodu k tomu používáme projekt rpi-clone ve variantě udržované Jeffem Geerlingem. Připravuje spustitelný cíl, nejde o obyčejné kopírování složky. Před zápisem identifikuješ cílový disk podle modelu a kapacity. Tento krok jeho obsah přepisuje. Klonování provedeš ještě před spuštěním databází a měření, aby se během kopírování neměnila důležitá data.
+
+Následuje úplné vypnutí, vyjmutí karty a nový start. Pokud zaváděcí konfigurace vyžaduje úpravu, nastavíš podporu a pořadí startu podle oficiálního návodu. Výsledek ověříš pohledem na připojené oddíly. Kořenový souborový systém i zaváděcí oddíl musí patřit SSD. Teprve teď máš potvrzeno, že zařízení funguje samostatně bez karty. Není důvod pokračovat k Dockeru, dokud tento jednoduchý test neprojde.
+
+=== 04 | Wi-Fi, internet a vzdálená příkazová řádka ===
+
+Pro nastavení potřebuješ spojení mezi notebookem a Raspberry. Ethernetový kabel k tomu není nutný. Oba přístroje můžeš připojit k domácí Wi-Fi nebo k hotspotu telefonu. Je dobré rozlišovat místní síť a internet. Místní síť umožní, aby spolu zařízení mluvila. Internet potřebuješ hlavně při stahování systému, aktualizací a aplikací. Samotné přihlášení a místní web mohou fungovat i bez něj.
+
+Router obvykle přidělí Raspberry síťovou adresu. Té se říká IP adresa. Často můžeš místo čísel použít i jméno zařízení s koncovkou local. Když překlad jména nefunguje, může spojení přes číselnou adresu pořád fungovat. Adresu najdeš například v seznamu připojených zařízení routeru. Některé hotspoty a sítě pro hosty blokují komunikaci mezi klienty. Připojení obou přístrojů ke stejné síti tedy ještě samo o sobě nezaručuje, že se navzájem uvidí.
+
+Vzdálenou příkazovou řádku otevře protokol SSH. Notebook je klient, Raspberry je server. Po přihlášení se příkazy vykonávají na Raspberry, přestože je píšeš do okna na notebooku. To je zpočátku zásadní rozlišení. Pokud se připojení ukončí, vrátíš se do místního prostředí svého počítače. Před důležitým příkazem si proto všimni, na jakém stroji skutečně jsi.
+
+Při prvním připojení se ukládá identita serveru. Po přeinstalaci se může změnit. Varování o změně proto znamená ověřit, že se opravdu připojuješ ke svému přeinstalovanému zařízení. Heslo je pro začátek jednoduché. Později si můžeš zřídit přihlašování klíčem. Přístupové údaje samozřejmě nepatří do veřejného repozitáře ani do přílohy bakalářky.
+
+U Wi-Fi nastavujeme zemi Česká republika kvůli rádiovým pravidlům. Časové pásmo Europe Prague se používá také v Liberci. Název časové zóny neudává fyzické umístění zařízení. Pro měřicí data budeme navíc rozlišovat čas přijímače, univerzální čas a čas zobrazený člověku. Místní letní čas nemá rozhodovat o pořadí vzorků.
+
+První úspěšné přihlášení je příležitost udělat malou kontrolu: verze systému, dostupná paměť, viditelné disky, síť a případná hlášení o napájení. Pak systém aktualizuješ a restartuješ. Když se po restartu znovu přihlásíš, ověřil jsi, že přístup není závislý na jednorázovém ručním zásahu. To je první drobný, ale skutečný provozní test.
+
+=== 05 | Co přesně ukládat z přijímače ===
+
+Zkratka GNSS označuje družicové navigační systémy obecně. GPS je jedním z nich. Tvůj přijímač může pracovat s více soustavami a frekvencemi. Uvnitř zpracovává signály a vytváří různé typy výstupu. Pro jednoduché zobrazení polohy stačí zprávy se souřadnicemi. Pro pozdější přesné zpracování ale potřebuješ také původní pozorování, odpovídající navigační informace a diagnostiku podle požadavků zvoleného řešiče.
+
+Septentrio používá binární formát SBF. Zprávy jsou uspořádané do různých bloků. Nastavením výstupu určuješ, které bloky přijímač posílá a jak často. Když uložíš pouze blok s výslednou polohou, soubor sice bude mít správnou příponu, ale chybějící původní pozorování v něm nevzniknou. Proto začínáme konkrétním profilem výstupu a ověřením, že mu náš následný zpracovatelský nástroj rozumí.
+
+Padesát hertzů znamená padesát epoch za sekundu, tedy rozestup dvacet milisekund. Neříká to ale samo o sobě nic přesného o počtu bajtů za sekundu. Záleží na počtu bloků, družic, signálů a dalších informací. Stejně tak vysoká četnost výsledné polohy automaticky neznamená, že všechny potřebné původní údaje i základna mají stejnou četnost. U vlastní základny s F devět P je nutné ověřit konkrétní variantu přijímače, firmware a možnosti řešiče. Padesátihertzový výsledek následného zpracování je cíl experimentu, ne už prokázaná vlastnost celé sestavy.
+
+RTK provádí relativní přesné určení polohy průběžně s dostupnými korekcemi. PPK pracuje následně s uloženými záznamy roveru a základny ze stejného období. Pro tvoji aktuální koncepci je proto důležité uchovat obě měření a správně je časově spárovat. Kvalita anténního umístění a skutečný příjem signálu zůstávají zásadní. Software neodstraní každý problém způsobený zakrytím antény nebo odrazy.
+
+Logger by měl zapisovat originální proud, rozdělený do rozumně velkých souborů. K jízdě přiloží identifikaci přijímače, verzi firmwaru, konfiguraci a verzi svého programu. Průběžně počítá přijaté bajty, rozpoznané bloky, chyby a mezery v očekávaných epochách. Kontrolní součet pomůže odhalit poškozený blok. Počet zpráv a jejich časy pomohou odhalit chybějící úsek. Jsou to různé kontroly a potřebuješ obě.
+
+Jeden proces má mít jasnou odpovědnost za čtení konkrétního datového rozhraní. Nenecháš několik programů soupeřit o tentýž sériový proud. Dalším částem předáš kopii vybraných údajů nebo hotové soubory. Tím získáš jedno místo, kde dokážeš vysvětlit, co skutečně přišlo a co se s tím stalo.
+
+=== 06 | Kdy jsou data opravdu na disku ===
+
+Teď přichází jedna z nejdůležitějších částí. Program zavolá zápis do souboru a dostane odpověď, že zápis proběhl. Znamená to, že data přežijí okamžité odpojení napájení? Běžně ještě ne. Cestou mohou být ve vyrovnávací paměti programu, v paměti operačního systému a případně v paměti samotného disku.
+
+Tyto mezivrstvy mají dobrý důvod. Spojí mnoho malých zápisů do větších a umožní programu pokračovat, aniž by čekal na každý jednotlivý fyzický zápis. Výkon je vyšší, ale vzniká časové okno, ve kterém poslední data nejsou trvale potvrzená. Když to víš, můžeš toto okno řídit a měřit.
+
+Vyprázdnění bufferu programovací knihovny posune data směrem k operačnímu systému. Synchronizační volání fsync požádá o jejich dotažení na úložné zařízení a čeká na jeho potvrzení. Musíš kontrolovat i návratové chyby. Při vytváření nebo přejmenování souborů je navíc důležitá trvalost změny adresáře. Tuto podrobnost řešíme při implementaci uzavírání jednotlivých segmentů záznamu.
+
+Ani správně použitá synchronizace není záruka proti všem hardwarovým poruchám. Záleží na chování disku a napájení. Souborový systém ext čtyři používá žurnál, který pomáhá udržet konzistenci jeho struktury po pádu. Žurnál ale nepovažuj za automatické zachování každého posledního měření. Stejně tak interní transakční mechanismus databáze nechrání data, která databáze ještě nepřevzala.
+
+Praktický návrh může synchronizovat v pravidelných dávkách. Konkrétní interval vybereš podle měření zpoždění a přijatelného rizika ztráty nejnovějšího úseku. Jedna sekunda může být výchozí experiment, není to univerzální záruka ztráty nejvýše jedné sekundy. Potřebuješ změřit i dobu samotného zápisu a reakci při chybě. Synchronizovat každý malý vzorek zase může zbytečně zvyšovat režii.
+
+Vedle toho budeš mít omezenou frontu v operační paměti. Zachytí krátké zpomalení zápisu. Má ale pevnou kapacitu a po výpadku napájení její obsah zmizí. Při odpojení NVMe může navíc selhat i systém, protože z téhož disku běží. Nelze tedy automaticky slibovat, že počítač dál poběží, počká na návrat disku a všechno přelije zpátky. Takové chování by vyžadovalo zvláštní návrh a důkladné ověření.
+
+V našem jednoduchém řešení sledujeme velikost fronty, dobu zápisu, volné místo a chyby. Při problému se nesmí tvářit, že měření pokračuje bez ztráty. Pro běžné vypnutí nejprve zastavíš záznam, necháš dokončit zápisy a potom vypneš systém. Kvalitní napájení, chlazení a upevnění kabelů jsou součástí spolehlivosti stejně jako program. Real-time plánovač tyto podmínky nenahradí.
+
+=== 07 | Stačí dva gigabajty paměti ===
+
+Odpověď závisí na tom, co bude běžet současně. Pro samotný odlehčený systém a rozumně napsaný logger jsou dva gigabajty použitelný výchozí předpoklad. Pro databázi, několik grafů a velké vědecké výpočty současně už bych dostatek paměti bez měření nesliboval. Kapacita SSD nedoplňuje operační paměť stejným způsobem, jako kdybys přidal další paměťový čip.
+
+Uděláme si modelový rozpočet. Následující čísla jsou pracovní odhady pro vysvětlení, nejsou změřenou spotřebou tvé sestavy. Pro systém a základní služby si vyhradíme tři sta mebibajtů. Pro logger sto. Pro datovou frontu sto dvacet osm. Pro průběžný výpočet dvě stě. Dohromady je to sedm set dvacet osm mebibajtů. Mebibajt je binární jednotka používaná u paměti; pro dnešní úvahu si ho můžeš představit přibližně jako megabajt.
+
+Když přidáme Docker s rozpočtem sto padesát, databázi se šesti sty a Grafanu se třemi sty padesáti mebibajty, dostaneme se na osmnáct set dvacet osm. S rezervou tři sta už jsme nad dvěma gibibajty. A skutečně použitelná paměť bude menší než její nominální kapacita. Stačí náročnější dotaz, import nebo dočasná kopie pole a plán přestane vycházet. Proto rozlišujeme základní měřicí režim a bohatší režim prohlížení.
+
+Spotřebu ověříš na běžícím zařízení. Sleduješ dostupnou paměť, dlouhodobý růst procesu, špičky a případné ukončování programů kvůli nedostatku paměti. V Linuxu není každá obsazená paměť problém. Část tvoří uvolnitelná disková cache. Důležitá je dostupná kapacita a chování při skutečné zátěži. Samotný údaj, že po startu něco zabírá dvě stě megabajtů, nepopisuje situaci během importu celé jízdy.
+
+Fronta má jednoduchou matematiku. Sto dvacet osm mebibajtů při toku jeden mebibajt za sekundu vystačí přibližně na sto dvacet osm sekund. Při desetkrát menším toku je to přibližně dvacet jedna minut. Platí to pro čistý datový obsah, bez režie datových struktur. Proto si změř skutečný proud a hlídej počet bajtů ve frontě, nejen počet zpráv. Tisíc krátkých zpráv a tisíc velkých bloků mají různou paměťovou cenu.
+
+Odkládání paměti na disk může oddálit pád programu, ale při intenzivním používání zhoršuje odezvu. Není to náhrada rozpočtu. Pokud celek nevejde, nejjednodušší krok je provozovat databázi a Grafanu na notebooku, případně je zapínat až po jízdě. Raspberry pak drží hlavně sběr a záznam. Výzkumný výsledek tím neztrácí hodnotu a dva gigabajty využiješ tam, kde jsou opravdu potřeba.
+
+=== 08 | Co přinese Docker a jak mu rozumět ===
+
+Docker řeší hlavně balení a spouštění aplikací. Představ si, že databáze potřebuje určité knihovny a konkrétní verze souborů. Obraz kontejneru je připravený balíček této aplikace a jejího prostředí. Kontejner je běžící instance obrazu. Na Linuxu sdílí s hostitelem jádro, takže pro každou službu nespouštíš další celý virtuální počítač.
+
+To ale neznamená nulovou spotřebu. Databáze uvnitř kontejneru potřebuje podobnou pracovní paměť jako databáze mimo něj. Docker usnadní instalaci a oddělení prostředí, nezmenší libovolný program na pár megabajtů. Také nezaručuje přesnou časovou odezvu ani automaticky trvalé uložení dat.
+
+Na Raspberry nainstaluješ Docker Engine a doplněk Compose podle oficiálního postupu pro odpovídající Debian a architekturu. Nepotřebuješ Docker Desktop. A nepotřebuješ ani Docker v Dockeru. Ten se používá pro zvláštní úlohy, například některá automatizovaná sestavování. Pro tebe bude na hostiteli jeden Docker a vedle sebe několik služeb.
+
+Compose popisuje sestavu v textovém konfiguračním souboru. Řekneš, jaký obraz spustit, jakou mu předat konfiguraci, kam připojit data a které síťové porty zpřístupnit. Soubor pak můžeš verzovat spolu s projektem. Při opakování experimentu se podíváš, jakou sestavu jsi skutečně použil. Konkrétní verze obrazů jsou pro tento účel vhodnější než neurčité označení nejnovější verze.
+
+Musíš také rozumět životnosti dat. Kontejner lze zahodit a vytvořit znovu. Pokud databázi necháš pouze v jeho zapisovatelné vrstvě, při odstranění kontejneru o tuto vrstvu přijdeš. Proto databázové soubory uložíš do připojeného trvalého svazku nebo určené složky hostitele. Svazek přežije výměnu kontejneru, pokud ho výslovně neodstraníš. Pořád ale fyzicky leží na našem jediném SSD. Není to druhá kopie dat.
+
+Síť uvnitř Compose má vlastní jména služeb. Grafana tak může oslovovat databázi názvem její služby. Naproti tomu localhost uvnitř kontejneru znamená tento kontejner. Není to automaticky Raspberry ani jiný kontejner. V prohlížeči notebooku potom zadáváš adresu Raspberry a zveřejněný port webové služby. Toto rozlišení vyřeší překvapivě mnoho začátečnických chyb.
+
+Logger bych při prvních pokusech spouštěl přímo v systému, protože snáze zkontroluješ přístup k přijímači a chybová hlášení. Pozdější kontejnerizace je možná. Nejprve ale ověř základní funkci. Na malém zařízení se hodí, když dokážeš každou vrstvu zkontrolovat samostatně a přesně víš, kterou právě opravuješ.
+
+=== 09 | Databáze, Grafana a tvoje webová stránka ===
+
+Databáze časových řad usnadňuje otázky typu: jaká byla rychlost mezi dvěma časy, kdy klesl počet použitých družic a jak se měnila nejistota polohy. Každý bod má čas a hodnoty. K nim můžeš přidat identifikaci jízdy nebo přijímače. To je už jiná podoba informace než původní binární proud ze zařízení.
+
+V dosavadním návrhu pracujeme s InfluxDB řady dva. Je to konkrétní výuková volba s vlastním webovým rozhraním a dostupnou integrací. Existuje i novější řada tři. Při instalaci proto nepomícháš návody a konfigurace různých generací. Verzi vybereš vědomě, ověříš dostupnost pro šedesátičtyřbitový ARM a zapíšeš ji do dokumentace sestavy.
+
+V řadě dva se setkáš s pojmem bucket, tedy úložištěm dat s nastavenou dobou uchování. Přístup řídí tokeny. Jeden program může mít oprávnění zapisovat, zatímco zobrazovací služba dostane jen čtení. Pro dotazy se v této variantě často používá jazyk Flux. Pro začátek potřebuješ rozumět tomu, jak vybrat časový interval, veličinu a způsob případného zjednodušení průběhu.
+
+Databázi nebudeš plnit v kritické smyčce způsobem, který zastaví čtení přijímače při každém pomalém síťovém požadavku. Bezpečnější návrh nejprve uchová původní soubory a samostatný importér z nich vytváří databázový pohled. Importér si eviduje, kam došel, a umí pokračovat. Musíš promyslet i opakovaný import, aby nezpůsobil dvojí započítání týchž měření. Když databázi vypneš, sběr původních dat má dál fungovat.
+
+Grafana nad databází staví panely a přehledy. V jednom panelu vidíš rychlost, v druhém stav řešení a ve třetím chybějící epochy. Průběh můžeš přiblížit na konkrétní zatáčku. Samotná Grafana běžně není hlavním skladem všech tvých vzorků. Uchovává hlavně svou konfiguraci a zobrazuje data získaná z připojeného zdroje.
+
+Na grafu klidně zobrazíš řidší nebo agregovaný průběh, pokud je jasné, co zobrazuje. Průměr za časové okno ale může skrýt krátkou špičku. Pro posouzení kvality je někdy vhodné zobrazit také minimum, maximum a počet dostupných vzorků. Původní data ponecháš v potřebné četnosti. Plynulý graf sám o sobě nedokazuje úplnost záznamu.
+
+Zpočátku ti tedy hotová webová rozhraní pravděpodobně stačí. Vlastní stránku přidáš, až budeš mít konkrétní chybějící úlohu, třeba pojmenování jízdy a přehled stavu loggeru. Taková stránka komunikuje s omezeným serverovým rozhraním. Nedostane univerzální právo spouštět systémové příkazy. Databázová hesla a správní přístupy zůstávají na serveru. Díky tomu si nepřidáš zbytečně složitý administrátorský portál dřív, než máš první použitelné měření.
+
+=== 10 | Prostředí pro tvoje vlastní výpočty ===
+
+Teď k části, kterou chceš dělat sám. Tvoje vlastní výpočty mohou začít jako obyčejný program v Pythonu. Vytvoříš mu virtuální prostředí, označované venv, a do něj nainstaluješ potřebné knihovny. Toto prostředí oddělí knihovny projektu od balíčků používaných operačním systémem. Je lehčí na pochopení než okamžité balení celého vývoje do několika kontejnerů.
+
+Zdrojový kód a seznam závislostí uložíš do projektu. Samotné virtuální prostředí není věc, kterou musíš kopírovat mezi Windows a Raspberry. Na každém stroji ho vytvoříš znovu pro příslušnou platformu. Podobně kontejnerový obraz musí podporovat procesorovou architekturu cílového zařízení. Přenositelnost programu neznamená, že každá hotová binární knihovna z notebooku poběží beze změny na Raspberry.
+
+Výpočet rozděl na čtení vstupu, vlastní algoritmus a zápis výsledku. Pak můžeš stejný algoritmus ověřovat nejprve na uložené jízdě. Nemusíš kvůli každé změně rovnou jezdit s autem. Výstupy ukládej odděleně od původních souborů. Přilož parametry výpočtu a označení verze programu. Když později změníš filtr, budeš vědět, které výsledky vznikly kterou variantou.
+
+Paměťově je zásadní rozdíl mezi průběžným algoritmem a uchováním celé historie. Filtr může pro další krok potřebovat jen aktuální stav, matici nejistoty a malý počet posledních vzorků. Taková paměť s délkou jízdy téměř neroste. Pokud ale uložíš velkou matici ke každému vzorku do seznamu, spotřeba roste po celou dobu.
+
+Konkrétní příklad. Dvanáct hodnot uložených v osmibajtových číslech, pět setkrát za sekundu, během tří hodin zabere přibližně půl gigabajtu jen pro samotná čísla. Tabulky, časové značky a dočasné kopie mohou přidat další paměť. To není důkaz, že tvůj výpočet půl gigabajtu potřebuje. Je to důvod zpracovávat po blocích a rozlišovat, co musí zůstat v paměti a co můžeš průběžně uložit.
+
+Nejprve porovnáš výsledek se známým nebo jednoduše ověřitelným případem. Potom měříš dobu jednoho kroku a paměť na skutečných datech. Náročný následný výpočet může běžet na notebooku, zatímco Raspberry zajišťuje měření. Přesun na palubní počítač dává smysl tehdy, když konkrétní výsledek potřebuješ už během jízdy. Tak si zachováš prostor pro vlastní odbornou práci a zároveň budeš mít prostředí, jehož chování dokážeš vysvětlit.
+
+=== 11 | Automatický provoz a ověřování spolehlivosti ===
+
+Program spuštěný v otevřeném terminálu není hotové měřicí zařízení. Potřebuješ, aby se po zapnutí spustil správně a jeho životnost nebyla závislá na tvém přihlášení. V Linuxu se o takové služby běžně stará systemd. V popisu služby určíš program, uživatele, pracovní složku a pravidla spuštění. Můžeš také nastavit opakování po selhání.
+
+Restart programu ale neopraví ztracené vzorky z doby, kdy neběžel. Proto vedle automatického obnovení zaznamenáš i samotný výpadek. Po startu logger vytvoří novou relaci, ověří přístup k disku a přijímači a teprve potom oznámí připravenost. Stav spuštěno by neměl být zaměnitelný za stav úspěšně přijímám a trvale ukládám data.
+
+Identifikace připojeného zařízení by měla být stabilní. Po restartu se může změnit pořadí některých názvů rozhraní. Využiješ proto dostupnou identitu zařízení nebo vhodné pravidlo přiřazení. Také promyslíš práva: logger potřebuje přístup ke svému rozhraní a datové složce, ne neomezenou správu celého počítače.
+
+Zkoušky provádíš postupně. Nejprve krátký soubor, který dokážeš přečíst a zkontrolovat. Potom delší záznam v cílové četnosti. Sleduješ očekávané epochy, mezery, počet chyb, velikost fronty, paměť a teplotu. Přidáš databázi a porovnáš, zda se chování loggeru nezhoršilo. Vyvoláš náročnější dotaz a sleduješ špičky. Důležitá je i zkouška dostatečně dlouhá, aby odhalila postupný únik paměti.
+
+Další test vypne databázi. Správný výsledek je pokračující původní záznam a pozdější doplnění databázového pohledu. Při zkoušce odpojení přijímače naopak očekáváš jasně označenou mezeru a definované obnovení. Test zaplnění úložiště provedeš v omezeném testovacím prostoru, aby ses zbytečně nepřipravil o funkční systém. Předem určíš, co má program při nedostatku místa udělat. Tiché přepisování nejstarší jízdy není samozřejmý výchozí postup.
+
+Řízené zkoušky výpadku napájení patří až do připraveného experimentu s postradatelnými daty a možností systém obnovit. Po každé zkoušce kontroluješ čitelnost souborů, poslední zachovanou epochu a průběh dalšího startu. Výsledkem není věta, že všechno fungovalo. Výsledkem je protokol: jaká konfigurace, jaká porucha, kolik opakování a jaká naměřená ztráta.
+
+Právě tohle je cenná část bakalářky. Neslibuješ stoprocentní jistotu na jednom disku. Předkládáš srozumitelný návrh, měřitelné požadavky a důkazy o tom, v jakých podmínkách zařízení splňuje svůj účel.
+
+=== 12 | V jakém pořadí to skutečně postavíš ===
+
+Na závěr si projdeme konkrétní pořadí práce. Nemusíš si pamatovat všechny příkazy. Důležité je vědět, jaký výsledek máš po každém kroku vidět a proč na něm další krok závisí.
+
+První etapa je samotné Raspberry. Použiješ připravenou kartu s Raspberry Pi OS Lite a nastaveným vzdáleným přístupem. Zapneš sestavu, najdeš ji ve své Wi-Fi a přihlásíš se. Ověříš systém, napájení a síť. Aktualizuješ, restartuješ a znovu se připojíš. Výstupem je ověřený základní počítač, který dokážeš spravovat bez monitoru a Ethernetu.
+
+Druhá etapa je SSD. Zkontroluješ jeho přítomnost, model a kapacitu. Přeneseš čistý systém podle návodu, vypneš zařízení, vyjmeš kartu a spustíš ho znovu. Ověříš, odkud běží systém i zaváděcí oddíl. Uděláš další restart. Výstupem je samostatně startující zařízení, které pro běžný provoz kartu nepotřebuje.
+
+Třetí etapa je přijímač a původní data. Nejdřív nastavíš datový profil a vytvoříš krátký záznam. Otevřeš ho vhodným nástrojem, ověříš potřebné bloky a časový průběh. Změříš skutečný počet bajtů za sekundu. Podle toho navrhneš velikost fronty a segmentů souboru. Teprve potom rozšiřuješ logger o automatický start, diagnostiku a ošetření chyb.
+
+Čtvrtá etapa je tvůj výpočet. Nad známým uloženým vstupem vytvoříš jednoduchý, opakovatelný postup. Změříš jeho paměť a dobu běhu. Výsledky uchováš odděleně a popíšeš verzi algoritmu. Tady vzniká prostředí pro tvoji vlastní práci, kterou potom můžeš rozvíjet nezávisle na tom, jestli zrovna stojí formule v dílně.
+
+Pátá etapa je pohodlné prohlížení. Přidáš Docker, databázi a Grafanu, nejprve klidně na notebooku. Importuješ jednu zkušební jízdu a vytvoříš několik smysluplných panelů. Ověříš opakovaný import a provoz bez databáze. Až podle změřené spotřeby rozhodneš, které služby ponecháš přímo na Raspberry.
+
+Poslední etapa je delší měření celé sestavy a cílené zkoušky poruch. Zapíšeš výsledky a upravíš návrh tam, kde narazí na skutečný limit. V tu chvíli už nebudeš jen spouštět cizí návody. Budeš rozumět tomu, co každá část zajišťuje, co nezajišťuje a jak její funkci ověřit. A přesně to ti umožní infrastrukturu obhájit, dál rozvíjet a především ji použít pro vlastní výpočty a měření.

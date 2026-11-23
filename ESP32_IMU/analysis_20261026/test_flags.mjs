@@ -1,0 +1,92 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {Readable} from 'node:stream';
+import vm from 'node:vm';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.dirname(fileURLToPath(import.meta.url));
+const html=fs.readFileSync(path.join(root,'app/viewer.html'),'utf8');
+const scripts=[...html.matchAll(/<script(?:[^>]*)>([\s\S]*?)<\/script>/g)].filter(m=>!m[0].includes('type="application/json"')).map(m=>m[1]);
+const main=scripts.find(s=>s.includes('class ZipReader'));
+for(const source of scripts)new vm.Script(source);
+const core=vm.runInNewContext(scripts[0]+';FlagData',{TextDecoderStream,setTimeout});
+const flags=[{number:7,index:0,label:'začátek'},{number:42,index:2,label:'vrchol, "levá"'},{number:9,index:4,label:'konec'}];
+assert.equal(core.validate(flags,5).length,3);
+assert.throws(()=>core.validate([...flags,{...flags[0],number:8}],5),/jedna/);
+assert.throws(()=>core.validate([{number:0,index:0,label:''}],5));
+assert.throws(()=>core.validate([{number:1,index:5,label:''}],5));
+assert.equal(core.cell('=SUM(A1)'),"'=SUM(A1)");
+assert.equal(core.fields([]),',');
+const collect=async generator=>{let out='';for await(const part of generator)out+=part;return out};
+const csv='time_us,seq,ax_g,crc32\r\n'+Array.from({length:27},(_,i)=>`${i*2000+1000},${i},0.5,abc`).join('\r\n');
+const stream=()=>new Blob([csv]).stream();
+const output=await collect(core.rawChunks(stream(),flags,flags[2],flags[0]));
+const rows=output.trim().split('\r\n');
+assert.equal(rows[0],'time_us,seq,ax_g,source_crc32,flag_number,flag_label');
+assert.equal(rows.length,22); // source 5000 through 45000 inclusive: 21 rows.
+assert.ok(rows[1].startsWith('5000,2,0.5,abc,7,'));
+assert.ok(rows.at(-1).startsWith('45000,22,0.5,abc,9,'));
+assert.equal(rows.filter(r=>r.endsWith(',,')).length,18);
+assert.ok(rows.includes('25000,12,0.5,abc,42,"vrchol, ""levá"""'));
+const pair=[{number:1,index:0,label:''},{number:2,index:1,label:''}];
+// Both endpoints can resolve to the same original row across a long sampling gap.
+const sparse=new Blob(['time_us,seq\n10000,0\n100000,1']).stream();
+assert.equal((await collect(core.rawChunks(sparse,pair,...pair))).trim(),'time_us,seq,flag_number,flag_label\r\n10000,0,1|2, |');
+const edge=[{number:1,index:0,label:''},{number:2,index:5,label:''}];
+assert.ok((await collect(core.rawChunks(stream(),edge,...edge))).includes('53000,26,0.5,abc,2,'));
+const invalid=new Blob(['time_us,seq\n5000,0\n2000,1']).stream();
+await assert.rejects(()=>collect(core.rawChunks(invalid,pair,...pair)),/časová/);
+const controller=new AbortController();controller.abort();
+await assert.rejects(()=>collect(core.rawChunks(stream(),flags,flags[0],flags[2],controller.signal)),{name:'AbortError'});
+const floats=new Float32Array([.005,1,.015,2,.025,NaN,.035,4,.045,5]);
+const overview=await collect(core.overviewChunks(floats,2,['t_s','ax_g'],flags,0,4));
+assert.equal(overview.trim().split('\r\n').length,6);
+assert.equal(overview.split('\r\n').filter(r=>r.endsWith(',,')).length,2);
+assert.ok(overview.includes(',,42,"vrchol'));
+// Real CSV: compare every emitted source row with an independently selected nearest interval.
+const source='./input/logs/boot_000181_run_001.csv';
+const actualFlags=[{number:11,index:78130,label:'QA start'},{number:12,index:80000,label:'QA middle'},{number:13,index:83140,label:'QA end'}];
+const actual=await collect(core.rawChunks(Readable.toWeb(fs.createReadStream(source)),actualFlags,actualFlags[0],actualFlags[2]));
+const actualRows=actual.trimEnd().split('\r\n').slice(1);
+const decoder=new TextDecoder();let carry='',candidates=[],n=0;
+for await(const chunk of fs.createReadStream(source)){
+  const lines=(carry+decoder.decode(chunk,{stream:true})).split('\n');carry=lines.pop();
+  let done=false;
+  for(const line of lines){const t=Number(line.slice(0,line.indexOf(',')));if(!Number.isFinite(t))continue;if(t>=781290000&&t<=831420000)candidates.push(line.trimEnd());if(t>831420000){done=true;break}n++}
+  if(done)break;
+}
+const times=candidates.map(r=>+r.split(',',1)[0]);
+const nearest=time=>times.reduce((best,t,i)=>Math.abs(t-time)<Math.abs(times[best]-time)?i:best,0);
+const low=nearest(781305000),high=nearest(831405000);
+assert.equal(actualRows.length,high-low+1);
+for(let i=0;i<actualRows.length;i++)assert.equal(actualRows[i].split(',').slice(0,28).join(','),candidates[low+i]);
+assert.ok(actualRows[0].endsWith(',11,QA start'));
+assert.ok(actualRows.at(-1).endsWith(',13,QA end'));
+assert.equal(actualRows.filter(r=>!r.endsWith(',,')).length,3);
+fs.writeFileSync(path.join(root,'output/QA_vlajecky_vyrez.csv'),actual);
+const zipSource=main.slice(main.indexOf('class ZipReader'),main.indexOf('async function openFile'));
+const ZipReader=vm.runInNewContext(zipSource+';ZipReader',{DataView,Uint8Array,TextDecoder,Response,DecompressionStream});
+const zip=await new ZipReader(await fs.openAsBlob(path.join(root,'output/Formule_IMU.fimu'))).init();
+const zipped=await collect(core.rawChunks(await zip.stream('raw/boot_000181_run_001.csv'),actualFlags,actualFlags[0],actualFlags[2]));
+assert.equal(zipped,actual);
+// Exercise the actual UI export controller without invoking an OS download outside this project.
+const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,{disabled:false,value:'raw',classList:{add(){},remove(){}}});return elements.get(id)};
+const ctx=vm.createContext({$,FlagData:core,Blob,AbortController,Float32Array,Map,window:{},manifest:{columns:['t_s','ax_g']},run:{id:'test',raw_member:'raw'},archive:{stream:async()=>stream()},data:floats,C:2,start:0,end:.045,exportController:null,selectedFlagRange:()=>[flags[0],flags[2]],currentFlags:()=>flags,pause(){},fmt:v=>String(v),flagMessage:m=>ctx.message=m,updateFlagRange(){},download:(blob,name)=>ctx.downloaded={blob,name}});
+vm.runInContext(main.slice(main.indexOf('async function exportSelection('),main.indexOf("$('flagExport').onclick")),ctx);
+await vm.runInContext('exportSelection(true)',ctx);
+assert.equal(await ctx.downloaded.blob.text(),output);
+assert.equal(ctx.exportController,null);assert.equal($('run').disabled,false);
+let written='',closed=false;
+ctx.window.showSaveFilePicker=async()=>({createWritable:async()=>({write:async chunk=>written+=chunk,close:async()=>{closed=true},abort:async()=>{}})});
+$('flagFormat').value='overview';
+await vm.runInContext('exportSelection(true)',ctx);
+assert.equal(written,overview);assert.equal(closed,true);
+// Cancellation must release the export lock and abort the unfinished disk write.
+let aborted=false;
+ctx.window.showSaveFilePicker=async()=>({createWritable:async()=>({write:async()=>ctx.exportController.abort(),close:async()=>assert.fail('Cancelled file must not commit'),abort:async()=>{aborted=true}})});
+await vm.runInContext('exportSelection(true)',ctx);
+assert.equal(aborted,true);assert.equal(ctx.message,'Export byl zrušen.');assert.equal(ctx.exportController,null);
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'output/manifest.json'),'utf8'));
+const run=manifest.runs.find(r=>r.id==='boot_000181_run_001');
+fs.writeFileSync(path.join(root,'output/QA_vlajecky.json'),JSON.stringify({format:'fimu-flags',version:1,runs:[{id:run.id,sha256:run.sha256,flags:[{number:11,index:78130,label:'Ukázka · začátek úseku'},{number:12,index:83140,label:'Ukázka · konec úseku'},{number:13,index:80000,label:'Ukázka · důležitý bod'}]}]},null,2));
+console.log('PASS: validation, blank cells, escaping, reversed endpoints, nearest rows, EOF, cancellation, 100 Hz, real CSV/FIMU ('+actualRows.length+' unchanged source rows), UI export controller (Blob / disk / abort).');

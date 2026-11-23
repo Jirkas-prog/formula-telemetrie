@@ -1,0 +1,166 @@
+% !TeX program = xelatex
+% Nakupni prehled v sazbe TUL 2.3.
+\PassOptionsToPackage{localfonts}{tul}
+\documentclass[FM,SP,oneside]{tulthesis}
+\input{settings}
+
+\usepackage{colortbl}
+\usepackage{ragged2e}
+\hypersetup{
+  colorlinks=true,
+  urlcolor=tulFM,
+  linkcolor=tulFM,
+  pdfauthor={Jiří Buršík},
+  pdftitle={Nákupní seznam - RTK GNSS/IMU systém}
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\renewcommand{\arraystretch}{1.08}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\color{tulFM}\footnotesize Technická univerzita v Liberci -- FM}
+\fancyfoot[R]{\color{tulFM}\footnotesize\thepage/2}
+
+\newcommand{\cartheader}{%
+  \noindent
+  \begin{minipage}[c]{0.76\textwidth}
+    \includegraphics[width=52mm]{logo-fm-txt.pdf}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[c]{0.18\textwidth}
+    \raggedleft\includegraphics[width=14mm]{symbol-fm.pdf}
+  \end{minipage}
+  \vspace{1mm}
+  {\color{tulFM}\rule{\textwidth}{0.9pt}}
+  \vspace{1mm}
+}
+
+\newcommand{\shopheading}[2]{%
+  \vspace{0.55em}
+  \noindent\colorbox{tulFM!10}{%
+    \parbox{\dimexpr\textwidth-2\fboxsep\relax}{%
+      \textcolor{tulFM}{\TULmono\bfseries\normalsize #1}%
+      \hfill
+      {\small\bfseries #2}%
+    }%
+  }
+  \vspace{0.2em}
+}
+
+\newcommand{\product}[3]{%
+  \href{#3}{\textbf{#1}}\par\vspace{-0.25em}%
+  {\scriptsize\color{black!62}#2\par}
+}
+
+\begin{document}
+\cartheader
+
+{\sffamily\bfseries\fontsize{16pt}{19pt}\selectfont\color{tulFM}
+Nákupní seznam -- RTK GNSS/IMU systém\par}
+\vspace{0.2em}
+{\footnotesize
+\textbf{Projekt:} měření polohy vozidla Formula Student\hfill
+\textbf{Autor:} Jiří Buršík\\
+\textbf{Aktualizace seznamu:} 30. 9. 2026\hfill
+\textbf{Cílový rozpočet:} 25\,000 Kč bez DPH
+}
+
+\shopheading{RPiShop.cz}{3\,932 Kč s DPH}
+
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\centering\arraybackslash}p{10mm}Y>{\raggedleft\arraybackslash}p{29mm}@{}}
+\rowcolor{tulFM!7}
+\textbf{Ks} & \textbf{Položka} & \textbf{Cena s DPH} \\
+\midrule
+1 & \product{Raspberry Pi 5 -- 2 GB RAM}{Kód RPI502; výpočetní jednotka roveru.}{https://rpishop.cz/535838/raspberry-pi-5-2gb-ram/} & 1\,629 Kč \\
+1 & \product{Raspberry Pi 5 Active Cooler}{Kód OFI118; aktivní chlazení pro provoz v krytu.}{https://rpishop.cz/chladice-pro-raspberry-pi-5/6496-raspberry-pi-5-active-cooler.html} & 149 Kč \\
+1 & \product{Raspberry Pi M.2 HAT+}{Kód OFI134; pro vlastní NVMe SSD formátu 2230/2242.}{https://rpishop.cz/502557/raspberry-pi-m-2-hat/} & 349 Kč \\
+4 & \product{XIAO ESP32S3 + Wio-SX1262 Kit}{Kód SEE319; sada Seeed Studio pro LoRa 862--930 MHz, včetně LoRa a Wi-Fi antény.}{https://rpishop.cz/595653/xiao-esp32s3-wio-sx1262-kit-pro-meshtastic-lora/} & 4 $\times$ 339 Kč \\
+1 & \product{Adafruit ICM-20948, 9osá IMU}{Kód ADA076; akcelerometr, gyroskop a magnetometr. SPI/I\textsuperscript{2}C, vývod INT, STEMMA QT/Qwiic.}{https://rpishop.cz/652161/adafruit-9osy-imu-modul-icm-20948-se-stemma-qt-qwiic/} & 449 Kč \\
+\bottomrule
+\end{tabularx}
+
+\shopheading{ArduSimple}{863 EUR bez DPH}
+
+\begin{tabularx}{\textwidth}{@{}>{\centering\arraybackslash}p{10mm}Y>{\raggedleft\arraybackslash}p{29mm}@{}}
+\rowcolor{tulFM!7}
+\textbf{Ks} & \textbf{Položka} & \textbf{Cena} \\
+\midrule
+1 & \product{simpleRTK3B Pro}{Rover s přijímačem Septentrio mosaic-X5; až 100 Hz, SBF/NMEA/RTCM.}{https://www.ardusimple.com/product/simplertk3b-x5/} & 569 EUR \\
+2 & \product{u-blox ANN-MB2-00}{Třípásmová L1/L2/L5 anténa; 1 kus pro rover a 1 pro základnu. Každá s 5m kabelem a SMA konektorem.}{https://www.ardusimple.com/product/u-blox-gnss-tripleband-antenna-ann-mb2-00/} & 2 $\times$ 61 EUR \\
+1 & \product{simpleRTK2B Budget}{Přenosná základna s u-blox ZED-F9P.}{https://www.ardusimple.com/product/simplertk2b/} & 172 EUR \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.4em}
+{\scriptsize\color{black!62}
+Přepočet v souhrnu používá kurz ČNB 24,380 Kč/EUR platný 23. 9. 2026.
+Ceny LoRa, IMU a antény ANN-MB2-00 ověřeny 30. 9. 2026; ostatní ceny převzaty ze seznamu z 24. 9. 2026.
+Kliknutím na název položky se otevře příslušná produktová stránka.
+}
+
+\newpage
+\cartheader
+
+{\sffamily\bfseries\fontsize{16pt}{19pt}\selectfont\color{tulFM}
+Nákupní seznam -- souhrn a zapojení\par}
+
+\shopheading{Souhrn nákupu}{24\,290 Kč bez DPH}
+
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}Y>{\raggedleft\arraybackslash}p{38mm}@{}}
+\rowcolor{tulFM!7}
+\textbf{Dodavatel} & \textbf{Mezisoučet bez DPH} \\
+\midrule
+RPiShop.cz & 3\,249,59 Kč \\
+ArduSimple (863 EUR $\times$ 24,380 Kč/EUR) & 21\,039,94 Kč \\
+\midrule
+\textbf{Elektronika celkem (zaokrouhleno)} & \textbf{24\,290 Kč} \\
+Cílový rozpočet & 25\,000 Kč \\
+\textbf{Rezerva před dopravou a instalací} & \textbf{710 Kč} \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.45em}
+{\scriptsize\color{black!62}
+Součet nezahrnuje dopravu, napájení, USB a signálovou kabeláž, kryty, držáky ani stativ.
+SSD dodá autor. Rezerva proto není konečnou úsporou celé funkční instalace.\par
+}
+\vspace{0.35em}
+{\sffamily\bfseries\color{tulFM}Kontroly před objednáním}
+\begin{itemize}[leftmargin=1.35em,itemsep=0.05em,topsep=0.2em,parsep=0pt]
+  \item IMU připojím přímo k Raspberry Pi přes \textbf{SPI a INT}, desku napájím 3,3 V. STEMMA QT/Qwiic je rozhraní I\textsuperscript{2}C; pro SPI použiji pájecí vývody.
+  \item Pro akcelerometr a gyroskop počítám s nominální frekvencí \textbf{562,5 Hz} při zapnutém digitálním filtru a registru děliče nastaveném na 1. Magnetometr poskytuje nejvýše \textbf{100 Hz}. Sběr přes FIFO a přerušení ověřím na Raspberry Pi OS.
+  \item Vlastní NVMe SSD musí mít formát \textbf{2230 nebo 2242}; oficiální M.2 HAT+ nepodporuje 2280.
+  \item XIAO připojím k Raspberry Pi přes \textbf{USB-C datový kabel}; sada kabel neobsahuje. Pro přenos RTCM počítám s vlastním firmwarem USB/UART--LoRa namísto předinstalovaného Meshtastic.
+  \item Před závodem ověřím propustnost RTCM, dosah a obnovu spojení při zvoleném nastavení rádiového přenosu v pásmu 868 MHz.
+  \item Napájecí měnič se vybere až podle rozsahu palubního napětí, proudové rezervy a požadované ochrany proti přepětí a přepólování.
+\end{itemize}
+
+\vspace{0.4em}
+{\sffamily\bfseries\color{tulFM}Volba IMU pro prototyp}
+\par\vspace{0.2em}
+ICM-20948 volím jako cenově dostupnou 9osou variantu od stejného dodavatele.
+Akcelerometr umožňuje rozsah až $\pm16\,g$, gyroskop až $\pm2000\,{}^{\circ}/\mathrm{s}$.
+Počítám s vyšší katalogovou hustotou šumu gyroskopu než u původního ISM330DHCX
+(typicky 0,015 oproti 0,005 $({}^{\circ}/\mathrm{s})/\sqrt{\mathrm{Hz}}$ za podmínek příslušných datasheetů).
+Magnetometr budu používat až po kalibraci a ověření rušení ve vozidle.
+TDK označuje ICM-20948 jako \textbf{EOL}; pro případnou další výrobu bude nutné řešit náhradu.
+
+\vspace{0.3em}
+{\scriptsize\color{black!62}
+Technické podklady:
+\href{https://learn.adafruit.com/adafruit-tdk-invensense-icm-20948-9-dof-imu/pinouts}{zapojení Adafruit},
+\href{https://product.tdk.com/system/files/dam/doc/product/sensor/mortion-inertial/imu/data_sheet/ds-000189-icm-20948-v1.5.pdf}{datasheet ICM-20948},
+\href{https://www.st.com/resource/en/datasheet/ism330dhcx.pdf}{datasheet ISM330DHCX},
+\href{https://www.invensense.tdk.com/en-us/products/9-axis/icm-20948}{stav produktu TDK}.
+}
+
+\vspace{0.35em}
+{\scriptsize\color{black!62}
+Podklad: technická rešerše RTK GNSS/IMU systému pro Formula Student, Jiří Buršík, 2026.
+}
+
+\end{document}

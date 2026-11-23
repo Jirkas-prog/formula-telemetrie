@@ -1,0 +1,48 @@
+\chapter*{Výchozí úvaha autora}
+\addcontentsline{toc}{chapter}{Výchozí úvaha autora}
+
+Mým cílem je zaznamenávat pohyb formule ve 3D prostoru, především přesně
+vůči základně; přibližné umístění na mapě mi zpočátku postačuje.
+Chci zachovat surová data GNSS, surová data IMU a průběžný kombinovaný
+výstup pro porovnání online řešení s postprocessingem.
+
+Pro GNSS/IMU část si stanovuji přibližně 25~000~Kč bez DPH s možností
+malého překročení. SSD dodám vlastní, notebook využiji při vývoji.
+Cílově chci základnu ZED-F9P s ESP32, raw loggerem a webovou správou
+bez notebooku. Rychlý mosaic-X5 zachovávám na formuli.
+
+Nechci pořizovat drahou taktickou IMU bez opory v měření. Pro první návrh
+volím rozsah \SI{\pm16}{g} a vzorkování kolem \SI{500}{Hz}. Informaci o
+nárazové ochraně kolem \SI{3}{g} beru jako vodítko, nikoli záruku proti
+lokálním špičkám. Rozestup vzorků nezaměňuji s přesností polohy.
+
+Původní ISM330DHCX nahrazuji deskou Adafruit ICM-20948 kvůli kompasu
+a dostupnosti u RPiShopu pro společnou objednávku s Pi a rádiovými sadami.
+Musím ověřit šum, drift a magnetické rušení. Omezení životnosti čipu
+uvádím v kapitole o výběru.
+
+IMU chci připojit přímo k Raspberry Pi 5 s Raspberry Pi OS, bez časovacího
+STM32 či Teensy. Přesnost časového přiřazení musím změřit. ESP32 v rádiových
+sadách bude obsluhovat korekční spoj, nikoli sběr IMU.
+
+Pro korekce chci přímé LoRa spojení 868~MHz: dvě sady pro spoj, dvě
+pro vývoj a rezervu. Ověřím propustnost, rádiové podmínky a pokrytí.
+Dvě ANN-MB2 volím pro vlastní kryty a úsporu; montáž ověřím měřením.
+NTRIP ponechávám jako zálohu.
+
+Po konzultaci se školitelem upřednostňuji dostupnost a méně dodavatelů před
+úsporou jednotlivých stokorun. Volím RPiShop a ArduSimple; Mouser je
+nákupní alternativa. Součet přibližně 24~290~Kč bez DPH nezahrnuje
+napájení, úložiště základny, instalační díly ani dopravu. Vlastní přínos
+vidím v integraci, firmwaru a ověření, nikoli v nutnosti vyvíjet GNSS čip.
+
+V navazující etapě chci tento systém začlenit do senzoriky celé formule.
+Raspberry Pi má ukládat i pohyb roll/heave, otáčky kol a teploty.
+Nově volím centrální ADC u Raspberry a samostatné přívody od snímačů.
+CAN 1 a CAN 2 ponechávám pro auto a ADU; místní uzly zatím nepořizuji.
+Tento širší rozsah i jeho napájení posuzuji
+odděleně od původního rozpočtu; nejde zatím o realizovanou instalaci.
+
+\begin{flushright}
+  \textit{Jiří Buršík, autor práce}
+\end{flushright}

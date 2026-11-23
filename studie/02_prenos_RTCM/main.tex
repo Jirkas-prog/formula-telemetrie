@@ -1,0 +1,235 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{lmodern,microtype}
+\usepackage[left=30mm,right=20mm,top=24mm,bottom=25mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,array,tabularx,longtable}
+\usepackage{enumitem,xcolor,xurl}
+\usepackage{fancyhdr}
+\usepackage[unicode,colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!45!black]{hyperref}
+\setlength{\emergencystretch}{3em}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{1.2em}
+\setlist{itemsep=0.2em,topsep=0.4em,leftmargin=*}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[L]{\small Rešeršní studie \textbullet{} 21.~10.~2026}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.3pt}
+\raggedbottom
+\newcommand{\studietitle}[3]{\noindent{\small\bfseries STUDIE #1 \hfill Verze 1.0 / 21. 10. 2026}\par\vspace{0.7em}
+{\LARGE\bfseries #2\par}\vspace{0.5em}\noindent{\large #3\par}\vspace{0.8em}}
+\newcommand{\zdroj}[3]{\bibitem{#1}#2. Dostupné z: \url{#3}. [cit.~2026-10-21].}
+\begin{document}
+
+\studietitle{02}{Přenos korekčních dat RTK}{Velikost zpráv, datový tok, stáří korekcí a limity LoRa}
+\section{Zaměření studie}
+Studie odpovídá na otázky, kolik dat je nutné přenášet pro RTK, jak často mají přicházet a jak dlouho lze využívat starší data. Výpočty jsou vztaženy k pevné základně ZED-F9P a roveru mosaic-X5, které jsou zvoleny v hlavním projektu \texttt{rtk-gnss-bakalarka}. Přenos má původně zajišťovat dvojice XIAO ESP32S3/Wio-SX1262. Žádný datový tok zde není vydáván za měření skutečné sestavy: jde o reprodukovatelný rozměrový model a plán experimentu.
+
+Pojem \emph{korekce} je obvyklou zkratkou. U zde uvažovaného RTK proud zahrnuje především časově označené observace základny, její souřadnice a pomocné údaje. NTRIP, popsaný ve studii 03, přenáší stejný druh binárních dat a nezmenšuje automaticky jejich objem. Výpočty a navržené intervaly v této studii jsou vlastní návrh; vlastnosti formátů a přijímačů jsou doloženy zdroji.
+
+\section{Co je paket a co jedna epocha}
+Je nutné rozlišovat čtyři jednotky:
+\begin{enumerate}
+\item \textbf{RTCM rámec:} jedna úplná zpráva s hlavičkou, daty a kontrolou integrity.
+\item \textbf{Epocha observací:} měření pro určitý čas; může zahrnovat několik zpráv a konstelací.
+\item \textbf{Rádiový paket:} jednotka vlastního protokolu, která nese celý RTCM rámec nebo jeho fragment.
+\item \textbf{TCP segment či blok čtení:} část internetového proudu; jeho hranice nemusí odpovídat RTCM rámci.
+\end{enumerate}
+Na otázku po velikosti jednoho paketu proto neexistuje jediné číslo bez určení vrstvy.
+
+RTCM~3 má tříbajtovou hlavičku a tříbajtovou kontrolu CRC-24Q. Desetibitové pole délky omezuje datovou část na 1023~B, tedy celý rámec nejvýše na 1029~B. Preambule je \texttt{0xD3}. Parser musí ověřit délku a CRC; samotný výskyt preambule uvnitř proudu nestačí.\cite{rtcm-core}
+\begin{equation}
+ L_{\text{rámec}}=6+\left\lceil\frac{n_{\text{datových bitů}}}{8}\right\rceil
+ \quad [\mathrm B].
+\end{equation}
+Hodnota 1029~B je limit formátu, nikoliv obvyklá velikost zprávy. Nevyjadřuje ani objem celé epochy.
+
+\section{Zprávy vhodné pro zvolenou sestavu}
+ZED-F9P podle tabulky výstupních zpráv podporuje 1005, příslušné MSM4 a MSM7 pro GPS, GLONASS, Galileo a BeiDou a zprávu 1230.\cite{f9p} Výchozí testovací profil je následující; intervaly jsou \emph{návrhem}, ne univerzálním požadavkem normy.
+
+\par
+\begin{table}[htbp]\centering\small
+\caption{Navržený výchozí profil pevné základny.}
+\begin{tabularx}{\linewidth}{L{27mm}YL{29mm}}
+\toprule Typ zprávy & Účel & Výchozí interval\\ \midrule
+1005 & Souřadnice referenčního bodu antény základny. & 10~s a po změně nastavení\\
+1074 / 1084 & GPS / GLONASS MSM4 observace. & 1~s\\
+1094 / 1124 & Galileo / BeiDou MSM4 observace. & 1~s\\
+1230 & GLONASS code-phase biases; ponechat při ověřování kombinace výrobců. & 10~s\\
+\bottomrule\end{tabularx}\end{table}
+\par
+
+MSM znamená \emph{Multiple Signal Messages}. MSM4 obsahuje kódové a fázové měření, indikaci zámku a kvalitu signálu; MSM7 přidává jemnější vyjádření a údaje o rychlosti změny vzdálenosti.\cite{rtcm-encoder} Pro stejnou konstelaci se nemá bez důvodu souběžně vysílat MSM4 i MSM7. V základním testu se nepřidávají starší duplicitní observace ani proprietární zprávy pro pohyblivou základnu. Redukce konstelací snižuje objem, ale může zhoršit geometrii a dostupnost FIX.
+
+Zpráva 1006 má proti 1005 navíc výšku antény a zabírá 27~B místo 25~B. Jde o informaci pro jiné zdroje RTCM, nikoliv pokyn zapnout nepodporovaný výstup 1006 na F9P. Délka 1230 je při $n_b$ přítomných odchylkách $10+2n_b$~B, kde $0\leq n_b\leq4$, tedy nejvýše 18~B.\cite{pyrtcm} Konkrétní obsah se zjistí z binárního záznamu.
+
+\section{Výpočet velikosti MSM a datového toku}
+\subsection{Model délky}
+Označme $N_s$ počet družic jedné konstelace v masce, $N_g$ počet typů signálu v masce a $N_c$ počet přítomných dvojic družice--signál. Platí $N_c\leq N_sN_g$; dvě frekvence neznamenají automaticky právě dva typy signálu. Z bitových polí veřejné implementace RTKLIB lze odvodit délky jednoho nerozděleného rámce:\cite{rtcm-encoder}
+\begin{align}
+ L_4&=6+\left\lceil
+ \frac{169+N_sN_g+18N_s+48N_c}{8}\right\rceil,\\
+ L_7&=6+\left\lceil
+ \frac{169+N_sN_g+36N_s+80N_c}{8}\right\rceil.
+\end{align}
+Člen 169 zahrnuje pevnou část MSM hlavičky včetně masky družic a signálů, $N_sN_g$ délku masky buněk, další členy údaje za družice a aktivní buňky. Výsledky jsou v bajtech včetně RTCM hlavičky a CRC. Pokud zdroj konstelaci rozděluje do více zpráv, přibudou další hlavičky; výpočet se provede pro každou zprávu zvlášť. Veřejné implementace zde slouží k ověření rozměrů, nenahrazují normativní text placené normy RTCM.
+
+\par
+\begin{table}[htbp]\centering\small
+\caption{Vlastní modelové výpočty jedné konstelace s plnou maskou buněk.}
+\begin{tabular}{rrrrr}\toprule
+$N_s$ & $N_g$ & $N_c$ & MSM4 [B] & MSM7 [B]\\\midrule
+8 & 2 & 16 & 144 & 226\\
+10 & 2 & 20 & 173 & 275\\
+12 & 2 & 24 & 202 & 325\\
+20 & 3 & 60 & 440 & 725\\
+\bottomrule\end{tabular}\end{table}
+\par
+Pro 12 družic a dva signály vychází MSM4
+$6+\lceil1561/8\rceil=202$~B. Rádio nelze dimenzovat podle jedné krátké zprávy zachycené při malém počtu družic.
+
+\subsection{Model celé epochy}
+Uvažujme GPS 12, GLONASS 8, Galileo 10 a BeiDou 12 družic, vždy se dvěma signály a plnou maskou buněk. Jde o výpočetní scénář, nikoliv předpověď viditelnosti na konkrétní trati.
+\begin{align}
+ E_4&=202+144+173+202=721~\mathrm B,\\
+ E_7&=325+226+275+325=1151~\mathrm B.
+\end{align}
+Při 1005 po 10~s a konzervativně plné 1230 po 10~s je metadata režie $25/10+18/10=4{,}3$~B/s. Pro frekvenci observací $f$ proto platí
+\begin{equation}
+ R_4=721f+4{,}3,\qquad R_7=1151f+4{,}3
+ \quad [\mathrm{B/s}].
+\end{equation}
+
+\par
+\begin{table}[htbp]\centering\small
+\caption{Vlastní výpočet pro MSM4: pouze RTCM, bez transportní režie. MB znamená $10^6$ bajtů.}
+\begin{tabular}{rrrrr}\toprule
+$f$ [Hz] & Interval [s] & Tok [B/s] & Tok [kbit/s] & MB/h\\\midrule
+0,2 & 5 & 148,5 & 1,188 & 0,535\\
+0,5 & 2 & 364,8 & 2,918 & 1,313\\
+1 & 1 & 725,3 & 5,802 & 2,611\\
+2 & 0,5 & 1446,3 & 11,570 & 5,207\\
+5 & 0,2 & 3609,3 & 28,874 & 12,993\\
+\bottomrule\end{tabular}\end{table}
+\par
+MSM7 při 1~Hz vychází 1155,3~B/s, 9,242~kbit/s a 4,159~MB/h. Pro první kabelovou či internetovou zkoušku se navrhuje kapacitní rezerva alespoň dvojnásobku modelového průměru. Nenahrazuje měření delších epoch, výpadků a režie.
+
+\subsection{Dávky a sériová linka}
+Zprávy často přicházejí v dávce po dokončení epochy. UART 8N1 spotřebuje deset přenosových bitů na bajt. Modelových 725,3~B/s zatěžuje UART 7253~bit/s, nikoliv 5802~bit/s. Samotná epocha 721~B potřebuje na 9600~Bd přibližně 0,751~s; na 115200~Bd přibližně 0,063~s. NMEA a diagnostika ve stejném portu dobu dále zvětšují.
+
+Navrhuje se proto začít na 115200~Bd nebo rychlejší ověřené lince a oddělit nepotřebný textový výstup. Vyšší baudová rychlost UART nezvyšuje rádiovou propustnost LoRa. Ztráty v sériové frontě mohou být mylně považovány za problém GNSS.
+
+\section{Jak často vysílat a jak dlouho data vydrží}
+\subsection{Interval, zpoždění a stáří}
+Interval $T$ je doba mezi generováním epoch. Zpoždění $L$ zahrnuje čekání na odeslání, transport a příjem. Stáří použitých observací při výpočtu v čase $t$ je
+\begin{equation}
+ A(t)=t-t_{\mathrm{epocha}}.
+\end{equation}
+Čas posledního přijatého bajtu sám stáří neurčuje. Opakovaně přijatá stará epocha zůstává stará. U více konstelací se stáří jednotlivých částí může lišit.
+
+Pro idealizovaný proud se stálým intervalem a horní mezí zpoždění $L_{\max}$ je těsně před další použitelnou epochou stáří přibližně omezeno vztahem
+\begin{equation}
+ A_{\max}\lesssim(k+1)T+L_{\max},
+\end{equation}
+kde $k$ je počet po sobě ztracených epoch. Pro $T=1$~s a $L_{\max}=0{,}25$~s vychází bez ztráty 1,25~s, při jedné ztrátě 2,25~s. Projektový cíl stáří do 2~s by tedy vyžadoval menší interval nebo toleranci této události v definici dostupnosti.
+
+\subsection{Neexistuje univerzální doba platnosti}
+Observace jsou svázány s epochou. Jejich stárnutí ovlivňuje atmosféra, délka základny, dostupné signály, změny sledování a algoritmus roveru. Statická souřadnice v 1005 může zůstat správná dlouho, pokud se základna ani její zadání nezmění. Nepřítomnost nové 1005 každou sekundu proto není totéž jako nepřítomnost nových observací. Po restartu či změně zdroje je nutné zajistit správná metadata.
+
+Příručka mosaic-X5 pro firmware 4.14.10 uvádí u \texttt{setDiffCorrMaxAge} výchozí \texttt{RTKCorr}=20~s. Současně platí globální \texttt{MaxAge} z \texttt{setDiffCorrUsage}; rozhoduje přísnější nastavení. Režim \texttt{LowLatency} extrapoluje poslední korekce k aktuálnímu výpočtu. Pole SBF \texttt{MeanCorrAge} je průměrné stáří korekcí, nikoliv maximum všech dílčích observací.\cite{mosaic}
+
+U ZED-F9P v roli roveru uvádí manuál výchozí mez 60~s; starší korekce přestane používat.\cite{f9p} Zde je ale F9P základnou: 60~s není rozhodujícím limitem našeho roveru. Jde o implementační timeouty, nikoliv zaručenou dobu centimetrové přesnosti. Aktuální konfigurace se musí z přijímačů vyčíst.
+
+\par
+\begin{table}[htbp]\centering\small
+\caption{Interpretace časových hodnot pro projekt.}
+\begin{tabularx}{\linewidth}{L{30mm}YY}\toprule
+Hodnota & Význam & Použití\\\midrule
+1~Hz & Navržený výchozí přenos observací. & První kabelový a internetový test.\\
+Stáří do 2~s & Vlastní pracovní cíl běžného provozu. & Přijmout až po přesnostní zkoušce.\\
+0,5 či 0,2~Hz & Úsporné experimentální profily. & Bez zkoušky nelze potvrdit vhodnost pro jízdu.\\
+20~s / 60~s & Výchozí limity citovaných roverů. & Nejsou návrhem intervalu vysílání.\\
+\bottomrule\end{tabularx}\end{table}
+\par
+
+Minimální potřebná frekvence je nejnižší frekvence, která na konkrétní sestavě splní zvolenou přesnost a dostupnost včetně ztrát a zpoždění. Bez měření nelze potvrdit, že jedna korekce za deset sekund stačí. Zvyšování timeoutu neobnovuje čerstvost dat.
+
+Rychlost výstupu polohy a korekcí jsou různé parametry. Výstup roveru 50~Hz neznamená nutnost 50~Hz RTCM. Stejně tak nelze stáří korekcí násobit rychlostí vozidla a výsledek vydávat za chybu RTK: rover průběžně měří vlastní aktuální polohu. Součin rychlosti a časové chyby se používá při chybném přiřazení polohy k času, jak vysvětluje studie 01.
+
+\subsection{Výpadek, obnova a PPK}
+Při výpadku může rover pokračovat s extrapolací nebo změnit režim. Doba udržení FIX a doba zachování předepsané chyby jsou dva různé výsledky experimentu. Po obnovení se může znovu ustalovat řešení ambiguit.
+
+Software má zahazovat neúplné či prošlé rámce a obnovit proud aktuálními daty; nemá nejprve přehrávat dlouhou starou frontu. Surové observace mají nadále cenu pro PPK, kde se zpracují odpovídající epochy základny a roveru mimo reálný čas. To neopravňuje později považovat archivovanou RTCM zprávu za čerstvou online korekci.
+
+\section{Důsledky pro LoRa}
+\subsection{Fragmentace}
+Pro první návrh lze zvolit nejvýše 240~B RTCM obsahu na fragment a modelovou vlastní režii 8~B; rádiový payload pak má nejvýše 248~B. Jde o návrhové hodnoty tohoto protokolu. Fragmenty musí umožnit určit pořadí, příslušnost k rámci a úplnost. RTCM CRC se ověří po složení celého rámce.
+
+Rámec 440~B potřebuje dva fragmenty, rámec 725~B čtyři. Při nezávislé pravděpodobnosti ztráty fragmentu $p$ je pravděpodobnost příjmu celého rámce bez opakování
+\begin{equation}
+ P_{\text{úplný}}=(1-p)^n.
+\end{equation}
+Pro $p=0{,}05$ a $n=4$ vychází 81,45\,\%. Skutečné výpadky mohou být shlukované; nezávislost je zjednodušení. Opakování spotřebovává další čas a může dodat již zastaralá data.
+
+\subsection{Čas ve vzduchu}
+Doba symbolu je $T_s=2^{SF}/BW$. Pro explicitní hlavičku, payload CRC, osm preambulových symbolů a kódování 4/5 lze pro zde uvedené $SF\geq7$ použít
+\begin{align}
+ N_{\mathrm{pay}}&=8+5\max\left(
+ \left\lceil\frac{8PL-4SF+28+16}{4(SF-2DE)}\right\rceil,0\right),\\
+ T_{\mathrm{air}}&=(8+4{,}25+N_{\mathrm{pay}})T_s .
+\end{align}
+$PL$ je rádiový payload včetně vlastní 8B režie; $DE$ je optimalizace pro dlouhé symboly (zde 1 pro SF12/125~kHz, jinak 0). Vztah odpovídá veřejné implementaci Semtech.\cite{semtech}
+
+Výpočet níže uvažuje čtyři rámce 202, 144, 173 a 202~B každou sekundu, každý s 8~B navíc. Zprávy 1005 a 1230 se vysílají samostatně po 10~s. Neobsahuje potvrzování, opakování ani přepínání rádia.
+\par
+\begin{table}[htbp]\centering\small
+\caption{Vlastní výpočet pro MSM4 při 1~Hz. Nad 100\,\% nelze proud odvysílat ani nepřetržitě.}
+\begin{tabular}{rrr}\toprule
+Režim & Vysílací čas [s za s] & Požadovaný podíl\\\midrule
+SF7 / 125~kHz & 1,218 & 121,76\,\%\\
+SF7 / 250~kHz & 0,609 & 60,88\,\%\\
+SF7 / 500~kHz & 0,304 & 30,44\,\%\\
+SF9 / 125~kHz & 3,838 & 383,82\,\%\\
+SF12 / 125~kHz & 27,904 & 2790,36\,\%\\
+\bottomrule\end{tabular}\end{table}
+\par
+Širší kanál zlepšuje propustnost za cenu jiných rádiových vlastností. Řádek pro 500~kHz je fyzikální srovnání, nikoliv schválení kanálu v libovolném úseku 868~MHz.
+
+\subsection{Povolený vysílací čas a kapacita}
+České VO-R/10/05.2025-5 rozlišuje podmínky podle podúseku. Čl.~3 uvádí pro 868,0--868,6~MHz 25~mW e.r.p. a při režimu omezeném klíčovacím poměrem 1\,\%; pro 869,4--869,65~MHz odlišné podmínky s možností 10\,\% a omezením kanálu. Oprávnění obsahuje též podmínky alternativního přístupu ke spektru.\cite{ctu} Před provozem se ověří konkrétní režim a země použití. Pouhá detekce CAD není důkazem vyhovujícího LBT.
+
+Ani 30,44\,\% z nejrychlejšího zde počítaného profilu se nevejde do 10\,\% vysílacího limitu. Modelový proud při 1~Hz proto nelze bez dalšího přijmout jako funkční zadání pro tato LoRa nastavení. Nejde o důkaz nemožnosti všech režimů SX1262: nižší SF, jiný dovolený přístup, FSK, kratší obsah nebo jiný spoj vyžadují samostatné posouzení. Ani nominální kanál 250~kHz není automaticky prokázaným splněním všech podmínek podúseku širokého 250~kHz.
+
+Pokud trvalý vstup převyšuje dlouhodobou kapacitu, pouhé ukládání do fronty nepomůže: fronta roste a korekce stárnou. Rozhoduje současné splnění propustnosti, čerstvosti, ztrátovosti a podmínek rádiového provozu.
+
+\section{Experiment pro určení minimálního toku}
+\begin{enumerate}
+\item Zaznamenat 30--60 minut RTCM přímo ze základny ve volném prostoru. U každého rámce určit typ, délku, CRC, ID stanice, epochu a počet aktivních buněk. Délka testu je návrhem.
+\item Vyčíslit průměr i 95. a 99.~percentil B/s, největší epochu a mezery. Použít krátká časová okna, ne jen velikost souboru dělenou dobou záznamu.
+\item Ze stejného zdroje porovnat MSM4 a MSM7 při 1~Hz přes kabel. Ověřit signály i chybu vůči nezávislé referenci.
+\item Řízeně vložit zpoždění 0,2; 0,5; 1; 2 a 5~s, dále výpadky 1; 2; 5; 10; 20 a 30~s. Opakovat staticky i při jízdě.
+\item Samostatně snížit frekvenci na 0,5 a 0,2~Hz. Neměnit současně interval, konstelace a rádio.
+\item Vložit skutečné rádio; srovnat airtime, fragmentaci, ztráty a stáří na roveru s výpočtem.
+\end{enumerate}
+Rozhodující je křivka chyby a dostupnosti vůči stáří korekcí. Sledovat se má i nepravdivě příznivý FIX, obnova po výpadku a chyba za celou jízdu. Minimální interval nelze odvodit z jediné úspěšné inicializace. Navržená zkouška je zároveň podkladem pro rozhodnutí, zda zůstat u LoRa, nebo zvolit jinou transportní cestu.
+
+\section{Závěr pro stavbu}
+Pro výchozí model vychází asi 0,73~kB/s při MSM4 nebo 1,16~kB/s při MSM7 a 1~Hz. Jednotlivé rámce mají v příkladech stovky bajtů; celá epocha je větší. Nejnižší potřebná frekvence dosud nebyla změřena. Výchozím bodem zkoušek je 1~Hz, pracovní cíl stáří kolem jedné sekundy a vyhodnocení překročení 2~s.
+
+Timeout mosaic-X5 20~s není doporučením vysílat jednou za 20~s ani zárukou přesnosti během výpadku. Model současně zpochybňuje proveditelnost širokého RTCM proudu přes pomalé LoRa režimy. Prioritou je skutečný záznam RTCM a srovnání kabelu, internetu a rádia. NTRIP je proto relevantní alternativa už při oživení.
+
+\begin{thebibliography}{99}\small
+\zdroj{rtcm-core}{TAKASU, Tomoji. \emph{RTKLIB: src/rtcm.c}. Funkce input\_rtcm3 a gen\_rtcm3; master k datu přístupu}{https://raw.githubusercontent.com/tomojitakasu/RTKLIB/master/src/rtcm.c}
+\zdroj{f9p}{U-BLOX. \emph{ZED-F9P Integration Manual}. R16, 30. 10. 2024. Tabulka 7 na s. 18; timeout na s. 19}{https://content.u-blox.com/sites/default/files/ZED-F9P_IntegrationManual_UBX-18010802.pdf}
+\zdroj{rtcm-encoder}{TAKASU, Tomoji. \emph{RTKLIB: src/rtcm3e.c}. Funkce encode\_msm\_head, encode\_msm4 a encode\_msm7; master k datu přístupu}{https://raw.githubusercontent.com/tomojitakasu/RTKLIB/master/src/rtcm3e.c}
+\zdroj{pyrtcm}{SMITH, Steve. \emph{pyrtcm: rtcmtypes\_get.py a rtcmtypes\_core.py}. Definice 1005, 1006 a 1230; master k datu přístupu}{https://github.com/semuconsulting/pyrtcm/tree/master/src/pyrtcm}
+\zdroj{mosaic}{SEPTENTRIO. \emph{mosaic-X5 Reference Guide}. Firmware 4.14.10, 23. 9. 2024. s. 110--111; blok PVTGeodetic, pole MeanCorrAge. Originál výrobce distribuovaný ArduSimple}{https://www.ardusimple.com/wp-content/uploads/2024/10/mosaic-X5-Firmware-v4.14.10-Reference-Guide.pdf}
+\zdroj{semtech}{SEMTECH. \emph{LoRaMac-node: src/radio/sx126x/radio.c}. Funkce RadioGetLoRaTimeOnAirNumerator; master k datu přístupu}{https://raw.githubusercontent.com/Lora-net/LoRaMac-node/master/src/radio/sx126x/radio.c}
+\zdroj{ctu}{ČESKÝ TELEKOMUNIKAČNÍ ÚŘAD. \emph{VO-R/10/05.2025-5}. 20. 5. 2025. Čl. 3, tabulka a navazující podmínky}{https://ctu.gov.cz/sites/default/files/obsah/VO-R10-052025-5.pdf}
+\end{thebibliography}
+\end{document}

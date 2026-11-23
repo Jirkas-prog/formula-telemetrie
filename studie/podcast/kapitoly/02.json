@@ -1,0 +1,13 @@
+{
+  "number": 2,
+  "title": "Proč Linux a co znamená real-time",
+  "text": null,
+  "voice": "cs-CZ-AntoninNeural",
+  "rate": "+12%",
+  "sha256_text_voice_rate": "eefc8c3ccad87ef5dd7979394e8131246c96def42f0f64743f4595fa8d0e3af6",
+  "sha256_audio": "292989b696845c143086e06ecdc4f81d420a9c2627747470bb36948a96054c7e",
+  "duration_seconds": 140.832,
+  "word_count": 334,
+  "sample_rate": 24000,
+  "bitrate": 48000
+}
